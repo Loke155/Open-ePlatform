@@ -54,6 +54,7 @@ A sample MySQL database is available in the docs folder of the FlowEngine projec
 ##Dependencies
 The projects above require the following depencies in order to build.
 
+* Java SE 1.6
 * The OpenHierarchy framework (openhierarchy.org)
 * MinimalUser module (svn://svn.openhierarchy.org/openhierarchy/modules/minimaluser/trunk)
 * SAMLLoginProvider module (svn://svn.openhierarchy.org/openhierarchy/modules/SAMLLoginProvider/trunk)
