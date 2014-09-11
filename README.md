@@ -15,6 +15,9 @@ A signing provider tailored for API of authify.com.
 ###BaseMapQuery
 The base class for all types of map based query types.
 
+###demo.oeplatform.org
+A dynamic web project for eclipse containing the Open ePlatform design
+
 ###FlowEngine
 The main engine in Open ePlatform responsible for all core functions.
 
@@ -44,6 +47,9 @@ A simple RMI proxy for looking up property unit designation etc. via Open eMap.
 
 ###SinglePolygonMapQuery
 A map based query type that supports single geometries.
+
+##Database
+A sample MySQL database is available in the docs folder of the FlowEngine project. The default login is admin/admin.
 
 ##Dependencies
 The projects above require the following depencies in order to build.
