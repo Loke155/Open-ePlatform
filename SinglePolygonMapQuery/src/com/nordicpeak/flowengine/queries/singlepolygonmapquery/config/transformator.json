@@ -20,12 +20,12 @@
                 "strokeColor": "#2969bf"
             },
             "Line": {
-            	"strokeWidth": 3,
+            	"strokeWidth": 1.5,
             	"strokeColor": "#2969bf",
 				"strokeOpacity": 1
             },
             "Polygon": {
-                "strokeWidth": 3,
+                "strokeWidth": 1.5,
                 "strokeOpacity": 1,
                 "strokeColor": "#29bf4c",
                 "fillColor": "#e8ffee",
@@ -33,14 +33,14 @@
             }
         },
         "select": {
-            "strokeWidth": 3,
+            "strokeWidth": 1.5,
             "strokeOpacity": 1,
             "fillColor": "#deecff",
             "fillOpacity": 0.4,
             "strokeColor": "#2969bf"
         },
         "temporary": {
-            "strokeWidth": 3,
+            "strokeWidth": 1.5,
             "strokeOpacity": 0.75,
             "fillColor": "#ff00ff",
             "fillOpacity": 0,
@@ -58,18 +58,6 @@
         "KeyboardDefaults"
     ],
     "layers": [
-        {
-            "name": "Flygfoto",
-            "url": "https://extmap.sundsvall.se/geoserver/gwc/service/wms",
-            "params": {
-                "layers": "Lantmateriet:Ortofoto50_25cm",
-                "format": "image/jpeg"
-            },
-            "options": {
-            	"isBaseLayer": true,
-            	"displayInLayerSwitcher": false
-            }
-        },
         {
             "name": "Karta",
             "url": "https://extmap.sundsvall.se/geoserver/gwc/service/wms",

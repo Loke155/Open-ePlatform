@@ -38,6 +38,7 @@ public abstract class BaseQuery extends GeneratedElementable implements Query, S
 		return configURL;
 	}
 
+	@Override
 	public MutableQueryDescriptor getQueryDescriptor() {
 
 		return queryDescriptor;

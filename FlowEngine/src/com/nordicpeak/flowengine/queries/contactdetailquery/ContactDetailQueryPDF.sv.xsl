@@ -15,7 +15,7 @@
 	<xsl:variable name="i18n.Email">E-postadress</xsl:variable>
 	<xsl:variable name="i18n.Phone">Telefon</xsl:variable>
 	<xsl:variable name="i18n.And">&amp;</xsl:variable>
-	<xsl:variable name="i18n.ChooseContactChannels">Ange hur du vill att vi ska kontakta dig i det här ärendet</xsl:variable>
+	<xsl:variable name="i18n.ChooseContactChannels">Kontaktvägar</xsl:variable>
 	
 	<xsl:variable name="i18n.ContactByLetter">Brev</xsl:variable>
 	<xsl:variable name="i18n.ContactBySMS">SMS</xsl:variable>

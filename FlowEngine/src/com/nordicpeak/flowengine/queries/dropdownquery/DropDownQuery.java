@@ -91,11 +91,13 @@ public class DropDownQuery extends FixedAlternativesBaseQuery implements Summary
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;
 	}
 
+	@Override
 	public List<DropDownAlternative> getAlternatives() {
 
 		return alternatives;
@@ -106,6 +108,7 @@ public class DropDownQuery extends FixedAlternativesBaseQuery implements Summary
 		this.alternatives = alternatives;
 	}
 
+	@Override
 	public String getFreeTextAlternative() {
 		return freeTextAlternative;
 	}

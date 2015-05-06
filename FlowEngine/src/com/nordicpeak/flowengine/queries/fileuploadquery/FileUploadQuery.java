@@ -95,6 +95,7 @@ public class FileUploadQuery extends BaseQuery {
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;

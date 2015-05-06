@@ -18,12 +18,11 @@
 	<xsl:variable name="i18n.Email">E-postadress</xsl:variable>
 	<xsl:variable name="i18n.Phone">Telefon</xsl:variable>
 	
-	<xsl:variable name="i18n.ChooseContactChannels">Ange hur du vill att vi ska kontakta dig i det här ärendet</xsl:variable>
+	<xsl:variable name="i18n.ChooseContactChannels">Kontaktvägar</xsl:variable>
 	
-	<xsl:variable name="i18n.ContactByLetter">Brev</xsl:variable>
+	<xsl:variable name="i18n.AllowContactBySMS">Kontakta mig via SMS</xsl:variable>
 	<xsl:variable name="i18n.ContactBySMS">SMS</xsl:variable>
 	<xsl:variable name="i18n.ContactByEmail">E-post</xsl:variable>
-	<xsl:variable name="i18n.ContactByPhone">Telefon</xsl:variable>
 	
 	<xsl:variable name="i18n.And">&amp;</xsl:variable>
 	
@@ -39,7 +38,6 @@
 	<xsl:variable name="i18n.NameExists">Du har redan registrerat ett företag med det angivna namnet</xsl:variable>
 	<xsl:variable name="i18n.OrganizationNumberExists">Du har redan registrerat ett företag med det angivna organisationsnumret</xsl:variable>
 	
-	<xsl:variable name="i18n.RequiredQuery">Den här frågan är obligatorisk!</xsl:variable>
 	<xsl:variable name="i18n.RequiredField">Det här fältet är obligatoriskt!</xsl:variable>
 	<xsl:variable name="i18n.TooLongFieldContent.part1">Innehållet i det här fältet är </xsl:variable>
 	<xsl:variable name="i18n.TooLongFieldContent.part2"> tecken vilket överskrider maxgränsen på </xsl:variable>

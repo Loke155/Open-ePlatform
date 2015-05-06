@@ -26,7 +26,7 @@
 				</a>
 				<div class="submenu notification-menu" style="display: none;">
 					<div class="heading-wrapper">
-						<h4><xsl:value-of select="$i18n.Events" /></h4>
+						<h3><xsl:value-of select="$i18n.Events" /></h3>
 					</div>
 					<xsl:choose>
 						<xsl:when test="$eventCount > 0">

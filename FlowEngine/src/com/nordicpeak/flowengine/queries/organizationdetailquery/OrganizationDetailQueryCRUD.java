@@ -32,10 +32,6 @@ public class OrganizationDetailQueryCRUD extends BaseQueryCRUD<OrganizationDetai
 		OrganizationDetailQuery query = super.populateFromUpdateRequest(bean, req, user, uriParser);
 		
 		List<ValidationError> validationErrors = new ArrayList<ValidationError>();
-
-		if(!query.isAllowLetter() && !query.isAllowEmail() && !query.isAllowSMS() && !query.isAllowPhone()) {
-			validationErrors.add(new ValidationError("NoContactChannelChoosen"));
-		}
 		
 		this.populateQueryDescriptor((QueryDescriptor) query.getQueryDescriptor(), req, validationErrors);
 		

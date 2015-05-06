@@ -8,6 +8,7 @@ import se.riges.lm.rmi.interfaces.IEstate;
 import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.db.tableversionhandler.TableVersionHandler;
 import se.unlogic.standardutils.db.tableversionhandler.UpgradeResult;
 import se.unlogic.standardutils.db.tableversionhandler.XMLDBScriptProvider;
@@ -43,9 +44,9 @@ public class PUDMapQueryProvider extends BaseMapQueryProviderModule<PUDMapQuery,
 	}
 
 	@Override
-	public void populate(PUDMapQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(PUDMapQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
-		super.populate(queryInstance, req, user, allowPartialPopulation);
+		super.populate(queryInstance, req, user, allowPartialPopulation, attributeHandler);
 		
 		Integer queryID = queryInstance.getQuery().getQueryID();
 
@@ -95,7 +96,7 @@ public class PUDMapQueryProvider extends BaseMapQueryProviderModule<PUDMapQuery,
 			
 			queryInstance.getQueryInstanceDescriptor().setPopulated(true);
 			
-			generatePNG(queryInstance, user);
+			generateMapImages(queryInstance, user);
 			
 		}
 		

@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.unlogic.standardutils.annotations.RequiredIfSet;
 import se.unlogic.standardutils.annotations.WebPopulate;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
@@ -26,6 +27,7 @@ import se.unlogic.standardutils.xml.XMLValidationUtils;
 
 import com.nordicpeak.flowengine.enums.QueryState;
 import com.nordicpeak.flowengine.interfaces.MutableQueryDescriptor;
+import com.nordicpeak.flowengine.populators.XMLElementNamePopulator;
 
 @Table(name = "flowengine_query_descriptors")
 @XMLElement
@@ -72,6 +74,12 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 	private boolean exported;
 
 	@DAOManaged
+	@WebPopulate(maxLength = 255, populator=XMLElementNamePopulator.class)
+	@RequiredIfSet(paramName="exported")
+	@XMLElement
+	private String xsdElementName;
+
+	@DAOManaged
 	@OneToMany
 	@XMLElement
 	private List<QueryInstanceDescriptor> queryInstanceDescriptors;
@@ -82,9 +90,10 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 	private List<EvaluatorDescriptor> evaluatorDescriptors;
 
 	private XMLParser importParser;
-	
+
+	@Override
 	public XMLParser getImportParser() {
-	
+
 		return importParser;
 	}
 
@@ -111,6 +120,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.name = name;
 	}
 
+	@Override
 	public Integer getSortIndex() {
 
 		return sortIndex;
@@ -121,6 +131,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.sortIndex = index;
 	}
 
+	@Override
 	public QueryState getDefaultQueryState() {
 
 		return defaultQueryState;
@@ -132,6 +143,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.defaultQueryState = defaultQueryState;
 	}
 
+	@Override
 	public Step getStep() {
 
 		return step;
@@ -152,6 +164,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.queryInstanceDescriptors = queryInstanceDescriptors;
 	}
 
+	@Override
 	public String getQueryTypeID() {
 
 		return queryTypeID;
@@ -168,6 +181,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		return name + " (ID: " + queryID + ")";
 	}
 
+	@Override
 	public List<EvaluatorDescriptor> getEvaluatorDescriptors() {
 
 		return evaluatorDescriptors;
@@ -178,14 +192,27 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.evaluatorDescriptors = evaluatorDescriptors;
 	}
 
+	@Override
 	public boolean isExported() {
 
 		return exported;
 	}
 
+	@Override
 	public void setExported(boolean exported) {
 
 		this.exported = exported;
+	}
+
+	@Override
+	public String getXSDElementName() {
+
+		return xsdElementName;
+	}
+
+	public void setXSDElementName(String name) {
+
+		this.xsdElementName = name;
 	}
 
 	@Override
@@ -198,8 +225,15 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 		this.sortIndex = XMLValidationUtils.validateParameter("sortIndex", xmlParser, true, PositiveStringIntegerPopulator.getPopulator(), errors);
 		this.queryTypeID = XMLValidationUtils.validateParameter("queryTypeID", xmlParser, true, 1, 255, StringPopulator.getPopulator(), errors);
 		this.defaultQueryState = XMLValidationUtils.validateParameter("defaultQueryState", xmlParser, true, new EnumPopulator<QueryState>(QueryState.class), errors);
-		
+
 		this.exported = xmlParser.getPrimitiveBoolean("exported");
+		this.xsdElementName = XMLValidationUtils.validateParameter("xsdElementName", xmlParser, false, 1, 255, new XMLElementNamePopulator(), errors);
+
+		//Backwards compatibility for flows exported with FlowEngine version before 1.2
+		if(xsdElementName == null){
+
+			this.exported = false;
+		}
 
 		this.evaluatorDescriptors = XMLPopulationUtils.populateBeans(xmlParser, "EvaluatorDescriptors/EvaluatorDescriptor", EvaluatorDescriptor.class, errors);
 
@@ -207,7 +241,7 @@ public class QueryDescriptor extends GeneratedElementable implements MutableQuer
 
 			throw new ValidationException(errors);
 		}
-		
+
 		this.importParser = xmlParser;
 	}
 }

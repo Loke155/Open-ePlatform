@@ -2,6 +2,8 @@ package com.nordicpeak.flowengine.enums;
 
 public enum EventType {
 	UPDATED,
+	SIGNED,
+	PAYED,
 	SUBMITTED, 
 	STATUS_UPDATED, 
 	MANAGERS_UPDATED, 

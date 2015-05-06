@@ -36,20 +36,22 @@ public class UserFlowInstanceMenuModule extends AnnotatedBackgroundModule {
 		
 			Entry<SectionDescriptor, Section> section = systemInterface.getRootSection().getSectionCache().getEntry(sectionID);
 			
-			SectionMenu sectionMenu = section.getValue().getMenuCache().getUserMenu(user, null, uriParser);
-			
-			Document doc = this.createDocument(req, uriParser, user);
-			
-			Element document = doc.getDocumentElement();
-			
-			document.appendChild(section.getKey().toXML(doc));
-			
-			for(MenuItem menuItem : sectionMenu.getMenuItems()) {
-				document.appendChild(menuItem.toXML(doc));
+			if(section != null){
+
+				SectionMenu sectionMenu = section.getValue().getMenuCache().getUserMenu(user, null, uriParser);
+				
+				Document doc = this.createDocument(req, uriParser, user);
+				
+				Element document = doc.getDocumentElement();
+				
+				document.appendChild(section.getKey().toXML(doc));
+				
+				for(MenuItem menuItem : sectionMenu.getMenuItems()) {
+					document.appendChild(menuItem.toXML(doc));
+				}
+				
+				return new SimpleBackgroundModuleResponse(doc);				
 			}
-			
-			return new SimpleBackgroundModuleResponse(doc);
-		
 		}
 		
 		return null;

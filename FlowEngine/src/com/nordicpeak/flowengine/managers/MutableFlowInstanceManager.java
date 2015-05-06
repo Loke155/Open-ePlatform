@@ -12,8 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.standardutils.collections.CollectionUtils;
+import se.unlogic.standardutils.dao.RelationQuery;
 import se.unlogic.standardutils.dao.TransactionHandler;
 import se.unlogic.standardutils.json.JsonArray;
 import se.unlogic.standardutils.json.JsonObject;
@@ -69,6 +73,8 @@ import com.nordicpeak.flowengine.utils.TextTagReplacer;
 
 public class MutableFlowInstanceManager implements Serializable, HttpSessionBindingListener, FlowInstanceManager {
 
+	private static final RelationQuery FLOW_INSTANCE_SAVE_RELATIONS = new RelationQuery(FlowInstance.ATTRIBUTES_RELATION);
+
 	// Nested class to keep track of active flow instance managers in a protected fashion
 	public final static class FlowInstanceManagerRegistery implements Serializable {
 
@@ -84,7 +90,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		private transient ArrayList<MutableFlowInstanceManager> nonSessionBoundInstanceManagers = new ArrayList<MutableFlowInstanceManager>();
 
 		private FlowInstanceManagerRegistery() {};
-		
+
 		public static synchronized FlowInstanceManagerRegistery getInstance() {
 
 			if(REGISTERY == null){
@@ -276,14 +282,14 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 	private boolean closed;
 	private String instanceManagerID;
 	private long created = System.currentTimeMillis();
-	
+
 	private boolean hasUnsavedChanges;
 
 	private boolean concurrentModificationLock;
 
 	/**
 	 * Creates a new flow instance for the given flow and user
-	 * 
+	 *
 	 * @param flow The flow to create the instance from. The flow must include it's steps, default flow states, query descriptors and evaluator descriptors.
 	 * @param instanceManagerID
 	 * @param instanceMetadata
@@ -304,7 +310,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		setID(instanceManagerID);
 
 		TextTagReplacer.replaceTextTags(flow, instanceMetadata.getSiteProfile());
-		
+
 		flowInstance.setFlow(flow);
 
 		//Parse steps
@@ -344,13 +350,13 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		}
 
 		currentStepIndex = 0;
-		
-		flowInstance.setStepID(managedSteps.get(currentStepIndex).getStep().getStepID());		
+
+		flowInstance.setStepID(managedSteps.get(currentStepIndex).getStep().getStepID());
 	}
 
 	/**
 	 * Opens an existing flow instance for the given user
-	 * 
+	 *
 	 * @param flowInstance The flow instance to be managed, must include it's flow, steps, default flow states, query descriptors, query instance descriptors relation and evaluator descriptors.
 	 * @param instanceMetadata
 	 * @throws MissingQueryInstanceDescriptor
@@ -371,7 +377,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		setID(instanceManagerID);
 
 		TextTagReplacer.replaceTextTags(flowInstance.getFlow(), instanceMetadata.getSiteProfile());
-		
+
 		managedSteps = new ArrayList<ManagedStep>(flowInstance.getFlow().getSteps().size());
 
 		for(Step step : flowInstance.getFlow().getSteps()){
@@ -510,6 +516,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		return getStepShowHTML(currentStepIndex, req, user, flowEngineInterface, onlyPopulatedQueries, baseUpdateURL, baseQueryRequestURL);
 	}
 
+	@Override
 	public synchronized List<ManagerResponse> getFullShowHTML(HttpServletRequest req, User user, FlowEngineInterface flowEngineInterface, boolean onlyPopulatedQueries, String baseUpdateURL, String baseQueryRequestURL) throws UnableToGetQueryInstanceShowHTMLException, FlowInstanceManagerClosedException {
 
 		checkState();
@@ -593,7 +600,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		List<ValidationError> validationErrors = null;
 
 		try{
-			managedQueryInstance.getQueryInstance().populate(req, user, true, queryHandler);
+			managedQueryInstance.getQueryInstance().populate(req, user, true, queryHandler, flowInstance.getAttributeHandler());
 
 		}catch(RuntimeException e){
 
@@ -604,8 +611,8 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 			validationErrors = e.getErrors();
 		}
 
-		this.hasUnsavedChanges = true;		
-		
+		this.hasUnsavedChanges = true;
+
 		List<QueryModification> queryModifications = null;
 
 		if(managedQueryInstance.getEvaluators() != null){
@@ -664,10 +671,10 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 			for(QueryModification queryModification : queryModifications) {
 
 				if(!isInCurrentStep(queryModification.getQueryInstance())){
-					
+
 					continue;
 				}
-				
+
 				try {
 
 					modifications.addNode(queryModification.toJson(req, user, queryHandler, this, managedSteps.get(currentStepIndex), contextPath));
@@ -697,11 +704,11 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		for(ManagedQueryInstance managedInstance : managedSteps.get(currentStepIndex).getManagedQueryInstances()){
 
 			if(managedInstance.getQueryInstance().equals(queryInstance)){
-				
+
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -734,7 +741,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				if(queryInstance.getQueryInstanceDescriptor().getQueryState() != QueryState.HIDDEN){
 
 					try{
-						queryInstance.populate(req, user, allowPartialPopulation, queryHandler);
+						queryInstance.populate(req, user, allowPartialPopulation, queryHandler, flowInstance.getAttributeHandler());
 
 					}catch(RuntimeException e){
 						throw new UnableToPopulateQueryInstanceException(queryInstance.getQueryInstanceDescriptor(), e);
@@ -743,7 +750,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				}else{
 
 					try{
-						queryInstance.reset();
+						queryInstance.reset(flowInstance.getAttributeHandler());
 
 					}catch(RuntimeException e){
 						throw new UnableToResetQueryInstanceException(queryInstance.getQueryInstanceDescriptor(), e);
@@ -790,7 +797,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		}
 
 		this.hasUnsavedChanges = true;
-		
+
 		//If we have any validation errors stay in the current step, else follow the requested flow direction
 		if(!validationErrorMap.isEmpty()){
 
@@ -815,7 +822,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 			}
 
 			flowInstance.setFullyPopulated(false);
-			
+
 			return new ManagerResponse(currentStep.getStep().getStepID(), currentStepIndex, queryResponses, true, concurrentModificationLock);
 		}
 
@@ -845,7 +852,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		}
 
 		flowInstance.setStepID(managedSteps.get(currentStepIndex).getStep().getStepID());
-		
+
 		return getCurrentStepFormHTML(queryHandler, req, user, baseQueryRequestURL);
 	}
 
@@ -871,7 +878,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				flowInstance.setAdded(TimeUtils.getCurrentTimestamp());
 
 				//Add flow instance to database
-				daoFactory.getFlowInstanceDAO().add(flowInstance, transactionHandler, null);
+				daoFactory.getFlowInstanceDAO().add(flowInstance, transactionHandler, FLOW_INSTANCE_SAVE_RELATIONS);
 
 				for(ManagedStep managedStep : this.managedSteps){
 
@@ -894,7 +901,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				flowInstance.setEditor(user);
 
 				//Update flow instance
-				daoFactory.getFlowInstanceDAO().update(flowInstance, transactionHandler, null);
+				daoFactory.getFlowInstanceDAO().update(flowInstance, transactionHandler, FLOW_INSTANCE_SAVE_RELATIONS);
 
 				//Update all query instance descriptors
 				for(ManagedStep managedStep : this.managedSteps){
@@ -905,7 +912,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 						QueryInstanceDescriptor queryInstanceDescriptor = (QueryInstanceDescriptor)managedQueryInstance.getQueryInstance().getQueryInstanceDescriptor();
 
 						//Update QueryInstanceDescriptor
-						daoFactory.getQueryInstanceDescriptorDAO().update(queryInstanceDescriptor, transactionHandler, null);
+						daoFactory.getQueryInstanceDescriptorDAO().update(queryInstanceDescriptor, transactionHandler, FLOW_INSTANCE_SAVE_RELATIONS);
 					}
 				}
 			}
@@ -928,7 +935,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 			transactionHandler.commit();
 
 			this.hasUnsavedChanges = false;
-			
+
 		}finally{
 
 			//Clear all autogenerated ID's if add operation fails
@@ -1017,16 +1024,19 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		return this.flowInstance.getFlowInstanceID() != null;
 	}
 
+	@Override
 	public Integer getFlowInstanceID() {
 
 		return flowInstance.getFlowInstanceID();
 	}
 
+	@Override
 	public Integer getFlowID() {
 
 		return flowInstance.getFlow().getFlowID();
 	}
 
+	@Override
 	public Status getFlowState() {
 
 		return flowInstance.getStatus();
@@ -1047,6 +1057,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		return flowInstance.isFullyPopulated();
 	}
 
+	@Override
 	public ImmutableFlowInstance getFlowInstance() {
 
 		return flowInstance;
@@ -1067,11 +1078,13 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 		return created;
 	}
 
+	@Override
 	public void valueBound(HttpSessionBindingEvent sessionBindingEvent) {
 
 		this.registery.addSessionBoundInstance(this);
 	}
 
+	@Override
 	public void valueUnbound(HttpSessionBindingEvent sessionBindingEvent) {
 
 		this.registery.removeSessionBoundInstance(this);
@@ -1121,13 +1134,13 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				if(queryInstanceClass.isAssignableFrom(managedQueryInstance.getQueryInstance().getClass())){
 
 					return (T)managedQueryInstance.getQueryInstance();
-				}				
+				}
 			}
 		}
 
 		return null;
-	}		
-	
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends ImmutableQueryInstance> T getQuery(Class<T> queryInstanceClass, String name) {
@@ -1139,19 +1152,19 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				if(queryInstanceClass.isAssignableFrom(managedQueryInstance.getQueryInstance().getClass()) && managedQueryInstance.getQueryInstance().getQueryInstanceDescriptor().getQueryDescriptor().getName().equals(name)){
 
 					return (T)managedQueryInstance.getQueryInstance();
-				}				
+				}
 			}
 		}
 
 		return null;
-	}	
-	
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> getQueries(Class<T> queryInstanceClass) {
 
 		List<T> queryList = new ArrayList<T>();
-		
+
 		for(ManagedStep managedStep : this.managedSteps){
 
 			for(ManagedQueryInstance managedQueryInstance : managedStep.getManagedQueryInstances()){
@@ -1159,18 +1172,18 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				if(queryInstanceClass.isAssignableFrom(managedQueryInstance.getQueryInstance().getClass())){
 
 					queryList.add((T) managedQueryInstance.getQueryInstance());
-				}				
+				}
 			}
-		}		
-		
+		}
+
 		if(queryList.isEmpty()){
-			
+
 			return null;
 		}
-		
+
 		return queryList;
-	}	
-	
+	}
+
 	@Override
 	public List<PDFManagerResponse> getPDFContent(FlowEngineInterface flowEngineInterface) throws FlowInstanceManagerClosedException, UnableToGetQueryInstancePDFContentException {
 
@@ -1185,7 +1198,7 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 			for(ManagedQueryInstance managedQueryInstance : managedStep.getManagedQueryInstances()){
 
 				MutableQueryInstanceDescriptor queryInstanceDescriptor = managedQueryInstance.getQueryInstance().getQueryInstanceDescriptor();
-				
+
 				if(queryInstanceDescriptor.getQueryState() != QueryState.HIDDEN && queryInstanceDescriptor.isPopulated()){
 
 					try{
@@ -1196,24 +1209,48 @@ public class MutableFlowInstanceManager implements Serializable, HttpSessionBind
 				}
 			}
 
-			managerResponses.add(new PDFManagerResponse(managedStep.getStep().getStepID(), stepIndex, queryResponses));			
+			managerResponses.add(new PDFManagerResponse(managedStep.getStep().getStepID(), stepIndex, queryResponses));
 		}
 
 		return managerResponses;
 	}
 
 	public boolean hasUnsavedChanges() {
-		
+
 		return hasUnsavedChanges;
 	}
-	
+
 	public boolean isConcurrentModificationLocked() {
-		
+
 		return concurrentModificationLock;
 	}
 
 	public void setConcurrentModificationLock(boolean concurrentModificationLock) {
-	
+
 		this.concurrentModificationLock = concurrentModificationLock;
+	}
+
+	@Override
+	public List<Element> getExportXMLElements(Document doc, QueryHandler queryHandler) throws Exception {
+
+		List<Element> elements = new ArrayList<Element>(this.managedSteps.size() * 5);
+
+		for(ManagedStep managedStep : this.managedSteps){
+
+			for(ManagedQueryInstance managedQueryInstance : managedStep.getManagedQueryInstances()){
+
+				if(managedQueryInstance.getQueryInstance().getQueryInstanceDescriptor().getQueryDescriptor().isExported() && managedQueryInstance.getQueryInstance().getQueryInstanceDescriptor().isPopulated()){
+
+					Element queryElement = managedQueryInstance.getQueryInstance().toExportXML(doc, queryHandler);
+
+					if(queryElement != null){
+
+						elements.add(queryElement);
+					}
+				}
+			}
+		}
+
+		return elements;
 	}
 }

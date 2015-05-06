@@ -25,7 +25,7 @@
 				<xsl:when test="enabled = 'true'">
 					
 					<a href="{../../browserModuleURL}{FlowFamily/flowFamilyID}">
-						<span data-icon-before="&gt;" class="text">
+						<span class="text">
 							<xsl:value-of select="name"/>
 						</span>
 						
@@ -37,7 +37,7 @@
 				</xsl:when>
 				<xsl:otherwise>
 					
-					<span data-icon-before="&gt;" class="text">
+					<span class="text">
 						<xsl:value-of select="name"/>
 					</span>
 				

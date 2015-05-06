@@ -2,6 +2,10 @@ package com.nordicpeak.flowengine.queries.organizationdetailquery;
 
 import java.lang.reflect.Field;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
@@ -9,7 +13,9 @@ import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.string.StringUtils;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
 
 @Table(name = "organization_detail_query_instances")
@@ -37,7 +43,7 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 	@DAOManaged
 	@XMLElement
 	private String organizationNumber;
-	
+
 	@DAOManaged
 	@XMLElement
 	private String address;
@@ -53,11 +59,11 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 	@DAOManaged
 	@XMLElement
 	private String firstname;
-	
+
 	@DAOManaged
 	@XMLElement
 	private String lastname;
-	
+
 	@DAOManaged
 	@XMLElement
 	private String phone;
@@ -72,28 +78,16 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 
 	@DAOManaged
 	@XMLElement
-	private boolean contactByLetter;
-
-	@DAOManaged
-	@XMLElement
 	private boolean contactBySMS;
 
 	@DAOManaged
 	@XMLElement
-	private boolean contactByEmail;
-
-	@DAOManaged
-	@XMLElement
-	private boolean contactByPhone;
-
-	@DAOManaged
-	@XMLElement
 	private Integer organizationID;
-	
+
 	@DAOManaged
 	@XMLElement
 	private boolean persistOrganization;
-	
+
 	public String getName() {
 		return name;
 	}
@@ -134,27 +128,27 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 		this.postalAddress = postalAddress;
 	}
 
-	
+
 	public String getFirstname() {
-	
+
 		return firstname;
 	}
 
-	
+
 	public void setFirstname(String firstname) {
-	
+
 		this.firstname = firstname;
 	}
 
-	
+
 	public String getLastname() {
-	
+
 		return lastname;
 	}
 
-	
+
 	public void setLastname(String lastname) {
-	
+
 		this.lastname = lastname;
 	}
 
@@ -182,36 +176,12 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 		this.mobilePhone = mobilePhone;
 	}
 
-	public boolean isContactByLetter() {
-		return contactByLetter;
-	}
-
-	public void setContactByLetter(boolean contactByLetter) {
-		this.contactByLetter = contactByLetter;
-	}
-
 	public boolean isContactBySMS() {
 		return contactBySMS;
 	}
 
 	public void setContactBySMS(boolean contactBySMS) {
 		this.contactBySMS = contactBySMS;
-	}
-
-	public boolean isContactByEmail() {
-		return contactByEmail;
-	}
-
-	public void setContactByEmail(boolean contactByEmail) {
-		this.contactByEmail = contactByEmail;
-	}
-
-	public boolean isContactByPhone() {
-		return contactByPhone;
-	}
-
-	public void setContactByPhone(boolean contactByPhone) {
-		this.contactByPhone = contactByPhone;
 	}
 
 	public Integer getQueryInstanceID() {
@@ -261,7 +231,7 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.name = null;
 		this.organizationNumber = null;
@@ -271,7 +241,9 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 		this.phone = null;
 		this.email = null;
 		this.mobilePhone = null;
-		super.reset();
+		this.contactBySMS = false;
+		this.organizationID = null;
+		super.reset(attributeHandler);
 	}
 
 	@Override
@@ -281,9 +253,22 @@ public class OrganizationDetailQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public String getStringValue() {
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
 
-		return null;
+		Element element = getBaseExportXML(doc);
+
+		XMLUtils.appendNewCDATAElement(doc, element, "OrganizationName", name);
+		XMLUtils.appendNewCDATAElement(doc, element, "OrganizationNumber", organizationNumber);
+		XMLUtils.appendNewCDATAElement(doc, element, "Address", address);
+		XMLUtils.appendNewCDATAElement(doc, element, "ZipCode", zipCode);
+		XMLUtils.appendNewCDATAElement(doc, element, "PostalAddress", postalAddress);
+		XMLUtils.appendNewCDATAElement(doc, element, "Firstname", firstname);
+		XMLUtils.appendNewCDATAElement(doc, element, "Lastname", lastname);
+		XMLUtils.appendNewCDATAElement(doc, element, "Phone", phone);
+		XMLUtils.appendNewCDATAElement(doc, element, "Email", email);
+		XMLUtils.appendNewCDATAElement(doc, element, "MobilePhone", mobilePhone);
+		XMLUtils.appendNewCDATAElement(doc, element, "ContactBySMS", contactBySMS);
+
+		return element;
 	}
-
 }

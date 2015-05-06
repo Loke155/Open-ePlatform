@@ -3,6 +3,8 @@
 	
 	<xsl:import href="BaseFlowBrowserModule.sv.xsl"/>
 	
+	<xsl:include href="classpath://se/unlogic/hierarchy/core/utils/usergrouplist/UserGroupList.sv.xsl"/>
+	
 	<xsl:include href="FlowAdminModuleTemplates.xsl"/>
 	
 	<xsl:output encoding="ISO-8859-1" method="html" version="4.0"/>
@@ -49,6 +51,14 @@
 	<xsl:variable name="i18n.publishDate">Publiceringsdatum</xsl:variable>
 	<xsl:variable name="i18n.unPublishDate">Avpubliceringsdatum</xsl:variable>
 	<xsl:variable name="i18n.usePreview">Aktivera förhandsgranskning</xsl:variable>
+
+	<xsl:variable name="i18n.contact.title">Kontaktuppgifter - Frågor om e-tjänsten</xsl:variable>
+	<xsl:variable name="i18n.contact.name">Namn</xsl:variable>
+	<xsl:variable name="i18n.contact.email">E-post</xsl:variable>
+	<xsl:variable name="i18n.contact.phone">Telefon</xsl:variable>
+	<xsl:variable name="i18n.owner.title">Kontaktuppgifter - Personuppgiftsansvarig</xsl:variable>
+	<xsl:variable name="i18n.owner.name">Namn</xsl:variable>
+	<xsl:variable name="i18n.owner.email">E-post</xsl:variable>
 
 	<xsl:variable name="i18n.SelectedFlowTypeNotFound">Den valda typen hittades inte!</xsl:variable>
 	<xsl:variable name="i18n.FlowTypeAccessDenied">Du har inte behörighet till den valda typen!</xsl:variable>
@@ -121,6 +131,8 @@
 	<xsl:variable name="i18n.statusContentType.title">Innehåll</xsl:variable>
 	<xsl:variable name="i18n.statusContentType.description">Välj vilken typ av ärenden som den här statusen kommer att innehålla.</xsl:variable>
 	<xsl:variable name="i18n.contentType.NEW">Sparade men ej inskickade ärenden</xsl:variable>
+	<xsl:variable name="i18n.contentType.WAITING_FOR_MULTISIGN">Väntar på multipartsignering</xsl:variable>
+	<xsl:variable name="i18n.contentType.WAITING_FOR_PAYMENT">Väntar på betalning</xsl:variable>
 	<xsl:variable name="i18n.contentType.SUBMITTED">Inskickade ärenden</xsl:variable>
 	<xsl:variable name="i18n.contentType.IN_PROGRESS">Ärenden under behandling</xsl:variable>
 	<xsl:variable name="i18n.contentType.WAITING_FOR_COMPLETION">Väntar på komplettering</xsl:variable>
@@ -238,7 +250,7 @@
 	
 	<xsl:variable name="i18n.Managers">Handläggare</xsl:variable>
 	<xsl:variable name="i18n.ManagersDescription">Följande grupper och användare får handlägga ärenden för denna e-tjänst.</xsl:variable>
-	<xsl:variable name="i18n.UpdateFlowFamilyManagers">Uppdatera handläggare</xsl:variable>
+	<xsl:variable name="i18n.UpdateFlowFamilyManagers">Välj handläggare</xsl:variable>
 	<xsl:variable name="i18n.NoManagers">Inga handläggare har åtkomst till ärenden för den här e-tjänsten.</xsl:variable>
 	<xsl:variable name="i18n.UpdateManagers.title">Uppdatera handläggare för e-tjänsten</xsl:variable>
 	<xsl:variable name="i18n.UpdateManagers.submit">Spara ändringar</xsl:variable>
@@ -311,4 +323,23 @@
 	
 	<xsl:variable name="i18n.UnableToParseFile.part1">Den gick inte att tolka innehållet filen </xsl:variable>
 	<xsl:variable name="i18n.UnableToParseFile.part2">.</xsl:variable>
+	<xsl:variable name="i18n.UnauthorizedManagerUserError.MemberOfGroups">medlem i</xsl:variable>
+	
+	<xsl:variable name="i18n.showSubmitSurvey">Visa användarundersökning vid inskickad ansökan</xsl:variable>
+	<xsl:variable name="i18n.showsSubmitSurvey">Visar användarundersökning vid inskickad ansökan</xsl:variable>
+	
+	<xsl:variable name="i18n.FlowSurveysTitle">Användarundersökningar</xsl:variable>
+	
+	<xsl:variable name="i18n.UpdateNotificationSettings">Ändra inställningar</xsl:variable>
+	<xsl:variable name="i18n.Notifications">Notifieringar</xsl:variable>
+	<xsl:variable name="i18n.UpdateNotifications.title">Notifieringsinställningar för e-tjänsten</xsl:variable>
+	<xsl:variable name="i18n.UpdateNotifications.reset.confirm">Är du helt säker på att du vill återställa standardvärden för notifieringar för denna e-tjänst?</xsl:variable>
+	<xsl:variable name="i18n.UpdateNotifications.reset">Återställ standardvärden</xsl:variable>
+	<xsl:variable name="i18n.UpdateNotifications.submit">Spara ändringar</xsl:variable>
+	
+	
+	<xsl:variable name="i18n.StatisticsSettings">Statistik inställningar</xsl:variable>
+	<xsl:variable name="i18n.StatisticsMode.None">Generera ingen statistik</xsl:variable>
+	<xsl:variable name="i18n.StatisticsMode.Internal">Generera statistik men visa den endast för interna användare</xsl:variable>
+	<xsl:variable name="i18n.StatisticsMode.Public">Generera statistik och visa den publikt</xsl:variable>
 </xsl:stylesheet>

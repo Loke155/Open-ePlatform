@@ -95,11 +95,13 @@ public class CheckboxQuery extends FixedAlternativesBaseQuery implements Summary
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;
 	}
 
+	@Override
 	public List<CheckboxAlternative> getAlternatives() {
 
 		return alternatives;
@@ -130,6 +132,7 @@ public class CheckboxQuery extends FixedAlternativesBaseQuery implements Summary
 		this.alternatives = alternatives;
 	}
 
+	@Override
 	public String getFreeTextAlternative() {
 		return freeTextAlternative;
 	}

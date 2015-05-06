@@ -18,27 +18,23 @@ import com.nordicpeak.flowengine.queries.basequery.BaseQueryCRUD;
 public class ContactDetailQueryCRUD extends BaseQueryCRUD<ContactDetailQuery, ContactDetailQueryProviderModule> {
 
 	protected AnnotatedDAOWrapper<ContactDetailQuery, Integer> queryDAO;
-	
+
 	public ContactDetailQueryCRUD(AnnotatedDAOWrapper<ContactDetailQuery, Integer> queryDAO, BeanRequestPopulator<ContactDetailQuery> populator, String typeElementName, String typeLogName, String listMethodAlias, ContactDetailQueryProviderModule callback) {
-		
+
 		super(ContactDetailQuery.class, queryDAO, populator, typeElementName, typeLogName, listMethodAlias, callback);
-		
+
 		this.queryDAO = queryDAO;
 	}
 
 	@Override
 	protected ContactDetailQuery populateFromUpdateRequest(ContactDetailQuery bean, HttpServletRequest req, User user, URIParser uriParser) throws ValidationException, Exception {
-		
+
 		ContactDetailQuery query = super.populateFromUpdateRequest(bean, req, user, uriParser);
-		
+
 		List<ValidationError> validationErrors = new ArrayList<ValidationError>();
 
-		if(!query.isAllowLetter() && !query.isAllowEmail() && !query.isAllowSMS() && !query.isAllowPhone()) {
-			validationErrors.add(new ValidationError("NoContactChannelChoosen"));
-		}
-		
 		this.populateQueryDescriptor((QueryDescriptor) query.getQueryDescriptor(), req, validationErrors);
-		
+
 		if(!validationErrors.isEmpty()) {
 			throw new ValidationException(validationErrors);
 		}

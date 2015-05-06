@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import se.unlogic.hierarchy.core.beans.Group;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.enums.CRUDAction;
 import se.unlogic.hierarchy.core.enums.EventTarget;
@@ -165,16 +164,12 @@ public class FlowTypeCRUD extends IntegerBasedCRUD<FlowType, FlowAdminModule> {
 
 		if(bean.getAllowedGroupIDs() != null){
 
-			List<Group> groups = callback.getGroupHandler().getGroups(bean.getAllowedGroupIDs(), false);
-
-			XMLUtils.append(doc, showTypeElement, "AllowedGroups", groups);
+			XMLUtils.append(doc, showTypeElement, "AllowedGroups", callback.getGroupHandler().getGroups(bean.getAllowedGroupIDs(), false));
 		}
 
 		if(bean.getAllowedUserIDs() != null){
 
-			List<User> users = callback.getUserHandler().getUsers(bean.getAllowedUserIDs(), false, false);
-
-			XMLUtils.append(doc, showTypeElement, "AllowedUsers", users);
+			XMLUtils.append(doc, showTypeElement, "AllowedUsers", callback.getUserHandler().getUsers(bean.getAllowedUserIDs(), false, true));
 		}
 
 		if(bean.getAllowedQueryTypes() != null){
@@ -186,7 +181,7 @@ public class FlowTypeCRUD extends IntegerBasedCRUD<FlowType, FlowAdminModule> {
 	}
 
 	@Override
-	protected void appendListFormData(Document doc, Element listTypeElement, User user, HttpServletRequest req, URIParser uriParser, ValidationError validationError) throws SQLException {
+	protected void appendListFormData(Document doc, Element listTypeElement, User user, HttpServletRequest req, URIParser uriParser, List<ValidationError> validationErrors) throws SQLException {
 
 		appendAdminAccess(user, doc, listTypeElement);
 	}
@@ -200,7 +195,7 @@ public class FlowTypeCRUD extends IntegerBasedCRUD<FlowType, FlowAdminModule> {
 	}
 
 	@Override
-	protected void appendAllBeans(Document doc, Element listTypeElement, User user, HttpServletRequest req, URIParser uriParser, ValidationError validationError) throws SQLException {
+	protected void appendAllBeans(Document doc, Element listTypeElement, User user, HttpServletRequest req, URIParser uriParser, List<ValidationError> validationErrors) throws SQLException {
 
 		List<FlowType> flowTypes = getAllBeans(user, req, uriParser);
 
@@ -231,12 +226,22 @@ public class FlowTypeCRUD extends IntegerBasedCRUD<FlowType, FlowAdminModule> {
 	protected void appendUpdateFormData(FlowType bean, Document doc, Element updateTypeElement, User user, HttpServletRequest req, URIParser uriParser) throws Exception {
 
 		appendFormData(doc, updateTypeElement, user, req, uriParser);
+
+		if(bean.getAllowedGroupIDs() != null){
+
+			XMLUtils.append(doc, updateTypeElement, "AllowedGroups", callback.getGroupHandler().getGroups(bean.getAllowedGroupIDs(), false));
+		}
+
+		if(bean.getAllowedUserIDs() != null){
+
+			XMLUtils.append(doc, updateTypeElement, "AllowedUsers", callback.getUserHandler().getUsers(bean.getAllowedUserIDs(), false, true));
+		}
 	}
 
 	private void appendFormData(Document doc, Element updateTypeElement, User user, HttpServletRequest req, URIParser uriParser) {
 
 		XMLUtils.append(doc, updateTypeElement, "QueryTypeDescriptors", callback.getQueryHandler().getAvailableQueryTypes());
-		XMLUtils.append(doc, updateTypeElement, "Users", callback.getUserHandler().getUsers(false, false));
-		XMLUtils.append(doc, updateTypeElement, "Groups", callback.getGroupHandler().getGroups(false));
+
+
 	}
 }

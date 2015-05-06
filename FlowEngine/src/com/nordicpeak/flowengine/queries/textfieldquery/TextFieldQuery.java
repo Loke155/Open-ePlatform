@@ -82,6 +82,7 @@ public class TextFieldQuery extends BaseQuery {
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;
@@ -157,11 +158,6 @@ public class TextFieldQuery extends BaseQuery {
 	@Override
 	public void toXSD(Document doc) {
 
-		if(CollectionUtils.isEmpty(fields)){
-
-			return;
-		}
-
 		Element complexTypeElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:complexType");
 		complexTypeElement.setAttribute("name", getXSDTypeName());
 
@@ -184,85 +180,89 @@ public class TextFieldQuery extends BaseQuery {
 		sequenceElement.appendChild(nameElement);
 
 		ArrayList<String> fieldElementNames = new ArrayList<String>(fields.size());
-		
-		for(TextField textField : fields){
 
-			sequenceElement.appendChild(doc.createComment(textField.getLabel()));
+		if(!CollectionUtils.isEmpty(fields)){
 
-			String elementName = generateElementName(textField, fieldElementNames);
-			
-			Element fieldElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:element");
-			fieldElement.setAttribute("name", elementName);
-			fieldElement.setAttribute("type", "xs:string");
-			fieldElement.setAttribute("minOccurs", textField.isRequired() ? "1" : "0");
-			fieldElement.setAttribute("maxOccurs", "1");
+			for(TextField textField : fields){
 
-			sequenceElement.appendChild(fieldElement);
+				sequenceElement.appendChild(doc.createComment(textField.getLabel()));
+
+				String elementName = generateElementName(textField.getLabel(), fieldElementNames);
+
+				Element fieldElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:element");
+				fieldElement.setAttribute("name", elementName);
+				fieldElement.setAttribute("type", "xs:string");
+				fieldElement.setAttribute("minOccurs", textField.isRequired() ? "1" : "0");
+				fieldElement.setAttribute("maxOccurs", "1");
+
+				sequenceElement.appendChild(fieldElement);
+			}
 		}
 
 		doc.getDocumentElement().appendChild(complexTypeElement);
 	}
 
-	private String generateElementName(TextField textField, ArrayList<String> fieldElementNames) {
+	public static String generateElementName(String label, ArrayList<String> fieldElementNames) {
 
-		String elementName = XMLUtils.toValidElementName(textField.getLabel());
-		
+		String elementName = XMLUtils.toValidElementName(label);
+
 		if(fieldElementNames.contains(elementName)){
-			
+
 			int counter = 1;
-			
+
 			while(fieldElementNames.contains(elementName + counter)){
-				
+
 				counter++;
 			}
-			
+
 			elementName += counter;
 		}
-		
+
 		fieldElementNames.add(elementName);
-		
+
 		return elementName;
 	}
-	
+
 	@Override
 	public void populate(XMLParser xmlParser) throws ValidationException {
 
 		List<ValidationError> errors = new ArrayList<ValidationError>();
-		
+
 		description = XMLValidationUtils.validateParameter("description", xmlParser, false, 1, 65535, StringPopulator.getPopulator(), errors);
 		helpText = XMLValidationUtils.validateParameter("helpText", xmlParser, false, 1, 65535, StringPopulator.getPopulator(), errors);
-		
+
 		layout = XMLValidationUtils.validateParameter("layout", xmlParser, true, TextFieldCRUD.LAYOUT_POPULATOR, errors);
-		
+
 		List<XMLParser> xmlParsers = xmlParser.getNodes("Fields/TextField");
-		
+
 		if(xmlParsers != null) {
-			
+
 			fields = new ArrayList<TextField>();
-			
+
 			for(XMLParser parser : xmlParsers) {
-				
+
 				TextField textField = new TextField();
-				
+
 				textField.populate(parser);
-				
+
 				textField.setQuery(this);
-				
+
 				fields.add(textField);
-				
+
 			}
-			
-		} else {
-			
-			errors.add(new ValidationError("NoTextFieldsFound"));
-			
+
 		}
-		
+//		else {
+//
+//			errors.add(new ValidationError("NoTextFieldsFound"));
+//
+//		}
+
 		if(!errors.isEmpty()){
 
 			throw new ValidationException(errors);
 		}
-		
+
 	}
-	
+
 }

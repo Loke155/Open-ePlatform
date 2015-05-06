@@ -1,8 +1,13 @@
 package com.nordicpeak.flowengine.queries.textfieldquery;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
@@ -10,7 +15,9 @@ import se.unlogic.standardutils.dao.annotations.OneToMany;
 import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
 
 @Table(name = "text_field_query_instances")
@@ -68,10 +75,22 @@ public class TextFieldQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
+
+		if(this.values != null){
+
+			for(TextFieldValue textFieldValue : values){
+
+				if(textFieldValue.getTextField().isSetAsAttribute()){
+
+					attributeHandler.removeAttribute(textFieldValue.getTextField().getAttributeName());
+				}
+			}
+		}
 
 		this.values = null;
-		super.reset();
+
+		super.reset(attributeHandler);
 	}
 
 
@@ -86,45 +105,39 @@ public class TextFieldQueryInstance extends BaseQueryInstance {
 		this.values = values;
 	}
 
-
-	@Override
-	public String getStringValue() {
-
-		if(values == null){
-
-			return null;
-
-		}
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for(TextFieldValue value : values){
-
-			if(stringBuilder.length() != 0){
-
-				stringBuilder.append(", ");
-			}
-
-			stringBuilder.append(value.getTextField().getLabel() + ":" + value.getValue());
-		}
-
-		return stringBuilder.toString();
-	}
-
-
 	public String getFieldValue(String label) {
 
 		if(this.values != null){
-			
+
 			for(TextFieldValue textFieldValue : this.values){
-				
+
 				if(textFieldValue.getTextField().getLabel().equals(label)){
-					
+
 					return textFieldValue.getValue();
 				}
 			}
 		}
-		
+
 		return null;
+	}
+
+	@Override
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
+
+		Element element = getBaseExportXML(doc);
+
+		if(this.values != null){
+
+			//TODO this code needs to be sorted later on as it may lead to different element names than the generated XSD since not all labels are iterated over, preferably the element names of the fields should be set when configuring the query
+
+			ArrayList<String> fieldElementNames = new ArrayList<String>(this.values.size());
+
+			for(TextFieldValue textFieldValue : this.values){
+
+				XMLUtils.appendNewCDATAElement(doc, element, TextFieldQuery.generateElementName(textFieldValue.getTextField().getLabel(), fieldElementNames), textFieldValue.getValue());
+			}
+		}
+
+		return element;
 	}
 }

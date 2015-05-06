@@ -18,7 +18,7 @@
 	<xsl:variable name="i18n.alternatives.description">Välja vilka alternativ som denna regel skall kopplas mot.</xsl:variable>
 	<xsl:variable name="i18n.QueryHasNoAlternatives">Frågan som denna regel är kopplad till har inga alternativ.</xsl:variable>
 	<xsl:variable name="i18n.TargetQueryState.title">Frågeläge</xsl:variable>
-	<xsl:variable name="i18n.TargetQueryState.description">Välj vilket frågeläge nedanstående markerade frågor ska få när denna regel aktiveras. När regeln avaktiveras återställs automatiskt frågornas standardläge.</xsl:variable>
+	<xsl:variable name="i18n.TargetQueryState.description">Välj vilket frågeläge nedanstående markerade frågor ska få när denna regel aktiveras.</xsl:variable>
 	<xsl:variable name="i18n.QueryState.VISIBLE">Valfri</xsl:variable>
 	<xsl:variable name="i18n.QueryState.VISIBLE_REQUIRED">Obligatorisk</xsl:variable>
 	<xsl:variable name="i18n.QueryState.HIDDEN">Dold</xsl:variable>
@@ -35,4 +35,5 @@
 	<xsl:variable name="i18n.validation.unknownFault" select="'Ett okänt valideringsfel har uppstått.'"/>
 
 	<xsl:variable name="i18n.enabled">Aktivera regeln</xsl:variable>
+	<xsl:variable name="i18n.doNotResetQueryState">Återställ INTE frågornas standardläge automatiskt (användbart när flera regler påverkar samma frågor).</xsl:variable>
 </xsl:stylesheet>

@@ -12,7 +12,7 @@
 		<xsl:variable name="userFavouriteModuleURI"><xsl:value-of select="/Document/contextpath" /><xsl:value-of select="userFavouriteModuleAlias" /></xsl:variable>
 		
 		<script type="text/javascript">
-			flowOverviewURI = '<xsl:value-of select="$flowFamilyOverviewURI" />';
+			flowFamilyOverviewURI = '<xsl:value-of select="$flowFamilyOverviewURI" />';
 			userFavouriteModuleURI = '<xsl:value-of select="$userFavouriteModuleURI" />';
 			userFavouriteModuleMode = '<xsl:value-of select="mode" />';
 		</script>
@@ -51,7 +51,7 @@
 			
 			<a href="{$flowFamilyOverviewURI}/{FlowFamily/flowFamilyID}">
 				
-				<span data-icon-before="&gt;" class="text"><xsl:value-of select="flowName" /></span>
+				<span class="text"><xsl:value-of select="flowName" /></span>
 				<i>
 					<xsl:choose>
 						<xsl:when test="/Document/mode = 'SHOW'">

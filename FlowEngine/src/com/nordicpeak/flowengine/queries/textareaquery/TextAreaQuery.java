@@ -72,6 +72,7 @@ public class TextAreaQuery extends BaseQuery {
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;

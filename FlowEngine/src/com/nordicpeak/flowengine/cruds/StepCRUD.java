@@ -2,6 +2,7 @@ package com.nordicpeak.flowengine.cruds;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -112,8 +113,8 @@ public class StepCRUD extends IntegerBasedCRUD<Step, FlowAdminModule> {
 	}
 	
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws Exception {
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws Exception {
 
-		return callback.list(req, res, user, uriParser, validationError);
+		return callback.list(req, res, user, uriParser, validationErrors);
 	}
 }

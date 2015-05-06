@@ -5,13 +5,16 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
 import se.unlogic.standardutils.dao.annotations.OneToMany;
 import se.unlogic.standardutils.dao.annotations.Table;
-import se.unlogic.standardutils.io.BinarySizeFormater;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
 
@@ -69,10 +72,10 @@ public class FileUploadQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.setFiles(null);
-		super.reset();
+		super.reset(attributeHandler);
 	}
 
 	public void copyQueryValues() {
@@ -117,31 +120,18 @@ public class FileUploadQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public String getStringValue() {
-
-		if(files == null){
-
-			return null;
-		}
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for(FileDescriptor fileDescriptor : files){
-
-			if(stringBuilder.length() != 0){
-
-				stringBuilder.append(", ");
-			}
-
-			stringBuilder.append(fileDescriptor.getName() + " " + BinarySizeFormater.getFormatedSize(fileDescriptor.getSize()));
-		}
-
-		return stringBuilder.toString();
-	}
-
-	@Override
 	public QueryRequestProcessor getQueryRequestProcessor(HttpServletRequest req, User user, QueryHandler queryHandler) throws Exception {
 
 		return BaseQueryUtils.getGenericQueryInstanceProvider(this.getClass(), queryHandler, queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID()).getQueryRequestProcessor(this, req, user);
+	}
+
+	@Override
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
+
+		Element element = getBaseExportXML(doc);
+
+		queryHandler.getQueryProvider(queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID(), FileUploadQueryProviderModule.class).appendFileExportXML(doc, element, this);
+
+		return element;
 	}
 }

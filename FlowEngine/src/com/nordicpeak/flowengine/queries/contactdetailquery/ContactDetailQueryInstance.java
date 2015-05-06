@@ -2,9 +2,13 @@ package com.nordicpeak.flowengine.queries.contactdetailquery;
 
 import java.lang.reflect.Field;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.MutableUser;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.AttributeHandler;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
@@ -12,7 +16,9 @@ import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.string.StringUtils;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
 
 @Table(name = "contact_detail_query_instances")
@@ -67,19 +73,7 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 
 	@DAOManaged
 	@XMLElement
-	private boolean contactByLetter;
-
-	@DAOManaged
-	@XMLElement
 	private boolean contactBySMS;
-
-	@DAOManaged
-	@XMLElement
-	private boolean contactByEmail;
-
-	@DAOManaged
-	@XMLElement
-	private boolean contactByPhone;
 
 	@DAOManaged
 	@XMLElement
@@ -168,16 +162,6 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 		this.mobilePhone = mobilePhone;
 	}
 
-	public boolean isContactByLetter() {
-
-		return contactByLetter;
-	}
-
-	public void setContactByLetter(boolean contactByLetter) {
-
-		this.contactByLetter = contactByLetter;
-	}
-
 	public boolean isContactBySMS() {
 
 		return contactBySMS;
@@ -186,26 +170,6 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 	public void setContactBySMS(boolean contactBySMS) {
 
 		this.contactBySMS = contactBySMS;
-	}
-
-	public boolean isContactByEmail() {
-
-		return contactByEmail;
-	}
-
-	public void setContactByEmail(boolean contactByEmail) {
-
-		this.contactByEmail = contactByEmail;
-	}
-
-	public boolean isContactByPhone() {
-
-		return contactByPhone;
-	}
-
-	public void setContactByPhone(boolean contactByPhone) {
-
-		this.contactByPhone = contactByPhone;
 	}
 
 	public boolean isPersistUserProfile() {
@@ -254,7 +218,7 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.firstname = null;
 		this.lastname = null;
@@ -264,19 +228,14 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 		this.phone = null;
 		this.email = null;
 		this.mobilePhone = null;
-		super.reset();
+		this.contactBySMS = false;
+		super.reset(attributeHandler);
 	}
 
 	@Override
 	public String toString() {
 
 		return "ContactDetailQueryInstance (queryInstanceID=" + queryInstanceID + ")";
-	}
-
-	@Override
-	public String getStringValue() {
-
-		return null;
 	}
 
 	public void initialize(User user) {
@@ -295,14 +254,27 @@ public class ContactDetailQueryInstance extends BaseQueryInstance {
 			this.mobilePhone = attributeHandler.getString("mobilePhone");
 			this.phone = attributeHandler.getString("phone");
 
-			this.contactByEmail = attributeHandler.getPrimitiveBoolean("contactByEmail");
-			this.contactByLetter = attributeHandler.getPrimitiveBoolean("contactByLetter");
-			this.contactByPhone = attributeHandler.getPrimitiveBoolean("contactByPhone");
 			this.contactBySMS = attributeHandler.getPrimitiveBoolean("contactBySMS");
 		}
 
 		this.isMutableUser = user instanceof MutableUser;
-
 	}
 
+	@Override
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
+
+		Element element = getBaseExportXML(doc);
+
+		XMLUtils.appendNewCDATAElement(doc, element, "Firstname", firstname);
+		XMLUtils.appendNewCDATAElement(doc, element, "Lastname", lastname);
+		XMLUtils.appendNewCDATAElement(doc, element, "Address", address);
+		XMLUtils.appendNewCDATAElement(doc, element, "ZipCode", zipCode);
+		XMLUtils.appendNewCDATAElement(doc, element, "PostalAddress", postalAddress);
+		XMLUtils.appendNewCDATAElement(doc, element, "Phone", phone);
+		XMLUtils.appendNewCDATAElement(doc, element, "Email", email);
+		XMLUtils.appendNewCDATAElement(doc, element, "MobilePhone", mobilePhone);
+		XMLUtils.appendNewCDATAElement(doc, element, "ContactBySMS", contactBySMS);
+
+		return element;
+	}
 }

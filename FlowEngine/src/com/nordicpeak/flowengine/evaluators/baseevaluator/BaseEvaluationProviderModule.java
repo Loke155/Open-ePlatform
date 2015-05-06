@@ -121,6 +121,7 @@ public abstract class BaseEvaluationProviderModule<E extends BaseEvaluator> exte
 		return evaluatorDescriptor;
 	}
 
+	@Override
 	public <InstanceType extends EvaluationHandler> void instanceAdded(Class<EvaluationHandler> key, InstanceType instance) {
 
 		instance.addEvaluationProvider(this);

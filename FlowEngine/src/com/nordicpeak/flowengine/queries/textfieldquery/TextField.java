@@ -52,6 +52,7 @@ public class TextField extends GeneratedElementable implements Serializable, XML
 	@XMLElement
 	private Integer width;
 
+	//TODO implement client side
 	@DAOManaged
 	@WebPopulate(populator=PositiveStringIntegerPopulator.class)
 	@XMLElement
@@ -74,6 +75,14 @@ public class TextField extends GeneratedElementable implements Serializable, XML
 	@RequiredIfSet(paramName="formatValidator")
 	@XMLElement
 	private String invalidFormatMessage;	
+	
+	@DAOManaged
+	@XMLElement
+	private boolean setAsAttribute;
+	
+	@DAOManaged
+	@XMLElement
+	private String attributeName;	
 	
 	@DAOManaged(columnName = "queryID")
 	@ManyToOne
@@ -212,10 +221,41 @@ public class TextField extends GeneratedElementable implements Serializable, XML
 		formatValidator = XMLValidationUtils.validateParameter("formatValidator", xmlParser, false, 1, 255, StringPopulator.getPopulator(), errors);
 		invalidFormatMessage = XMLValidationUtils.validateParameter("invalidFormatMessage", xmlParser, false, 1, 255, StringPopulator.getPopulator(), errors);
 		
+		attributeName = XMLValidationUtils.validateParameter("attributeName", xmlParser, false, 1, 255, StringPopulator.getPopulator(), errors);
+		
+		if(attributeName != null){
+			
+			setAsAttribute = xmlParser.getPrimitiveBoolean("setAsAttribute");
+		}
+		
 		if(!errors.isEmpty()){
 
 			throw new ValidationException(errors);
 		}
 		
+	}
+
+	
+	public boolean isSetAsAttribute() {
+	
+		return setAsAttribute;
+	}
+
+	
+	public void setSetAsAttribute(boolean setAsAttribute) {
+	
+		this.setAsAttribute = setAsAttribute;
+	}
+
+	
+	public String getAttributeName() {
+	
+		return attributeName;
+	}
+
+	
+	public void setAttributeName(String attributeName) {
+	
+		this.attributeName = attributeName;
 	}
 }

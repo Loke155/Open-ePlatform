@@ -87,16 +87,16 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "PDF filename (without file extension)", description = "Filename of the attached PDF (without file extension). Available tags: $flow.name, $flowInstance.flowInstanceID, $poster.*", required = true)
 	protected String pdfFilename = "$flow.name, $flowInstance.flowInstanceID";
-	
+
 	@ModuleSetting(allowsNull = true)
 	@TextFieldSettingDescriptor(name = "Default email recipients", description = "The default email recipients to send emails to if no email addresses is set in current site profile", required = true)
 	protected String defaultEmailRecipients;
-	
+
 	protected List<String> emailRecipients;
 
 	@InstanceManagerDependency
 	protected PDFProvider pdfProvider;
-	
+
 	@InstanceManagerDependency
 	protected FlowAdminModule flowAdminModule;
 
@@ -104,34 +104,34 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 
 	@Override
 	public void init(ForegroundModuleDescriptor moduleDescriptor, SectionInterface sectionInterface, DataSource dataSource) throws Exception {
-		
+
 		super.init(moduleDescriptor, sectionInterface, dataSource);
-		
+
 		systemInterface.getEventHandler().addEventListener(FlowInstanceManager.class, SubmitEvent.class, this);
-		
+
 	}
-	
+
 	@Override
 	protected void moduleConfigured() {
 
 		emailRecipients = getEmailAddresses(defaultEmailRecipients);
 
 	}
-	
+
 	@Override
 	public void unload() throws Exception {
-		
+
 		systemInterface.getEventHandler().removeEventListener(FlowInstanceManager.class, SubmitEvent.class, this);
-		
-		super.unload();	
-	}	
-	
+
+		super.unload();
+	}
+
 	@Override
 	public ForegroundModuleResponse defaultMethod(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception, Throwable {
-		
+
 		return new SimpleForegroundModuleResponse("<div class=\"contentitem\">This module does not have a frontend. Check the log instead</div>", this.getDefaultBreadcrumb());
 	}
-	
+
 	public void sendEmail(FlowInstance flowInstance, FlowInstanceEvent flowInstanceEvent, SiteProfile siteProfile) {
 
 		try {
@@ -177,10 +177,10 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 				if(pdfFile == null){
 
 					log.warn("No PDF found for flowInstance " + flowInstance + ". No email notification will be sent.");
-					
+
 					return;
 				}
-				
+
 				log.info("Sending email notification message about submitted flowinstance " + flowInstance);
 
 				TagReplacer tagReplacer = new TagReplacer(FLOWINSTANCE_TAG_SOURCE_FACTORY.getTagSource(flowInstance), FLOW_TAG_SOURCE_FACTORY.getTagSource(flowInstance.getFlow()));
@@ -202,11 +202,11 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 					email.setSubject(subject);
 					email.setMessageContentType("text/html");
 					email.setMessage(message);
-					
+
 					String filename = tagReplacer.replace(pdfFilename) + ".pdf";
-					
+
 					email.add(new FileAttachment(pdfFile, FileUtils.toValidHttpFilename(filename)));
-					
+
 					systemInterface.getEmailHandler().send(email);
 
 				}
@@ -238,7 +238,7 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 
 		FlowInstanceEmailNotificationModule.this.sendEmail((FlowInstance)event.getFlowInstanceManager().getFlowInstance(), event.getEvent(), event.getSiteProfile());
 	}
-	
+
 	@InstanceManagerDependency(required = true)
 	public void setSiteProfileHandler(SiteProfileHandler siteProfileHandler) {
 
@@ -298,5 +298,11 @@ public class FlowInstanceEmailNotificationModule extends AnnotatedForegroundModu
 		}
 
 		return null;
-	}	
+	}
+
+	@Override
+	public int getPriority() {
+
+		return 50;
+	}
 }

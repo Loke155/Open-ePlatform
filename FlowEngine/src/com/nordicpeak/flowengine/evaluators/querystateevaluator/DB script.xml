@@ -47,5 +47,19 @@
 				DROP TABLE query_state_evaluator_queries;			
 			]]>
 		</Query>				
-	</Script>					
+	</Script>
+	
+	<Script version="3">
+		<Query>
+			<![CDATA[
+				ALTER TABLE `query_state_evaluators` ADD COLUMN `doNotResetQueryState` BOOLEAN NOT NULL AFTER `queryState`;		
+			]]>
+		</Query>				
+	</Script>
+	
+	<Script version="4">
+		<Query>
+			DELETE FROM query_state_evaluators WHERE evaluatorID NOT IN (SELECT evaluatorID FROM flowengine_evaluator_descriptors);		    
+		</Query>	    
+	</Script>		
 </DBScripts>

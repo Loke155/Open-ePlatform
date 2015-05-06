@@ -19,6 +19,7 @@ import se.unlogic.standardutils.db.tableversionhandler.TableVersionHandler;
 import se.unlogic.standardutils.db.tableversionhandler.UpgradeResult;
 import se.unlogic.standardutils.db.tableversionhandler.XMLDBScriptProvider;
 
+import com.nordicpeak.flowengine.beans.AbortedFlowInstance;
 import com.nordicpeak.flowengine.beans.Category;
 import com.nordicpeak.flowengine.beans.DefaultStandardStatusMapping;
 import com.nordicpeak.flowengine.beans.DefaultStatusMapping;
@@ -33,6 +34,7 @@ import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.beans.FlowType;
 import com.nordicpeak.flowengine.beans.InternalMessage;
 import com.nordicpeak.flowengine.beans.InternalMessageAttachment;
+import com.nordicpeak.flowengine.beans.OperatingMessage;
 import com.nordicpeak.flowengine.beans.QueryDescriptor;
 import com.nordicpeak.flowengine.beans.QueryInstanceDescriptor;
 import com.nordicpeak.flowengine.beans.StandardStatus;
@@ -68,6 +70,8 @@ public class FlowEngineDAOFactory {
 	private final UserFavouriteDAO userFavouriteDAO;
 	private final AnnotatedDAO<UserBookmark> userBookmarkDAO;
 	private final AnnotatedDAO<UserOrganization> userOrganizationDAO;
+	private final AnnotatedDAO<AbortedFlowInstance> abortedFlowInstanceDAO;
+	private final AnnotatedDAO<OperatingMessage> operatingMessageDAO;
 
 	public FlowEngineDAOFactory(DataSource dataSource, UserHandler userHandler, GroupHandler groupHandler) throws TableUpgradeException, SQLException, SAXException, IOException, ParserConfigurationException {
 
@@ -103,6 +107,8 @@ public class FlowEngineDAOFactory {
 		userFavouriteDAO = new UserFavouriteDAO(dataSource, UserFavourite.class, daoFactory);
 		userBookmarkDAO = daoFactory.getDAO(UserBookmark.class);
 		userOrganizationDAO = daoFactory.getDAO(UserOrganization.class);
+		abortedFlowInstanceDAO = daoFactory.getDAO(AbortedFlowInstance.class);
+		operatingMessageDAO = daoFactory.getDAO(OperatingMessage.class);
 	}
 
 	public TransactionHandler getTransactionHandler() throws SQLException {
@@ -191,12 +197,12 @@ public class FlowEngineDAOFactory {
 	}
 
 	public AnnotatedDAO<ExternalMessageAttachment> getExternalMessageAttachmentDAO() {
-		
+
 		return externalMessageAttachmentDAO;
 	}
 
 	public AnnotatedDAO<InternalMessageAttachment> getInternalMessageAttachmentDAO() {
-		
+
 		return internalMessageAttachmentDAO;
 	}
 
@@ -214,9 +220,20 @@ public class FlowEngineDAOFactory {
 
 		return userBookmarkDAO;
 	}
-	
+
 	public AnnotatedDAO<UserOrganization> getUserOrganizationDAO() {
 
 		return userOrganizationDAO;
+	}
+
+	public AnnotatedDAO<AbortedFlowInstance> getAbortedFlowInstanceDAO() {
+
+		return abortedFlowInstanceDAO;
+	}
+
+	
+	public AnnotatedDAO<OperatingMessage> getOperatingMessageDAO() {
+	
+		return operatingMessageDAO;
 	}
 }

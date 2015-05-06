@@ -30,6 +30,7 @@ import se.unlogic.standardutils.validation.ValidationException;
 import se.unlogic.standardutils.xml.XMLUtils;
 import se.unlogic.webutils.http.URIParser;
 import se.unlogic.webutils.populators.annotated.AnnotatedRequestPopulator;
+import se.unlogic.webutils.populators.annotated.RequestMapping;
 
 import com.nordicpeak.flowengine.FlowAdminModule;
 import com.nordicpeak.flowengine.beans.Flow;
@@ -38,13 +39,29 @@ import com.nordicpeak.flowengine.validationerrors.UnauthorizedManagerUserValidat
 
 public class FlowFamilyCRUD extends AdvancedIntegerBasedCRUD<FlowFamily, FlowAdminModule> {
 
+	private static AnnotatedRequestPopulator<FlowFamily> FLOW_FAMILY_POULATOR = new AnnotatedRequestPopulator<FlowFamily>(FlowFamily.class);
+
+	static {
+
+		List<RequestMapping> requestMappings = new ArrayList<RequestMapping>(FLOW_FAMILY_POULATOR.getRequestMappings());
+
+		for (RequestMapping requestMapping : requestMappings) {
+
+			if(!requestMapping.getParamName().equals("group") && !requestMapping.getParamName().equals("user")) {
+
+				FLOW_FAMILY_POULATOR.getRequestMappings().remove(requestMapping);
+			}
+		}
+
+	}
+
 	private static final String ACTIVE_FLOWINSTANCE_MANAGERS_SQL = "SELECT DISTINCT userID FROM flowengine_flow_instance_managers WHERE flowInstanceID IN(" +
 			"SELECT ffi.flowInstanceID FROM flowengine_flow_instances AS ffi LEFT JOIN flowengine_flow_statuses AS ffs ON ffi.statusID = ffs.statusID WHERE ffi.flowID IN(" +
 			"SELECT flowID FROM flowengine_flows WHERE flowFamilyID = ? AND enabled = true) AND ffs.contentType != 'ARCHIVED')";
 
 	public FlowFamilyCRUD(CRUDDAO<FlowFamily, Integer> crudDAO, FlowAdminModule callback) {
 
-		super(FlowFamily.class, crudDAO, new AnnotatedRequestPopulator<FlowFamily>(FlowFamily.class), "FlowFamily", "flowfamily", "", callback);
+		super(FlowFamily.class, crudDAO, FLOW_FAMILY_POULATOR, "FlowFamily", "flowfamily", "", callback);
 
 	}
 
@@ -138,18 +155,28 @@ public class FlowFamilyCRUD extends AdvancedIntegerBasedCRUD<FlowFamily, FlowAdm
 	@Override
 	protected void appendUpdateFormData(FlowFamily bean, Document doc, Element updateTypeElement, User user, HttpServletRequest req, URIParser uriParser) throws Exception {
 
-		List<Integer> flowInstanceManagerUserIDs = getCurrentFlowInstanceManagerUserIDs(bean);
+		//		This code is kept in case client side validation is to be implemented again
+		//
+		//		List<Integer> flowInstanceManagerUserIDs = getCurrentFlowInstanceManagerUserIDs(bean);
+		//
+		//		if (flowInstanceManagerUserIDs != null) {
+		//
+		//			XMLUtils.append(doc, updateTypeElement, "FlowInstanceManagerUsers", callback.getUserHandler().getUsers(flowInstanceManagerUserIDs, true, false));
+		//
+		//		}
 
-		if (flowInstanceManagerUserIDs != null) {
 
-			XMLUtils.append(doc, updateTypeElement, "FlowInstanceManagerUsers", callback.getUserHandler().getUsers(flowInstanceManagerUserIDs, true, false));
+		XMLUtils.append(doc, updateTypeElement, (Flow) req.getAttribute("flow"));
 
+		if(bean.getManagerGroupIDs() != null){
+
+			XMLUtils.append(doc, updateTypeElement, "ManagerGroups", callback.getGroupHandler().getGroups(bean.getManagerGroupIDs(), false));
 		}
 
-		XMLUtils.append(doc, updateTypeElement, "Groups", callback.getGroupHandler().getGroups(false));
-		XMLUtils.append(doc, updateTypeElement, (Flow) req.getAttribute("flow"));
-		XMLUtils.append(doc, updateTypeElement, "Users", callback.getUserHandler().getUsers(false, false));
+		if(bean.getManagerUserIDs() != null){
 
+			XMLUtils.append(doc, updateTypeElement, "ManagerUsers", callback.getUserHandler().getUsers(bean.getManagerUserIDs(), false, true));
+		}
 	}
 
 	@Override

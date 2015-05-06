@@ -71,6 +71,7 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 
 	private XMLParser importParser;
 	
+	@Override
 	public XMLParser getImportParser() {
 	
 		return importParser;
@@ -88,6 +89,7 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 		this.name = name;
 	}
 
+	@Override
 	public Integer getSortIndex() {
 
 		return sortIndex;
@@ -104,6 +106,7 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 		return name + " (ID: " + evaluatorID + ")";
 	}
 
+	@Override
 	public Integer getEvaluatorID() {
 
 		return evaluatorID;
@@ -114,6 +117,7 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 		this.evaluatorID = evaluatorID;
 	}
 
+	@Override
 	public String getEvaluatorTypeID() {
 
 		return evaluatorTypeID;
@@ -124,16 +128,19 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 		this.evaluatorTypeID = evaluatorTypeID;
 	}
 
+	@Override
 	public boolean isEnabled() {
 
 		return enabled;
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 
 		this.enabled = enabled;
 	}
 
+	@Override
 	public QueryDescriptor getQueryDescriptor() {
 
 		return queryDescriptor;
@@ -144,11 +151,13 @@ public class EvaluatorDescriptor extends GeneratedElementable implements Mutable
 		this.queryDescriptor = queryDescriptor;
 	}
 
+	@Override
 	public List<Integer> getTargetQueryIDs() {
 
 		return targetQueryIDs;
 	}
 
+	@Override
 	public void setTargetQueryIDs(List<Integer> targetQueryIDs) {
 
 		this.targetQueryIDs = targetQueryIDs;

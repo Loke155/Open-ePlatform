@@ -2,13 +2,19 @@ package com.nordicpeak.flowengine.queries.textareaquery;
 
 import java.lang.reflect.Field;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
 import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
 
 @Table(name = "text_area_query_instances")
@@ -54,10 +60,10 @@ public class TextAreaQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.value = null;
-		super.reset();
+		super.reset(attributeHandler);
 	}
 
 	public void copyQueryValues() {
@@ -81,8 +87,14 @@ public class TextAreaQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public String getStringValue() {
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
 
-		return value;
+		Element element = getBaseExportXML(doc);
+
+		XMLUtils.appendNewCDATAElement(doc, element, "Value", value);
+
+		return element;
 	}
+
+
 }

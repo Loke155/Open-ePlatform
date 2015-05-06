@@ -2,13 +2,19 @@ package com.nordicpeak.flowengine.queries.pudquery;
 
 import java.lang.reflect.Field;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
 import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
 
 @Table(name = "pud_query_instances")
@@ -18,7 +24,7 @@ public class PUDQueryInstance extends BaseQueryInstance {
 	private static final long serialVersionUID = -405719839906745735L;
 
 	public static Field QUERY_RELATION = ReflectionUtils.getField(PUDQueryInstance.class, "query");
-	
+
 	@DAOManaged
 	@Key
 	@XMLElement
@@ -36,7 +42,7 @@ public class PUDQueryInstance extends BaseQueryInstance {
 	@DAOManaged
 	@XMLElement
 	private Integer propertyUnitNumber;
-	
+
 	public Integer getQueryInstanceID() {
 		return queryInstanceID;
 	}
@@ -70,12 +76,12 @@ public class PUDQueryInstance extends BaseQueryInstance {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.propertyUnitDesignation = null;
 		this.setPropertyUnitNumber(null);
-		
-		super.reset();
+
+		super.reset(attributeHandler);
 	}
 
 	@Override
@@ -83,13 +89,18 @@ public class PUDQueryInstance extends BaseQueryInstance {
 
 		return "PUDQueryInstance (queryInstanceID=" + queryInstanceID + ")";
 	}
-	
-	@Override
-	public String getStringValue() {
-		
-		return propertyUnitDesignation;
-	}
 
 	public void copyQueryValues() {}
-	
+
+	@Override
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
+
+		Element element = getBaseExportXML(doc);
+
+		XMLUtils.appendNewCDATAElement(doc, element, "PropertyUnitDesignation", propertyUnitDesignation);
+		XMLUtils.appendNewElement(doc, element, "PropertyUnitNumber", propertyUnitNumber);
+
+		return element;
+	}
+
 }

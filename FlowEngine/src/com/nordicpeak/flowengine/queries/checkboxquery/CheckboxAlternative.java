@@ -62,11 +62,13 @@ public class CheckboxAlternative extends GeneratedElementable implements Mutable
 		this.name = name;
 	}
 
+	@Override
 	public Integer getAlternativeID() {
 
 		return alternativeID;
 	}
 
+	@Override
 	public void setAlternativeID(Integer alternativeID) {
 
 		this.alternativeID = alternativeID;
@@ -82,20 +84,24 @@ public class CheckboxAlternative extends GeneratedElementable implements Mutable
 		this.query = query;
 	}
 
+	@Override
 	public String getName() {
 
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 
 		this.name = name;
 	}
 
+	@Override
 	public Integer getSortIndex() {
 		return sortIndex;
 	}
 
+	@Override
 	public void setSortIndex(Integer sortIndex) {
 		this.sortIndex = sortIndex;
 	}

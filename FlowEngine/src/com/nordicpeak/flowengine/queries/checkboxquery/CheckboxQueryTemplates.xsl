@@ -41,7 +41,7 @@
 					
 					<xsl:if test="CheckboxQueryInstance/CheckboxQuery/description">
 						<span class="italic">
-							<xsl:if test="/Document/useCKEditorForDescription = 'true'"><xsl:attribute name="class">html-description</xsl:attribute></xsl:if>
+							<xsl:if test="/Document/useCKEditorForDescription = 'true'"><xsl:attribute name="class">italic html-description</xsl:attribute></xsl:if>
 							<xsl:value-of select="CheckboxQueryInstance/CheckboxQuery/description" disable-output-escaping="yes" />
 						</span>		
 					</xsl:if>

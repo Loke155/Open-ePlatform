@@ -219,6 +219,7 @@ public class MapFishTestModule extends AnnotatedForegroundModule implements Runn
 		
 	}
 	
+	@Override
 	public void systemStarted() {
 
 		this.initTaskScheduler();

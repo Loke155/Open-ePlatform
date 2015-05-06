@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
 
 import com.nordicpeak.flowengine.beans.Status;
@@ -13,6 +16,7 @@ import com.nordicpeak.flowengine.exceptions.queryinstance.UnableToGetQueryInstan
 import com.nordicpeak.flowengine.interfaces.FlowEngineInterface;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstance;
 import com.nordicpeak.flowengine.interfaces.ImmutableQueryInstance;
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 
 public interface FlowInstanceManager {
 
@@ -30,15 +34,17 @@ public interface FlowInstanceManager {
 
 	/**
 	 * Gets a query instance by the queryID of it's parent query.
-	 * 
+	 *
 	 * @param queryID
 	 * @return The query instance or null if the query instance was not found
 	 */
 	public ImmutableQueryInstance getQueryInstance(int queryID);
 
 	public <T extends ImmutableQueryInstance> T getQuery(Class<T> queryInstanceClass);
-	
+
 	public <T> List<T> getQueries(Class<T> queryInstanceClass);
 
 	public <T extends ImmutableQueryInstance> T getQuery(Class<T> queryInstanceClass, String name);
+
+	public List<Element> getExportXMLElements(Document doc, QueryHandler queryHandler) throws Exception;
 }

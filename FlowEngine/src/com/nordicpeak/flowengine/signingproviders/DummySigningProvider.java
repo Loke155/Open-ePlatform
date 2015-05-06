@@ -7,15 +7,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.annotations.InstanceManagerDependency;
 import se.unlogic.hierarchy.core.beans.SimpleViewFragment;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleDescriptor;
 import se.unlogic.hierarchy.core.interfaces.SectionInterface;
 import se.unlogic.hierarchy.core.interfaces.ViewFragment;
+import se.unlogic.hierarchy.core.utils.SimpleViewFragmentTransformer;
 import se.unlogic.hierarchy.foregroundmodules.AnnotatedForegroundModule;
 import se.unlogic.standardutils.dao.RelationQuery;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.SigningConfirmedResponse;
 import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.dao.FlowEngineDAOFactory;
 import com.nordicpeak.flowengine.exceptions.flow.FlowDefaultStatusNotFound;
@@ -36,10 +42,31 @@ public class DummySigningProvider extends AnnotatedForegroundModule implements S
 	
 	private FlowEngineDAOFactory daoFactory;
 
+	protected SimpleViewFragmentTransformer fragmentTransformer;
+	
 	@Override
 	protected void createDAOs(DataSource dataSource) throws Exception {
 
 		daoFactory = new FlowEngineDAOFactory(dataSource, systemInterface.getUserHandler(), systemInterface.getGroupHandler());
+	}
+	
+	@Override
+	protected void moduleConfigured() {
+
+		if(moduleDescriptor.getXslPath() != null) {
+		
+			try {
+	
+				fragmentTransformer = new SimpleViewFragmentTransformer(moduleDescriptor.getXslPath(), systemInterface.getEncoding(), this.getClass(), moduleDescriptor, sectionInterface);
+	
+			} catch (Exception e) {
+	
+				log.error("Unable to parse XSL stylesheet for dummy signing form in module " + this.moduleDescriptor, e);
+	
+			}
+		
+		}
+
 	}
 	
 	@Override
@@ -67,22 +94,28 @@ public class DummySigningProvider extends AnnotatedForegroundModule implements S
 	@Override
 	public ViewFragment sign(HttpServletRequest req, HttpServletResponse res, User user, MutableFlowInstanceManager instanceManager, SigningCallback signingCallback, boolean savedDuringCurrentRequest) throws IOException, FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound {
 
-		if(req.getParameter("sign") != null && !savedDuringCurrentRequest){
+		String signingURL = signingCallback.getSigningURL(instanceManager, req);
+		
+		if(req.getParameter("idp") != null && !savedDuringCurrentRequest){
 			
 			log.info("User " + user + " signed flow instance " + instanceManager);
 			
-			FlowInstanceEvent event = signingCallback.signingConfirmed(instanceManager, user);
+			SigningConfirmedResponse response = signingCallback.signingConfirmed(instanceManager, user);
 			
-			event.getAttributeHandler().setAttribute("signingProvider", this.getClass().getName());
+			FlowInstanceEvent signingEvent = response.getSigningEvent();
 			
-			daoFactory.getFlowInstanceEventDAO().update(event, EVENT_ATTRIBUTE_RELATION_QUERY);
+			signingEvent.getAttributeHandler().setAttribute("signingProvider", this.getClass().getName());
+			
+			daoFactory.getFlowInstanceEventDAO().update(signingEvent, EVENT_ATTRIBUTE_RELATION_QUERY);
+
+			FlowInstanceEvent pdfEvent = response.getSubmitEvent() != null ? response.getSubmitEvent() : signingEvent;
 			
 			if(pdfProvider != null){
 				
 				try {
-					if(pdfProvider.saveTemporaryPDF(instanceManager.getFlowInstanceID(), event)){
+					if(pdfProvider.saveTemporaryPDF(instanceManager.getFlowInstanceID(), pdfEvent)){
 						
-						log.info("Temporary PDF for flow instance " + instanceManager + " requested by user " + user + " saved for event " + event);
+						log.info("Temporary PDF for flow instance " + instanceManager + " requested by user " + user + " saved for event " + pdfEvent);
 						
 					}else{
 						
@@ -95,7 +128,7 @@ public class DummySigningProvider extends AnnotatedForegroundModule implements S
 				}
 			}			
 			
-			signingCallback.signingComplete(instanceManager, event, req);
+			signingCallback.signingComplete(instanceManager, pdfEvent, req);
 			
 			res.sendRedirect(signingCallback.getSignSuccessURL(instanceManager, req));
 			
@@ -136,14 +169,40 @@ public class DummySigningProvider extends AnnotatedForegroundModule implements S
 		
 		log.info("User " + user + " requested sign form for flow instance " + instanceManager);
 		
+		if(fragmentTransformer != null) {
+		
+			Document doc = XMLUtils.createDomDocument();
+			Element document = doc.createElement("Document");
+			doc.appendChild(document);
+
+			Element signElement = doc.createElement("SignForm");
+			document.appendChild(signElement);
+
+			XMLUtils.appendNewElement(doc, signElement, "signingURL", signingURL);
+
+			try {
+
+				return fragmentTransformer.createViewFragment(doc);
+
+			} catch (Exception e) {
+
+				res.sendRedirect(signingCallback.getSignFailURL(instanceManager, req));
+
+				return null;
+
+			}
+		
+		}
+		
 		StringBuilder stringBuilder = new StringBuilder();
 		
 		stringBuilder.append("<div>");
 		stringBuilder.append("<h1>Dummy signer</h1>");
-		stringBuilder.append("<p><a href=\"" + signingCallback.getSigningURL(instanceManager, req) + "&sign=1\">Click here to sign flow instance " + instanceManager.getFlowInstance().getFlow().getName() + " #" + instanceManager.getFlowInstanceID() + "</a></p>");
+		stringBuilder.append("<p><a href=\"" + signingCallback.getSigningURL(instanceManager, req) + "&idp=1\">Click here to sign flow instance " + instanceManager.getFlowInstance().getFlow().getName() + " #" + instanceManager.getFlowInstanceID() + "</a></p>");
 		stringBuilder.append("<p><a href=\"" + signingCallback.getSigningURL(instanceManager, req) + "&fail=1\">Click here to simulate a failed signing</a></p>");
 		stringBuilder.append("</div>");
 		
 		return new SimpleViewFragment(stringBuilder.toString());
+		
 	}
 }

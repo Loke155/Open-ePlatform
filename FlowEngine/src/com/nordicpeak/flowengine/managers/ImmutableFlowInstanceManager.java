@@ -6,6 +6,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.standardutils.collections.CollectionUtils;
 
@@ -44,7 +47,7 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 
 	/**
 	 * Opens an existing flow instance for the given user
-	 * 
+	 *
 	 * @param flowInstance The flow instance to be loaded, must include it's flow, steps, query descriptors and query instance descriptors relation.
 	 * @param instanceMetadata
 	 * @throws MissingQueryInstanceDescriptor
@@ -62,7 +65,7 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 		managedSteps = new ArrayList<ImmutableManagedStep>(flowInstance.getFlow().getSteps().size());
 
 		TextTagReplacer.replaceTextTags(flowInstance.getFlow(), instanceMetadata.getSiteProfile());
-		
+
 		for(Step step : flowInstance.getFlow().getSteps()){
 
 			if(step.getQueryDescriptors() == null){
@@ -183,7 +186,7 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 
 		return null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends ImmutableQueryInstance> T getQuery(Class<T> queryInstanceClass) {
@@ -200,7 +203,7 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 		}
 
 		return null;
-	}	
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -218,14 +221,14 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 		}
 
 		return null;
-	}	
-	
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> getQueries(Class<T> queryInstanceClass) {
 
 		List<T> queryList = new ArrayList<T>();
-		
+
 		for(ImmutableManagedStep managedStep : this.managedSteps){
 
 			for(ImmutableQueryInstance queryInstance : managedStep.getQueryInstances()){
@@ -238,13 +241,13 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 		}
 
 		if(queryList.isEmpty()){
-			
+
 			return null;
 		}
-		
+
 		return queryList;
-	}	
-	
+	}
+
 	@Override
 	public List<PDFManagerResponse> getPDFContent(FlowEngineInterface flowEngineInterface) throws FlowInstanceManagerClosedException, UnableToGetQueryInstancePDFContentException {
 
@@ -268,9 +271,39 @@ public class ImmutableFlowInstanceManager implements Serializable, FlowInstanceM
 				}
 			}
 
-			managerResponses.add(new PDFManagerResponse(managedStep.getStep().getStepID(), stepIndex, queryResponses));			
+			managerResponses.add(new PDFManagerResponse(managedStep.getStep().getStepID(), stepIndex, queryResponses));
 		}
 
 		return managerResponses;
+	}
+
+	@Override
+	public String toString(){
+
+		return flowInstance.toString();
+	}
+
+	@Override
+	public List<Element> getExportXMLElements(Document doc, QueryHandler queryHandler) throws Exception {
+
+		List<Element> elements = new ArrayList<Element>(this.managedSteps.size() * 5);
+
+		for(ImmutableManagedStep managedStep : this.managedSteps){
+
+			for(ImmutableQueryInstance queryInstance : managedStep.getQueryInstances()){
+
+				if(queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().isExported() && queryInstance.getQueryInstanceDescriptor().isPopulated()){
+
+					Element queryElement = queryInstance.toExportXML(doc, queryHandler);
+
+					if(queryElement != null){
+
+						elements.add(queryElement);
+					}
+				}
+			}
+		}
+
+		return elements;
 	}
 }

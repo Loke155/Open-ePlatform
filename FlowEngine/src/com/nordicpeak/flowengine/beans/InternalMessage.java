@@ -54,6 +54,7 @@ public class InternalMessage extends BaseMessage {
 		this.readReceipts = readRecipts;
 	}
 
+	@Override
 	public FlowInstance getFlowInstance() {
 
 		return flowInstance;

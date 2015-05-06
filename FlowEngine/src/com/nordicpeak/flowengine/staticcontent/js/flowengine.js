@@ -50,26 +50,33 @@ $(document).ready(function() {
 	
 	$("section .section-full").find("article:first").addClass("first");
 	
-	$(document).on("click", ".help a.open-help", function(e) {
-		e.preventDefault();
-		var $this = $(this);
-		if ($this.siblings("#currenthelp").length > 0) {
-			$("#currenthelp").hide().attr("id", "");
-			return;
-		}
-		$("#currenthelp").hide().attr("id", "");
-		var text = $this.data("help");
-		$this.parent().find(".help-box").attr("id", "currenthelp").toggle();		
-	});
+    $(window).on('resize', function() {
+    	helpBoxHeight = $('body').height();
+        $('div[data-help-box]').find('> div > div').attr('style', 'max-height: ' + (helpBoxHeight - 80) + 'px !important;');
+    });
 	
-	$(document).on("click", "#currenthelp .close", function(e) {
-		e.preventDefault();
-		$("#currenthelp").hide().attr("id", "");
-	});
+	//initFlowInstanceControlPanel();
 	
-	initFlowInstanceControlPanel();
-	
-	$("section.service .service-navigator li.active").prev().addClass("latest");
+	var $activeStep = $("section.service .service-navigator.primary li.active");
+    
+	$activeStep.prev().addClass("latest completed");
+    
+    var $futureSteps = $activeStep.nextAll();
+    $futureSteps.clone().appendTo($("#futureNavigator"));
+    $futureSteps.addClass("future");
+    
+    $(document).on('click', '[data-toggle-menu]', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var menu = $(this).data('toggle-menu');
+
+        $('[data-menu="' + menu + '"]').toggleClass('menu-active');
+
+    }).on('click', '[data-menu] li a', function(e) {
+        e.stopPropagation();
+    }).on('click', function(e) {
+        $('[data-menu]').removeClass('menu-active');
+    });
 	
 });
 

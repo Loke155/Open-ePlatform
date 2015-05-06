@@ -172,7 +172,19 @@
 					<xsl:value-of select="$i18n.exportQuery" />
 				</label>					
 			</div>
-		</div>	
+		</div>
+		
+		<div class="floatleft full bigmarginbottom">
+			<label for="xsdElementName" class="floatleft clearboth"><xsl:value-of select="$i18n.xsdElementName" /></label>
+			<div class="floatleft full">
+				<xsl:call-template name="createTextField">
+					<xsl:with-param name="id" select="'xsdElementName'"/>
+					<xsl:with-param name="name" select="'xsdElementName'"/>
+					<xsl:with-param name="title" select="$i18n.xsdElementName"/>
+					<xsl:with-param name="element" select="$element/QueryDescriptor" />
+				</xsl:call-template>
+		    </div>
+		</div>		
 	
 	</xsl:template>
 
@@ -372,6 +384,9 @@
 			<xsl:when test="$fieldName = 'name'">
 				<xsl:value-of select="$i18n.name" />
 			</xsl:when>
+			<xsl:when test="$fieldName = 'xsdElementName'">
+				<xsl:value-of select="$i18n.xsdElementName" />
+			</xsl:when>			
 			<xsl:when test="$fieldName = 'defaultQueryState'">
 				<xsl:value-of select="$i18n.defaultQueryState" />
 			</xsl:when>

@@ -12,7 +12,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -87,7 +86,7 @@ public class FlowIndexer {
 
 					for(String tag : flow.getTags()){
 
-						doc.add(new StringField(TAGS_FIELD, tag, Field.Store.NO));
+						doc.add(new TextField(TAGS_FIELD, tag, Field.Store.NO));
 					}
 				}
 

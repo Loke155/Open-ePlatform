@@ -4,16 +4,21 @@
 
 	<xsl:template match="helpText">
 		
+		<xsl:param name="queryID" select="../queryID" />
+		
 		<div class="help">
-			<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-			<div class="help-box" id="" style="display: none;">
-				<span> 
-					<a data-icon-after="x" href="#" class="close"></a> 
-					<xsl:value-of select="." disable-output-escaping="yes" />
-				</span> 
-				<div class="marker"></div>
+			<a class="open-help" href="#" data-icon-after="?" data-help-box="query_{$queryID}"><span><xsl:value-of select="$i18n.Help" /></span></a>
+			<div class="help-box" data-help-box="query_{$queryID}">
+				<div>
+		  			<div> 
+		  				<a class="close" href="#" data-icon-after="x"></a> 
+		  				<xsl:value-of select="." disable-output-escaping="yes" />
+		  			</div> 
+				</div>
 			</div>
 		</div>
+		
+		<div class="help-backdrop" data-help-box="query_{$queryID}" />
 		
 	</xsl:template>
 	

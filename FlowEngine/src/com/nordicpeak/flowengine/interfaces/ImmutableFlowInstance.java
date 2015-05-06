@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import se.unlogic.hierarchy.core.beans.User;
+import se.unlogic.hierarchy.core.interfaces.AttributeHandler;
 import se.unlogic.standardutils.xml.Elementable;
 
 public interface ImmutableFlowInstance extends Elementable, Serializable{
@@ -26,14 +27,16 @@ public interface ImmutableFlowInstance extends Elementable, Serializable{
 	public ImmutableStatus getStatus();
 
 	public boolean isFullyPopulated();
-	
+
 	public Integer getProfileID();
 
 	public List<? extends ImmutableMessage> getInternalMessages();
 
 	public List<? extends ImmutableMessage> getExternalMessages();
-	
+
 	public List<? extends ImmutableFlowInstanceEvent> getEvents();
 
 	public List<User> getManagers();
+
+	public AttributeHandler getAttributeHandler();
 }

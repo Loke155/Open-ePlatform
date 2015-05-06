@@ -2,12 +2,11 @@ package com.nordicpeak.authifyclient;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import se.unlogic.standardutils.settings.SettingNode;
 import se.unlogic.standardutils.xml.GeneratedElementable;
@@ -84,32 +83,19 @@ public class AuthifySession extends GeneratedElementable implements Serializable
 
 	public void setSignXML(String signXML, Document signXMLDocument) {
 
-		NodeList nodeList = signXMLDocument.getElementsByTagName("datatoauthify");
-		
-		if(nodeList != null) {
-		
-			this.signXML = signXML;
-		
+		List<XMLParser> attributes = new XMLParser(signXMLDocument).getNodes("//Authify/data/nodeValue0/datatoauthify/user/*");
+	
+		if(attributes != null) {
+			
 			if(signAttributes == null) {
 				
 				signAttributes = new HashMap<String, String>();
 			
 			}
 			
-			Node attributeXML = nodeList.item(0).getFirstChild();
-			
-			if(attributeXML != null) {
-			
-				NodeList attributes = attributeXML.getChildNodes();
+			for(XMLParser parser : attributes) {
 				
-				for(int i = 0; i < attributes.getLength(); i++) {
-					
-					Node node = attributes.item(i);
-					
-					signAttributes.put(node.getNodeName(), node.getTextContent());
-					
-				}
-			
+				signAttributes.put(parser.getElementName(), parser.getString("."));
 			}
 			
 		}

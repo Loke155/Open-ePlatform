@@ -37,4 +37,6 @@ public interface ImmutableFlow extends Serializable, Elementable {
 	public boolean requiresAuthentication();
 	
 	public boolean requiresSigning();
+	
+	public boolean showsSubmitSurvey();
 }

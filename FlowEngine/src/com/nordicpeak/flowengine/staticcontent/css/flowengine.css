@@ -285,22 +285,22 @@ FlowBrowser.contentitem input[type="checkbox"], input[type="radio"] {
 }
 
 .blockOverlay {
-	opacity: 0.5 !important;
+	opacity: 0 !important;
 }
 
-table thead.sortable tr .header {
+table.oep-table th {
+	white-space: normal;
+}
+
+table.oep-table thead.sortable tr .header {
 	cursor: pointer;
 }
 
-table thead.sortable th.headerSortDown, table thead.sortable th.headerSortUp {
-	background: none repeat scroll 0 0 #CACACA !important;
-}
-
-table thead.sortable th.headerSortDown span:after, table thead.sortable th.headerSortUp span:after {
+table.oep-table thead.sortable th.headerSortDown span:after, table.oep-table thead.sortable th.headerSortUp span:after {
 	display: inline-block;
 }
 
-table tr.disabled td, table tr.disabled td a {
+table.oep-table tr.disabled td, table.oep-table tr.disabled td a {
 	color: #7b7b7b;
 }
 
@@ -311,4 +311,16 @@ table tr.disabled td, table tr.disabled td a {
 .heading-wrapper p.description {
 	clear: both;
 	padding: 0 0 0 27px;
+}
+
+.usergroup-list{
+	padding: 0 0 0 0;
+}
+
+#OperatingMessageModule div.scrolllist {
+	height: 200px;
+}
+
+#FlowBrowser section.modal.warning {
+	padding: 10px 10px;
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -48,11 +49,13 @@ import se.unlogic.hierarchy.core.enums.PathType;
 import se.unlogic.hierarchy.core.exceptions.URINotFoundException;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleDescriptor;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.interfaces.SectionInterface;
 import se.unlogic.hierarchy.core.interfaces.SettingHandler;
 import se.unlogic.hierarchy.core.settings.Setting;
 import se.unlogic.hierarchy.core.settings.TextFieldSetting;
 import se.unlogic.hierarchy.core.utils.FCKUtils;
+import se.unlogic.log4jutils.levels.LogLevel;
 import se.unlogic.openhierarchy.foregroundmodules.siteprofile.interfaces.SiteProfileHandler;
 import se.unlogic.openhierarchy.foregroundmodules.siteprofile.interfaces.SiteProfileSettingProvider;
 import se.unlogic.standardutils.collections.CollectionUtils;
@@ -129,10 +132,16 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	protected String searchPrefixSettingDescription = "Search prefix used when searching for pud or address using LM Search";
 
 	@XSLVariable(prefix = "java.")
+	protected String municipalityCodeSettingName = "Municipality code";
+
+	@XSLVariable(prefix = "java.")
+	protected String municipalityCodeDescription = "The municipality code to use when searching for places using LM Search";
+
+	@XSLVariable(prefix = "java.")
 	protected String pdfAttachmentDescriptionPrefix = "A file from query:";
 
 	@XSLVariable(prefix = "java.")
-	protected String pdfAttachmentFilename = "Map $scale.png";
+	protected String pdfAttachmentFilename = "Map $scale";
 
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "Query type name", description = "The name of this query", required = true)
@@ -166,29 +175,59 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	@TextFieldSettingDescriptor(name = "Print service adress", description = "The address to the print service", required = true)
 	protected String printServiceAddress = "http://not.set/print";
 
-	@ModuleSetting
-	@TextFieldSettingDescriptor(name = "Small PNG layout", description = "The layout to use when generating small map image", required = true)
-	protected String smallPNGLayout = "OH_PNG";
+	/* First map image settings */
 
-	@ModuleSetting
-	@DropDownSettingDescriptor(name = "Small PNG scale", description = "The scale to use when generating small map image", required = true, valueDescriptions = { "1:400", "1:500", "1:1000", "1:2000", "1:5000", "1:10000" }, values = { "400", "500", "1000", "2000", "5000", "10000" })
-	protected Integer smallPNGScale = 500;
+	@ModuleSetting(id="smallPNGLayout")
+	@TextFieldSettingDescriptor(id="smallPNGLayout", name = "First map image scale layout", description = "The layout to use when generating first map image", required = true)
+	protected String firstMapImageLayout = "OH_PNG";
 
-	@ModuleSetting
-	@DropDownSettingDescriptor(name = "Small PNG resolution", description = "The resolution to use when generating small map image", required = true, valueDescriptions = { "56", "127", "190", "254" }, values = { "56", "127", "190", "254" })
-	protected Integer smallPNGResolution = 56;
+	@ModuleSetting(id="smallPNGScale")
+	@DropDownSettingDescriptor(id="smallPNGScale", name = "First map image scale", description = "The scale to use when generating first map image", required = true, valueDescriptions = { "1:400", "1:500", "1:1000", "1:2000", "1:5000", "1:10000" }, values = { "400", "500", "1000", "2000", "5000", "10000" })
+	protected Integer firstMapImageScale = 500;
 
-	@ModuleSetting
-	@TextFieldSettingDescriptor(name = "Large PNG layout", description = "The layout to use when generating large map image", required = true)
-	protected String largePNGLayout = "OH_PNG_LARGE";
+	@ModuleSetting(id="smallPNGResolution")
+	@DropDownSettingDescriptor(id="smallPNGResolution", name = "First map image resolution", description = "The resolution to use when generating first map image", required = true, valueDescriptions = { "56", "127", "190", "254" }, values = { "56", "127", "190", "254" })
+	protected Integer firstMapImageResolution = 56;
 
-	@ModuleSetting
-	@DropDownSettingDescriptor(name = "Large PNG scale", description = "The scale to use when generating large map image", required = true, valueDescriptions = { "1:400", "1:500", "1:1000", "1:2000", "1:5000", "1:10000" }, values = { "400", "500", "1000", "2000", "5000", "10000" })
-	protected Integer largePNGScale = 1000;
+	@ModuleSetting(id="smallPNGOutputFormat")
+	@TextFieldSettingDescriptor(id="smallPNGOutputFormat", name = "First map image output format", description = "The output format to use when generating first map image (e.g png, pdf etc.)", required = true)
+	protected String firstMapImageOutputFormat = "png";
 
-	@ModuleSetting
-	@DropDownSettingDescriptor(name = "Large PNG resolution", description = "The resolution to use when generating large map image", required = true, valueDescriptions = { "56", "127", "190", "254" }, values = { "56", "127", "190", "254" })
-	protected Integer largePNGResolution = 56;
+	/* Second map image settings */
+
+	@ModuleSetting(id="largePNGLayout")
+	@TextFieldSettingDescriptor(id="largePNGLayout", name = "Second PNG layout", description = "The layout to use when generating second map image", required = true)
+	protected String secondMapImageLayout = "OH_PNG_LARGE";
+
+	@ModuleSetting(id="largePNGScale")
+	@DropDownSettingDescriptor(id="largePNGScale", name = "Second map image scale", description = "The scale to use when generating second map image", required = true, valueDescriptions = { "1:400", "1:500", "1:1000", "1:2000", "1:5000", "1:10000" }, values = { "400", "500", "1000", "2000", "5000", "10000" })
+	protected Integer secondMapImageScale = 1000;
+
+	@ModuleSetting(id="largePNGResolution")
+	@DropDownSettingDescriptor(id="largePNGResolution", name = "Second map image resolution", description = "The resolution to use when generating second map image", required = true, valueDescriptions = { "56", "127", "190", "254" }, values = { "56", "127", "190", "254" })
+	protected Integer secondMapImageResolution = 56;
+
+	@ModuleSetting(id="largePNGOutputFormat")
+	@TextFieldSettingDescriptor(id="largePNGOutputFormat", name = "Second map image output format", description = "The output format to use when generating second map image (e.g png, pdf etc.)", required = true)
+	protected String secondMapImageOutputFormat = "png";
+
+	/* Third map image settings */
+
+	@ModuleSetting(allowsNull = true)
+	@TextFieldSettingDescriptor(name = "Third map image layout", description = "The layout to use when generating third map image", required = false)
+	protected String thirdMapImageLayout = "OEP_A4_Landscape";
+
+	@ModuleSetting(allowsNull = true)
+	@DropDownSettingDescriptor(name = "Third map image scale", description = "The scale to use when generating third map image", required = false, valueDescriptions = { "1:400", "1:500", "1:1000", "1:2000", "1:5000", "1:10000" }, values = { "400", "500", "1000", "2000", "5000", "10000" })
+	protected Integer thirdMapImageScale = 400;
+
+	@ModuleSetting(allowsNull = true)
+	@DropDownSettingDescriptor(name = "Third map image resolution", description = "The resolution to use when generating third map image", required = false, valueDescriptions = { "56", "127", "190", "254" }, values = { "56", "127", "190", "254" })
+	protected Integer thirdMapImageResolution = 56;
+
+	@ModuleSetting(allowsNull = true)
+	@TextFieldSettingDescriptor(name = "Third map image output format", description = "The output format to use when generating third map image (e.g png, pdf etc.)", required = false)
+	protected String thirdMapImageOutputFormat = "pdf";
 
 	@ModuleSetting
 	@CheckboxSettingDescriptor(name = "Enable PUD validation", description = "Controls whether the submitted property unit designation should be validated using LM Search service RMI server or not")
@@ -247,6 +286,10 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	protected String defaultSearchPrefix = "";
 
 	@ModuleSetting
+	@TextFieldSettingDescriptor(id = "BaseMapQuery-municipalityCode", name = "Default municipality code", description = "Specifies default municipality code when searching for places using LM Search", required = true)
+	protected String defaultMunicipalityCode = "";
+
+	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "MapFish connection timeout", description = "MapFish connection timeout")
 	protected Integer mapFishConnectionTimeout = 5000;
 
@@ -258,6 +301,18 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	@EnumDropDownSettingDescriptor(name = "Query instance preview mode", description = "Specifies which preview mode sholud be used for this query", required = true)
 	protected BaseMapQueryPreviewMode previewMode = BaseMapQueryPreviewMode.WEB_MAP;
 
+	@ModuleSetting
+	@CheckboxSettingDescriptor(name="Log print configuration", description="Log generated print configuration")
+	private boolean logPrintConfig;
+
+	@ModuleSetting
+	@EnumDropDownSettingDescriptor(name="MapFish timeout log level", description="The log level used when there is a socket timeout while waiting for an image from MapFish", required=true)
+	private LogLevel fishTimeoutLogLevel = LogLevel.ERROR;
+
+	@ModuleSetting
+	@EnumDropDownSettingDescriptor(name="MapFish error log level", description="The log level used when there is an error in the communication with MapFish", required=true)
+	private LogLevel fishErrorLogLevel = LogLevel.ERROR;
+
 	protected SiteProfileHandler siteProfileHandler;
 
 	protected TextFieldSetting startExtentSetting;
@@ -265,6 +320,8 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	protected TextFieldSetting lmUserSetting;
 
 	protected TextFieldSetting searchPrefixSetting;
+
+	protected TextFieldSetting municipalityCodeSetting;
 
 	protected String mapConfiguration;
 
@@ -284,7 +341,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	public void init(ForegroundModuleDescriptor moduleDescriptor, SectionInterface sectionInterface, DataSource dataSource) throws Exception {
 
 		this.queryTypeID = this.queryTypeID + "." + moduleDescriptor.getModuleID();
-		
+
 		super.init(moduleDescriptor, sectionInterface, dataSource);
 
 		cacheConfigurations();
@@ -320,12 +377,14 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	protected void moduleConfigured() throws Exception {
 
 		this.queryTypeName = queryTypeDescription;
-		
+
 		super.moduleConfigured();
-		
+
 		startExtentSetting = new TextFieldSetting("BaseMapQuery-startExtent", startExtentSettingName, startExtentSettingDescription, defaultStartExtent, true);
 		lmUserSetting = new TextFieldSetting("BaseMapQuery-lmUser", lmUserSettingName, lmUserSettingDescription, defaultLMUser, true);
 		searchPrefixSetting = new TextFieldSetting("BaseMapQuery-searchPrefix", searchPrefixSettingName, searchPrefixSettingDescription, defaultSearchPrefix, false);
+		municipalityCodeSetting = new TextFieldSetting("BaseMapQuery-municipalityCode", municipalityCodeSettingName, municipalityCodeDescription, defaultMunicipalityCode, true);
+
 	}
 
 	@Override
@@ -414,7 +473,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	}
 
 	@Override
-	public void populate(MapQueryInstanceType queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(MapQueryInstanceType queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		Integer queryID = queryInstance.getQuery().getQueryID();
 
@@ -427,7 +486,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 			if (!allowPartialPopulation && queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED) {
 
-				queryInstance.reset();
+				queryInstance.reset(attributeHandler);
 
 				queryInstance.setExtent(extent);
 				queryInstance.setVisibleBaseLayer(baseLayer);
@@ -435,7 +494,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 				throw new ValidationException(new ValidationError("RequiredQuery"));
 			}
 
-			queryInstance.reset();
+			queryInstance.reset(attributeHandler);
 
 			return;
 		}
@@ -465,14 +524,14 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 	}
 
-	public void generatePNG(MapQueryInstanceType queryInstance, User user) throws ValidationException {
+	public void generateMapImages(MapQueryInstanceType queryInstance, User user) throws ValidationException {
 
 		if (printConfiguration != null && printServiceAddress != null) {
 
 			log.info("Generating map images for queryInstance " + queryInstance + " for user " + user + ", using server: " + printServiceAddress);
 
 			String printConfig = printConfiguration;
-			
+
 			List<Geometry> geometries = queryInstance.getPrintableGeometries();
 
 			JsonArray features = new JsonArray();
@@ -482,9 +541,9 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			if (!CollectionUtils.isEmpty(geometries)) {
 
 				List<FeatureLabel> labels = new ArrayList<FeatureLabel>();
-				
+
 				GeometryFactory geometryFactory = new GeometryFactory();
-				
+
 				for (Geometry geometry : geometries) {
 
 					JsonObject properties = new JsonObject();
@@ -503,18 +562,19 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 						if (coordinates.length > 1) {
 
 							int count = 0;
-							
+
 							for (Coordinate coordinate : coordinates) {
 
-								if(count < coordinates.length-1) {
-								
-									LineString lineString = geometryFactory.createLineString(new Coordinate[]{coordinates[count],coordinates[count+1]});
-								
+								if (count < coordinates.length - 1) {
+
+									LineString lineString = geometryFactory.createLineString(new Coordinate[] { coordinates[count], coordinates[count + 1] });
+
 									Point centroid = lineString.getCentroid();
-								
+
 									labels.add(new FeatureLabel(UUID.randomUUID().toString(), centroid, NumberUtils.formatNumber(lineString.getLength(), 1, 1, false, true) + " m"));
-								};
-								
+								}
+								;
+
 								JsonArray coord = new JsonArray();
 
 								String x = NumberUtils.formatNumber(coordinate.x, 0, 1, false, true);
@@ -565,34 +625,33 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 				}
 
-				if(!labels.isEmpty()) {
-					
+				if (!labels.isEmpty()) {
+
 					StringBuilder labelStyles = new StringBuilder();
-					
-					for(FeatureLabel label : labels) {
-						
+
+					for (FeatureLabel label : labels) {
+
 						features.addNode(label.toJson());
-						
+
 						JsonObject labelStyle = new JsonObject();
 						labelStyle.putField("label", label.getLabel());
 						labelStyle.putField("strokeColor", label.getColor());
 						labelStyle.putField("strokeWidth", label.getWidth() + "");
 						labelStyle.putField("labelAlign", "cm");
 						labelStyle.putField("fontSize", "9px");
-						
+
 						labelStyles.append(",\"" + label.getId() + "\":" + labelStyle.toJson());
-						
-						
+
 					}
-					
+
 					printConfig = printConfig.replace("$labelStyles", labelStyles);
-					
+
 				} else {
-					
+
 					printConfig = printConfig.replace("$labelStyles", "");
-					
+
 				}
-				
+
 			}
 
 			Coordinate centerCoordinate = null;
@@ -632,21 +691,63 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 				printConfig = printConfig.replace("$baseLayer", baseLayer[1]);
 			}
 
-			String smallPNGConfig = printConfig;
+			String firstMapImageConfig = printConfig;
 
-			smallPNGConfig = smallPNGConfig.replace("$dpi", smallPNGResolution.toString());
-			smallPNGConfig = smallPNGConfig.replace("$scale", smallPNGScale.toString());
-			smallPNGConfig = smallPNGConfig.replace("$layout", smallPNGLayout);
+			firstMapImageConfig = firstMapImageConfig.replace("$dpi", firstMapImageResolution.toString());
+			firstMapImageConfig = firstMapImageConfig.replace("$scale", firstMapImageScale.toString());
+			firstMapImageConfig = firstMapImageConfig.replace("$layout", firstMapImageLayout);
+			firstMapImageConfig = firstMapImageConfig.replace("$outputFormat", firstMapImageOutputFormat);
 
-			queryInstance.setSmallPNG(getMapImageFromMapFish(queryInstance, user, smallPNGConfig));
+			if(logPrintConfig){
 
-			String largePNGConfig = printConfig;
+				log.info("First print config: " + firstMapImageConfig);
+			}
 
-			largePNGConfig = largePNGConfig.replace("$dpi", largePNGResolution.toString());
-			largePNGConfig = largePNGConfig.replace("$scale", largePNGScale.toString());
-			largePNGConfig = largePNGConfig.replace("$layout", largePNGLayout);
+			queryInstance.setFirstMapImageDpi(firstMapImageResolution);
+			queryInstance.setFirstMapImageScale(firstMapImageScale);
+			queryInstance.setFirstMapImageLayout(firstMapImageLayout);
+			queryInstance.setFirstMapImageFormat(firstMapImageOutputFormat);
+			queryInstance.setFirstMapImage(getMapImageFromMapFish(queryInstance, user, firstMapImageConfig));
 
-			queryInstance.setLargePNG(getMapImageFromMapFish(queryInstance, user, largePNGConfig));
+			String secondMapImageConfig = printConfig;
+
+			secondMapImageConfig = secondMapImageConfig.replace("$dpi", secondMapImageResolution.toString());
+			secondMapImageConfig = secondMapImageConfig.replace("$scale", secondMapImageScale.toString());
+			secondMapImageConfig = secondMapImageConfig.replace("$layout", secondMapImageLayout);
+			secondMapImageConfig = secondMapImageConfig.replace("$outputFormat", secondMapImageOutputFormat);
+
+			if(logPrintConfig){
+
+				log.info("Second print config: " + secondMapImageConfig);
+			}
+
+			queryInstance.setSecondMapImageDpi(secondMapImageResolution);
+			queryInstance.setSecondMapImageScale(secondMapImageScale);
+			queryInstance.setSecondMapImageLayout(secondMapImageLayout);
+			queryInstance.setSecondMapImageFormat(secondMapImageOutputFormat);
+			queryInstance.setSecondMapImage(getMapImageFromMapFish(queryInstance, user, secondMapImageConfig));
+
+			if(thirdMapImageLayout != null) {
+
+				String thirdMapImageConfig = printConfig;
+
+				thirdMapImageConfig = thirdMapImageConfig.replace("$dpi", thirdMapImageResolution.toString());
+				thirdMapImageConfig = thirdMapImageConfig.replace("$scale", thirdMapImageScale.toString());
+				thirdMapImageConfig = thirdMapImageConfig.replace("$layout", thirdMapImageLayout);
+				thirdMapImageConfig = thirdMapImageConfig.replace("$outputFormat", thirdMapImageOutputFormat);
+
+				if(logPrintConfig){
+
+					log.info("Third print config: " + thirdMapImageConfig);
+				}
+
+				queryInstance.setThirdMapImageDpi(thirdMapImageResolution);
+				queryInstance.setThirdMapImageScale(thirdMapImageScale);
+				queryInstance.setThirdMapImageLayout(thirdMapImageLayout);
+				queryInstance.setThirdMapImageFormat(thirdMapImageOutputFormat);
+				queryInstance.setThirdMapImage(getMapImageFromMapFish(queryInstance, user, thirdMapImageConfig));
+
+			}
 
 		}
 
@@ -677,7 +778,17 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 			StringWriter writer = new StringWriter();
 
-			HTTPUtils.sendHTTPPostRequest(reader, new URL(printServiceAddress + "/pdf/create.json"), writer, "UTF-8", mapFishConnectionTimeout, mapFishReadTimeout);
+			String url = printServiceAddress + "/pdf/create.json";
+
+			if (url.startsWith("https://")) {
+
+				HTTPUtils.sendHTTPSPostRequest(reader, new URL(url), writer, "UTF-8", mapFishConnectionTimeout, mapFishReadTimeout);
+
+			} else {
+
+				HTTPUtils.sendHTTPPostRequest(reader, new URL(url), writer, "UTF-8", mapFishConnectionTimeout, mapFishReadTimeout);
+
+			}
 
 			String mapImageURL = writer.toString();
 
@@ -691,7 +802,15 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 					outputStream = new ByteArrayOutputStream();
 
-					HTTPUtils.sendHTTPGetRequest(mapImageURL, null, outputStream);
+					if (mapImageURL.startsWith("https://")) {
+
+						HTTPUtils.sendHTTPsGetRequest(mapImageURL, null, outputStream);
+
+					} else {
+
+						HTTPUtils.sendHTTPGetRequest(mapImageURL, null, outputStream);
+
+					}
 
 					return new SerialBlob(outputStream.toByteArray());
 
@@ -701,9 +820,13 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 			log.error("Invalid response from print service when generating png for queryInstance " + queryInstance + " for user " + user);
 
+		} catch (SocketTimeoutException e) {
+
+			log.log(fishTimeoutLogLevel.getLevel(), "Unable to generate png for queryInstance " + queryInstance + " for user " + user, e);
+
 		} catch (Exception e) {
 
-			log.error("Unable to generate png for queryInstance " + queryInstance + " for user " + user, e);
+			log.log(fishErrorLogLevel.getLevel(), "Unable to generate png for queryInstance " + queryInstance + " for user " + user, e);
 
 		} finally {
 
@@ -730,7 +853,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 		XMLUtils.appendNewElement(doc, document, "startExtent", settingHandler.getString("BaseMapQuery-startExtent"));
 		XMLUtils.appendNewElement(doc, document, "lmUser", settingHandler.getString("BaseMapQuery-lmUser"));
-		
+
 		return doc;
 	}
 
@@ -753,16 +876,16 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		MapQueryType query = getMapQueryClass().newInstance();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		return query;
 	}
-	
+
 	@Override
 	public Query getQuery(MutableQueryDescriptor descriptor) throws Throwable {
 
@@ -834,9 +957,12 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 		}
 
-		FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-		
-		URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req);
+		if(req != null){
+
+			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req);
+		}
 
 		TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
 
@@ -969,28 +1095,38 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 		return null;
 
 	}
-	
+
 	@WebPublic(alias = "clientprint")
 	public ForegroundModuleResponse clientPrint(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception {
 
-		if(printServiceAddress != null) {
-			
+		if (printServiceAddress != null) {
+
 			String param = null;
-			
-			if((param = uriParser.get(2)) != null && param.equalsIgnoreCase("info.json")) {
-				
-				String response = HTTPUtils.sendHTTPGetRequest(printServiceAddress + "/pdf/info.json", null, null, null);
-				
-				if(response != null) {
-					
-					HTTPUtils.sendReponse(response, JsonUtils.getContentType(), res);
-					
+
+			if ((param = uriParser.get(2)) != null && param.equalsIgnoreCase("info.json")) {
+
+				String response = null;
+
+				if (printServiceAddress.startsWith("https://")) {
+
+					response = HTTPUtils.sendHTTPSGetRequest(printServiceAddress + "/pdf/info.json", null, null, null);
+
+				} else {
+
+					response = HTTPUtils.sendHTTPGetRequest(printServiceAddress + "/pdf/info.json", null, null, null);
+
 				}
-				
+
+				if (response != null) {
+
+					HTTPUtils.sendReponse(response, JsonUtils.getContentType(), res);
+
+				}
+
 			}
-		
+
 		}
-			
+
 		return null;
 
 	}
@@ -1043,7 +1179,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			searchURL += "/" + uriParser.get(3) + "/" + uriParser.get(4);
 		}
 
-		sendSearchReqest(req, res, user, searchURL);
+		sendSearchReqest(req, res, user, searchURL, true);
 
 	}
 
@@ -1053,7 +1189,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			throw new URINotFoundException(uriParser);
 		}
 
-		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchAddressParam);
+		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchAddressParam, true);
 
 	}
 
@@ -1063,7 +1199,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			throw new URINotFoundException(uriParser);
 		}
 
-		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchPlaceParam);
+		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchPlaceParam, false);
 
 	}
 
@@ -1073,12 +1209,12 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			throw new URINotFoundException(uriParser);
 		}
 
-		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchCoordinateParam);
+		sendSearchReqest(req, res, user, httpSearchServiceURL + "/" + httpSearchCoordinateParam, true);
 
 	}
 
 	@SuppressWarnings("unchecked")
-	private void sendSearchReqest(HttpServletRequest req, HttpServletResponse res, User user, String search) throws IOException {
+	private void sendSearchReqest(HttpServletRequest req, HttpServletResponse res, User user, String search, boolean appendSearchPrefix) throws IOException {
 
 		SettingHandler profileSettingHandler = getCurrentSiteProfileSettingHandler(req, user);
 
@@ -1098,7 +1234,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 						continue;
 
-					} else if (paramName.equalsIgnoreCase("q")) {
+					} else if (paramName.equalsIgnoreCase("q") && appendSearchPrefix) {
 
 						String prefix = profileSettingHandler.getString("BaseMapQuery-searchPrefix");
 
@@ -1114,6 +1250,17 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 							}
 
+						}
+
+					} else if (paramName.equalsIgnoreCase("kommunkod")) {
+
+						String municipalityCode = profileSettingHandler.getString("BaseMapQuery-municipalityCode");
+
+						if (!StringUtils.isEmpty(municipalityCode)) {
+
+							queryParameters.append("kommunkod=" + URLEncoder.encode(municipalityCode, "UTF-8") + "&");
+
+							continue;
 						}
 
 					}
@@ -1136,7 +1283,17 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 			log.info("User " + user + " searching using http search service with query " + searchQuery);
 
-			String response = HTTPUtils.sendHTTPGetRequest(searchQuery, null, null, null);
+			String response = null;
+
+			if (searchQuery.startsWith("https://")) {
+
+				response = HTTPUtils.sendHTTPSGetRequest(searchQuery, null, null, null);
+
+			} else {
+
+				response = HTTPUtils.sendHTTPGetRequest(searchQuery, null, null, null);
+
+			}
 
 			HTTPUtils.sendReponse(getUnescapedText(response), JsonUtils.getContentType(), res);
 
@@ -1342,7 +1499,7 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	@Override
 	public List<Setting> getSiteProfileSettings() {
 
-		return Arrays.asList((Setting) startExtentSetting, (Setting) lmUserSetting, (Setting) searchPrefixSetting);
+		return Arrays.asList((Setting) startExtentSetting, (Setting) lmUserSetting, (Setting) searchPrefixSetting, (Setting) municipalityCodeSetting);
 	}
 
 	protected SettingHandler getCurrentSiteProfileSettingHandler(HttpServletRequest req, User user) {
@@ -1379,15 +1536,21 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 
 		List<PDFAttachment> attachments = new ArrayList<PDFAttachment>(2);
 
-		if (queryInstance.getSmallPNG() != null) {
+		if (queryInstance.getFirstMapImage() != null) {
 
-			attachments.add(new BlobPDFAttachment(queryInstance.getSmallPNG(), this.pdfAttachmentFilename.replace("$scale", this.smallPNGScale + ""), this.pdfAttachmentDescriptionPrefix + " " + queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().getName()));
+			attachments.add(new BlobPDFAttachment(queryInstance.getFirstMapImage(), this.pdfAttachmentFilename.replace("$scale", queryInstance.getFirstMapImageScale() + "") + "." + queryInstance.getFirstMapImageFormat(), this.pdfAttachmentDescriptionPrefix + " " + queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().getName()));
 
 		}
 
-		if (queryInstance.getLargePNG() != null) {
+		if (queryInstance.getSecondMapImage()!= null) {
 
-			attachments.add(new BlobPDFAttachment(queryInstance.getLargePNG(), this.pdfAttachmentFilename.replace("$scale", this.largePNGScale + ""), this.pdfAttachmentDescriptionPrefix + " " + queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().getName()));
+			attachments.add(new BlobPDFAttachment(queryInstance.getSecondMapImage(), this.pdfAttachmentFilename.replace("$scale", queryInstance.getSecondMapImageScale() + "") + "." + queryInstance.getSecondMapImageFormat(), this.pdfAttachmentDescriptionPrefix + " " + queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().getName()));
+
+		}
+
+		if (queryInstance.getThirdMapImage() != null) {
+
+			attachments.add(new BlobPDFAttachment(queryInstance.getThirdMapImage(), this.pdfAttachmentFilename.replace("$scale", queryInstance.getThirdMapImageScale() + "") + "." + queryInstance.getThirdMapImageFormat(), this.pdfAttachmentDescriptionPrefix + " " + queryInstance.getQueryInstanceDescriptor().getQueryDescriptor().getName()));
 
 		}
 
@@ -1402,12 +1565,12 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 	@Override
 	protected PDFResourceProvider getPDFResourceProvider(MapQueryInstanceType queryInstance) {
 
-		if (queryInstance.getSmallPNG() == null) {
+		if (queryInstance.getFirstMapImage() == null) {
 
 			return null;
 		}
 
-		return new BlobResourceProvider(queryInstance.getSmallPNG());
+		return new BlobResourceProvider(queryInstance.getFirstMapImage());
 
 	}
 
@@ -1419,13 +1582,17 @@ public abstract class BaseMapQueryProviderModule<MapQueryType extends BaseMapQue
 			return null;
 		}
 
-		if (previewMode.equals(BaseMapQueryPreviewMode.SMALL_PNG) && queryInstance.getSmallPNG() != null) {
+		if (previewMode.equals(BaseMapQueryPreviewMode.FIRST_MAP_IMAGE) && queryInstance.getFirstMapImage() != null) {
 
-			return new BaseMapImageRequestProcessor(previewMode.toString(), queryInstance.getSmallPNG());
+			return new BaseMapImageRequestProcessor(previewMode.toString(), queryInstance.getFirstMapImage());
 
-		} else if (previewMode.equals(BaseMapQueryPreviewMode.LARGE_PNG) && queryInstance.getLargePNG() != null) {
+		} else if (previewMode.equals(BaseMapQueryPreviewMode.SECOND_MAP_IMAGE) && queryInstance.getSecondMapImage() != null) {
 
-			return new BaseMapImageRequestProcessor(previewMode.toString(), queryInstance.getLargePNG());
+			return new BaseMapImageRequestProcessor(previewMode.toString(), queryInstance.getSecondMapImage());
+
+		} else if (previewMode.equals(BaseMapQueryPreviewMode.THIRD_MAP_IMAGE) && queryInstance.getThirdMapImage() != null) {
+
+			return new BaseMapImageRequestProcessor(previewMode.toString(), queryInstance.getThirdMapImage());
 
 		}
 

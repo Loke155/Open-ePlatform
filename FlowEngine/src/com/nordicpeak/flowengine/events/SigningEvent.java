@@ -10,7 +10,7 @@ import com.nordicpeak.flowengine.managers.FlowInstanceManager;
 
 public class SigningEvent implements Serializable {
 
-	private static final long serialVersionUID = 4129670393435968733L;
+	private static final long serialVersionUID = -383039162159917192L;
 
 	protected final FlowInstanceManager flowInstanceManager;
 	protected final FlowInstanceEvent event;

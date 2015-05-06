@@ -5,12 +5,16 @@
 
 	<xsl:template match="Document">
 
-		<section class="user-menu">
-			<h2 class="bordered"><xsl:value-of select="section/name" /></h2>
-			<ul class="list-table">
-				<xsl:apply-templates select="menuitem" />
-			</ul>
-		</section>
+		<div data-menu="errand" class="errand-menu buttons-in-desktop errand-page">
+
+		  	<a href="{contextpath}{section/fullAlias}" data-toggle-menu="errand" class="btn btn-dark">
+		  		<span data-icon-after="_" data-icon-before="L"><xsl:value-of select="section/name" /></span>
+		  	</a>
+	
+		  	<ul>
+		  		<xsl:apply-templates select="menuitem" />
+		  	</ul>
+	  	</div>
 
 	</xsl:template>
 
@@ -20,7 +24,7 @@
 			<xsl:choose>
 				<xsl:when test="url">
 					
-					<a>
+					<a class="btn btn-light">
 						<xsl:attribute name="href">
 							<xsl:choose>
 								<xsl:when test="urlType='RELATIVE_FROM_CONTEXTPATH'">
@@ -33,7 +37,17 @@
 								</xsl:when>
 							</xsl:choose>
 						</xsl:attribute>
-						<span data-icon-before="&gt;" class="text" title="{description}"><xsl:value-of select="name" /></span>
+						<span class="text" title="{description}">
+							<xsl:attribute name="data-icon-before">
+								<xsl:choose>
+									<xsl:when test="name = 'Mina ärenden'">&#58894;</xsl:when>
+									<xsl:when test="name = 'Mina uppgifter'">u</xsl:when>
+									<xsl:when test="name = 'Mina företag'">b</xsl:when>
+									<xsl:otherwise>&gt;</xsl:otherwise>
+								</xsl:choose>
+							</xsl:attribute>
+							<xsl:value-of select="name" />
+						</span>
 					</a>
 					
 				</xsl:when>

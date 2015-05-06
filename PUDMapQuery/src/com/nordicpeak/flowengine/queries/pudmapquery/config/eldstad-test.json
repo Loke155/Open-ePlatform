@@ -16,18 +16,6 @@
     "resolutions": [ 280, 140, 70, 28, 14, 7, 4.2, 2.8, 1.4, 0.56, 0.28, 0.14, 0.112, 0.056 ],
     "layers": [
         {
-            "name": "Flygfoto",
-            "url": "http://extmaptest.sundsvall.se/geoserver/gwc/service/wms",
-            "params": {
-                "layers": "Lantmateriet:Ortofoto50_25cm",
-                "format": "image/jpeg"
-            },
-            "options": {
-            	"isBaseLayer": true,
-            	"displayInLayerSwitcher": false
-            }
-        },
-        {
             "name": "Karta",
             "url": "http://extmaptest.sundsvall.se/geoserver/gwc/service/wms",
             "params": {

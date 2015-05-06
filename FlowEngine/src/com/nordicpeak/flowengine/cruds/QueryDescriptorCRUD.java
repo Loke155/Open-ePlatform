@@ -1,6 +1,7 @@
 package com.nordicpeak.flowengine.cruds;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import se.unlogic.webutils.http.URIParser;
 import se.unlogic.webutils.populators.annotated.AnnotatedRequestPopulator;
 
 import com.nordicpeak.flowengine.FlowAdminModule;
+import com.nordicpeak.flowengine.beans.EvaluatorDescriptor;
 import com.nordicpeak.flowengine.beans.Flow;
 import com.nordicpeak.flowengine.beans.QueryDescriptor;
 import com.nordicpeak.flowengine.beans.QueryTypeDescriptor;
@@ -185,6 +187,14 @@ public class QueryDescriptorCRUD extends IntegerBasedCRUD<QueryDescriptor, FlowA
 
 			callback.getQueryHandler().deleteQuery(bean, transactionHandler);
 
+			if(bean.getEvaluatorDescriptors() != null){
+
+				for(EvaluatorDescriptor evaluatorDescriptor : bean.getEvaluatorDescriptors()){
+
+					callback.getEvaluationHandler().deleteEvaluator(evaluatorDescriptor, transactionHandler);
+				}
+			}		
+			
 			transactionHandler.commit();
 
 		}finally{
@@ -194,9 +204,6 @@ public class QueryDescriptorCRUD extends IntegerBasedCRUD<QueryDescriptor, FlowA
 
 		callback.getEventHandler().sendEvent(QueryDescriptor.class, new CRUDEvent<QueryDescriptor>(CRUDAction.DELETE, bean), EventTarget.ALL);
 	}
-
-
-
 
 	@Override
 	protected ForegroundModuleResponse beanAdded(QueryDescriptor bean, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception {
@@ -215,7 +222,6 @@ public class QueryDescriptorCRUD extends IntegerBasedCRUD<QueryDescriptor, FlowA
 
 		return null;
 	}
-
 
 	@Override
 	protected void appendAddFormData(Document doc, Element addTypeElement, User user, HttpServletRequest req, URIParser uriParser) throws Exception {
@@ -242,8 +248,8 @@ public class QueryDescriptorCRUD extends IntegerBasedCRUD<QueryDescriptor, FlowA
 	}
 
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws Exception {
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws Exception {
 
-		return callback.list(req, res, user, uriParser, validationError);
+		return callback.list(req, res, user, uriParser, validationErrors);
 	}
 }

@@ -33,12 +33,13 @@ import se.unlogic.hierarchy.core.beans.SettingDescriptor;
 import se.unlogic.hierarchy.core.beans.SimpleForegroundModuleResponse;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.beans.ValueDescriptor;
+import se.unlogic.hierarchy.core.enums.CRUDAction;
 import se.unlogic.hierarchy.core.enums.EventSource;
+import se.unlogic.hierarchy.core.enums.EventTarget;
 import se.unlogic.hierarchy.core.events.CRUDEvent;
 import se.unlogic.hierarchy.core.exceptions.AccessDeniedException;
 import se.unlogic.hierarchy.core.exceptions.ModuleConfigurationException;
 import se.unlogic.hierarchy.core.exceptions.URINotFoundException;
-import se.unlogic.hierarchy.core.interfaces.EventHandler;
 import se.unlogic.hierarchy.core.interfaces.EventListener;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleDescriptor;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
@@ -57,6 +58,7 @@ import se.unlogic.standardutils.populators.IntegerPopulator;
 import se.unlogic.standardutils.string.StringUtils;
 import se.unlogic.standardutils.threads.ReflectedRunnable;
 import se.unlogic.standardutils.time.MillisecondTimeUnits;
+import se.unlogic.standardutils.time.TimeUtils;
 import se.unlogic.standardutils.validation.PositiveStringIntegerValidator;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.xml.XMLUtils;
@@ -67,9 +69,12 @@ import com.nordicpeak.flowengine.accesscontrollers.SessionAccessController;
 import com.nordicpeak.flowengine.accesscontrollers.UserFlowInstanceAccessController;
 import com.nordicpeak.flowengine.beans.Flow;
 import com.nordicpeak.flowengine.beans.FlowFamily;
+import com.nordicpeak.flowengine.beans.FlowInstance;
 import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.beans.FlowType;
+import com.nordicpeak.flowengine.beans.Status;
 import com.nordicpeak.flowengine.comparators.FlowNameComparator;
+import com.nordicpeak.flowengine.enums.EventType;
 import com.nordicpeak.flowengine.enums.ShowMode;
 import com.nordicpeak.flowengine.exceptions.FlowEngineException;
 import com.nordicpeak.flowengine.exceptions.evaluation.EvaluationException;
@@ -92,7 +97,10 @@ import com.nordicpeak.flowengine.interfaces.FlowInstanceAccessController;
 import com.nordicpeak.flowengine.interfaces.FlowProcessCallback;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstance;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstanceEvent;
+import com.nordicpeak.flowengine.interfaces.MultiSigningProvider;
+import com.nordicpeak.flowengine.interfaces.OperatingStatus;
 import com.nordicpeak.flowengine.interfaces.PDFProvider;
+import com.nordicpeak.flowengine.interfaces.PaymentProvider;
 import com.nordicpeak.flowengine.interfaces.SigningProvider;
 import com.nordicpeak.flowengine.managers.FlowInstanceManager;
 import com.nordicpeak.flowengine.managers.MutableFlowInstanceManager;
@@ -107,7 +115,9 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 
 	public static final String SAVE_ACTION_ID = FlowBrowserModule.class.getName() + ".save";
 	public static final String SUBMIT_ACTION_ID = FlowBrowserModule.class.getName() + ".submit";
-
+	public static final String PAYMENT_ACTION_ID = FlowBrowserModule.class.getName() + ".pay";
+	public static final String MULTI_SIGNING_ACTION_ID = FlowBrowserModule.class.getName() + ".multisigning";	
+	
 	public static final String SESSION_ACCESS_CONTROLLER_TAG = FlowBrowserModule.class.getName();
 
 	private static final FlowNameComparator FLOW_NAME_COMPARATOR = new FlowNameComparator();
@@ -146,13 +156,23 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	@ModuleSetting
 	@CheckboxSettingDescriptor(name = "Show related flows", description = "Controls whether to show related flows in flowoverview")
 	protected boolean showRelatedFlows = true;
+
+	@ModuleSetting
+	@CheckboxSettingDescriptor(name = "User category filter", description = "Controls whether to use category filter when listing flows")
+	protected boolean useCategoryFilter = false;
 	
 	@InstanceManagerDependency
 	protected PDFProvider pdfProvider;
 
 	@InstanceManagerDependency
 	protected SigningProvider signingProvider;
+	
+	@InstanceManagerDependency
+	protected MultiSigningProvider multiSigningProvider;
 
+	@InstanceManagerDependency
+	protected PaymentProvider paymentProvider;
+	
 	private List<String> searchTags;
 
 	private QueryParameterFactory<FlowType, Integer> flowTypeIDParamFactory;
@@ -176,6 +196,9 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 
 		cacheFlows();
 
+		this.eventHandler.addEventListener(FlowType.class, CRUDEvent.class, this);
+		this.eventHandler.addEventListener(Flow.class, CRUDEvent.class, this);
+		
 		scheduler = new Scheduler();
 		scheduler.schedule("0 0 * * *", this);
 		scheduler.schedule("0 * * * *", new ReflectedRunnable(this, "calculatePopularFlows"));
@@ -210,12 +233,8 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 			log.error("Error stopping scheduler", e);
 		}
 
-		EventHandler eventHandler = this.eventHandler;
-
-		if (eventHandler != null) {
-			this.eventHandler.removeEventListener(FlowType.class, CRUDEvent.class, this);
-			this.eventHandler.removeEventListener(Flow.class, CRUDEvent.class, this);
-		}
+		this.eventHandler.removeEventListener(FlowType.class, CRUDEvent.class, this);
+		this.eventHandler.removeEventListener(Flow.class, CRUDEvent.class, this);
 
 		if (this.equals(systemInterface.getInstanceHandler().getInstance(FlowBrowserModule.class))) {
 
@@ -229,10 +248,6 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 		super.createDAOs(dataSource);
 
 		flowTypeIDParamFactory = daoFactory.getFlowTypeDAO().getParamFactory("flowTypeID", Integer.class);
-
-		this.eventHandler.addEventListener(FlowType.class, CRUDEvent.class, this);
-		this.eventHandler.addEventListener(Flow.class, CRUDEvent.class, this);
-
 	}
 
 	@Override
@@ -254,11 +269,16 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	@Override
 	public ForegroundModuleResponse defaultMethod(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception, Throwable {
 
-		return list(req, res, user, uriParser, null);
+		return list(req, res, user, uriParser, (List<ValidationError>)null);
+	}
+
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws ModuleConfigurationException, SQLException {
+
+		return list(req, res, user, uriParser, CollectionUtils.getGenericSingletonList(validationError));
 	}
 
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws ModuleConfigurationException, SQLException {
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws ModuleConfigurationException, SQLException {
 
 		r.lock();
 
@@ -297,12 +317,16 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 			XMLUtils.append(doc, showFlowTypesElement, "recommendedTags", "Tag", searchTags);
 			XMLUtils.appendNewElement(doc, showFlowTypesElement, "userFavouriteModuleAlias", userFavouriteModuleAlias);
 
-			if (validationError != null) {
+			if(useCategoryFilter) {
+				XMLUtils.appendNewElement(doc, showFlowTypesElement, "useCategoryFilter", true);
+			}
+			
+			if (validationErrors != null) {
 
-				showFlowTypesElement.appendChild(validationError.toXML(doc));
+				XMLUtils.append(doc, showFlowTypesElement, validationErrors);
 			}
 
-			return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+			return new SimpleForegroundModuleResponse(doc, moduleDescriptor.getName(), this.getDefaultBreadcrumb());
 
 		} finally {
 
@@ -365,8 +389,18 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 		XMLUtils.appendNewElement(doc, showFlowOverviewElement, "userFavouriteModuleAlias", userFavouriteModuleAlias);
 		XMLUtils.appendNewElement(doc, showFlowOverviewElement, "openExternalFlowsInNewWindow", openExternalFlowsInNewWindow);
 		XMLUtils.appendNewElement(doc, showFlowOverviewElement, "showRelatedFlows", showRelatedFlows);
+
+		if(operatingMessageModule != null) {
+			
+			OperatingStatus operatingStatus = operatingMessageModule.getOperatingStatus(flow.getFlowFamily().getFlowFamilyID());
+			
+			if(operatingStatus != null) {
+				showFlowOverviewElement.appendChild(operatingStatus.toXML(doc));
+			}
+			
+		}
 		
-		return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+		return new SimpleForegroundModuleResponse(doc, flow.getName(), this.getDefaultBreadcrumb());
 
 	}
 
@@ -799,10 +833,10 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	}
 
 	public LinkedHashMap<Integer, Flow> getLatestPublishedFlowVersionMap() {
-		
+
 		return latestPublishedFlowVersionsMap;
 	}
-	
+
 	@Override
 	protected Flow getBareFlow(Integer flowID) throws SQLException {
 
@@ -903,6 +937,18 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 		return SAVE_ACTION_ID;
 	}
 
+	@Override
+	public String getPaymentActionID() {
+
+		return PAYMENT_ACTION_ID;
+	}
+
+	@Override
+	public String getMultiSigningActionID() {
+
+		return MULTI_SIGNING_ACTION_ID;
+	}
+	
 	public String getUserFavouriteModuleAlias() {
 
 		return userFavouriteModuleAlias;
@@ -932,7 +978,19 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 			throw new URINotFoundException(uriParser);
 		}
 	}
+	
+	@WebPublic(alias = "multisign")
+	public ForegroundModuleResponse showMultiSignMessage(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException {
 
+		return super.showMultiSignMessage(req, res, user, uriParser, new SessionAccessController(req.getSession(), SESSION_ACCESS_CONTROLLER_TAG), this);
+	}
+
+	@WebPublic(alias = "pay")
+	public ForegroundModuleResponse showPaymentForm(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException {
+
+		return super.showPaymentForm(req, res, user, uriParser, new SessionAccessController(req.getSession(), SESSION_ACCESS_CONTROLLER_TAG), this);
+	}
+	
 	@Override
 	protected void redirectToSubmitMethod(MutableFlowInstanceManager flowInstanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
@@ -973,15 +1031,15 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	}
 
 	@Override
-	public String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+	protected PaymentProvider getPaymentProvider() {
 
-		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/flow/" + instanceManager.getFlowID() + "/" + instanceManager.getFlowInstanceID() + "?preview=1&signprovidererror=1";
+		return paymentProvider;
 	}
 
 	@Override
-	public String getSignSuccessURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+	public String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
 
-		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/submitted/" + instanceManager.getFlowInstanceID();
+		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/flow/" + instanceManager.getFlowID() + "/" + instanceManager.getFlowInstanceID() + "?preview=1&signprovidererror=1";
 	}
 
 	@Override
@@ -999,6 +1057,14 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	}
 
 	@Override
+	public String getPaymentSuccessURL(FlowInstanceManager instanceManager, HttpServletRequest req) {
+
+		SessionAccessController.setSessionAttribute(instanceManager.getFlowInstanceID(), req.getSession(), SESSION_ACCESS_CONTROLLER_TAG);
+		
+		return super.getPaymentSuccessURL(instanceManager, req);
+	}
+	
+	@Override
 	protected String getEventPDFLink(FlowInstanceManager instanceManager, ImmutableFlowInstanceEvent event, HttpServletRequest req, User user) {
 
 		if (event.getAttributeHandler().getPrimitiveBoolean("pdf")) {
@@ -1008,16 +1074,79 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 
 		return null;
 	}
-	
+
 	@Override
 	protected void reOpenFlowInstance(Integer flowID, Integer flowInstanceID, HttpServletRequest req, User user, URIParser uriParser) {
 
 		try {
 			getSavedMutableFlowInstanceManager(flowID, flowInstanceID, this, req.getSession(true), user, uriParser, req, true, true, true);
-			
+
 		} catch (Exception e) {
 
 			log.error("Error reopening flow instance with ID " + flowInstanceID + " for user " + user, e);
 		}
+	}
+
+	@Override
+	protected MultiSigningProvider getMultiSigningProvider() {
+
+		return multiSigningProvider;
+	}
+	
+	public void multiSigningComplete(FlowInstanceManager instanceManager, SiteProfile siteProfile){
+		
+		boolean requiresPayment = requiresPayment(instanceManager);
+		
+		EventType eventType;
+		String actionID;
+		
+		if(requiresPayment){
+			
+			actionID = FlowBrowserModule.PAYMENT_ACTION_ID;
+			eventType = EventType.STATUS_UPDATED;
+			
+		}else{
+			
+			actionID = FlowBrowserModule.SUBMIT_ACTION_ID;
+			eventType = EventType.SUBMITTED;
+			
+		}
+		
+		Status nextStatus = (Status) instanceManager.getFlowInstance().getFlow().getDefaultState(actionID);
+		
+		if(nextStatus == null){
+			
+			log.error("Unable to find status for actionID " + actionID + " for flow instance " + instanceManager + ", flow instance will be left with wrong status.");
+			return;
+		}
+		
+		try {
+			FlowInstance flowInstance = (FlowInstance) instanceManager.getFlowInstance();
+			
+			flowInstance.setStatus(nextStatus);
+			flowInstance.setLastStatusChange(TimeUtils.getCurrentTimestamp());
+			this.daoFactory.getFlowInstanceDAO().update(flowInstance);
+			
+			FlowInstanceEvent event = addFlowInstanceEvent(flowInstance, eventType, null, null);
+			
+			eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, flowInstance), EventTarget.ALL);
+			
+			//TODO send multi sign complete event
+			
+			if(!requiresPayment){
+				
+				sendSubmitEvent(instanceManager, event, actionID, siteProfile);
+			}
+			
+		} catch (SQLException e) {
+
+			log.error("Error changing status and adding event for flow instance " + instanceManager + ", flow instance will be left with wrong status.", e);
+		}
+	}
+	
+	@Override
+	public int getPriority() {
+
+		return 0;
 	}	
 }

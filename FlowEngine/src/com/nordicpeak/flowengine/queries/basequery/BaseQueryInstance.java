@@ -4,12 +4,17 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.TransactionHandler;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.validation.ValidationException;
 import se.unlogic.standardutils.xml.GeneratedElementable;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
 import com.nordicpeak.flowengine.beans.PDFQueryResponse;
 import com.nordicpeak.flowengine.beans.QueryResponse;
@@ -39,9 +44,9 @@ public abstract class BaseQueryInstance extends GeneratedElementable implements 
 	}
 
 	@Override
-	public void populate(HttpServletRequest req, User user, boolean allowPartialPopulation, QueryHandler queryHandler) throws ValidationException {
+	public void populate(HttpServletRequest req, User user, boolean allowPartialPopulation, QueryHandler queryHandler, MutableAttributeHandler attributeHandler) throws ValidationException {
 
-		BaseQueryUtils.getGenericQueryInstanceProvider(this.getClass(), queryHandler, queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID()).populate(this, req, user, allowPartialPopulation);
+		BaseQueryUtils.getGenericQueryInstanceProvider(this.getClass(), queryHandler, queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID()).populate(this, req, user, allowPartialPopulation, attributeHandler);
 	}
 
 	@Override
@@ -62,10 +67,11 @@ public abstract class BaseQueryInstance extends GeneratedElementable implements 
 		return BaseQueryUtils.getGenericQueryInstanceProvider(this.getClass(), queryHandler, queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID()).getFormHTML(this, req, user, validationErrors, enableAjaxPosting, queryRequestURL);
 	}
 
+	@Override
 	public void close(QueryHandler queryHandler){}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		if(this.queryInstanceDescriptor != null){
 			this.queryInstanceDescriptor.setPopulated(false);
@@ -82,5 +88,15 @@ public abstract class BaseQueryInstance extends GeneratedElementable implements 
 	public PDFQueryResponse getPDFContent(QueryHandler queryHandler) throws Throwable {
 
 		return BaseQueryUtils.getGenericQueryInstanceProvider(this.getClass(), queryHandler, queryInstanceDescriptor.getQueryDescriptor().getQueryTypeID()).getPDFContent(this);
+	}
+
+	public Element getBaseExportXML(Document doc) throws Exception{
+
+		Element queryInstanceElement = doc.createElement(queryInstanceDescriptor.getQueryDescriptor().getXSDElementName());
+
+		XMLUtils.appendNewElement(doc, queryInstanceElement, "QueryID", queryInstanceDescriptor.getQueryDescriptor().getQueryID());
+		XMLUtils.appendNewCDATAElement(doc, queryInstanceElement, "Name", queryInstanceDescriptor.getQueryDescriptor().getName());
+
+		return queryInstanceElement;
 	}
 }

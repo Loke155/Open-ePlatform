@@ -3,6 +3,10 @@ package com.nordicpeak.flowengine.queries.checkboxquery;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToMany;
@@ -11,7 +15,9 @@ import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
+import com.nordicpeak.flowengine.queries.fixedalternativesquery.FixedAlternativeQueryUtils;
 import com.nordicpeak.flowengine.queries.fixedalternativesquery.FixedAlternativesQueryInstance;
 
 @Table(name = "checkbox_query_instances")
@@ -20,8 +26,8 @@ public class CheckboxQueryInstance extends BaseQueryInstance implements FixedAlt
 
 	private static final long serialVersionUID = -7761759005604863873L;
 
-	public static Field ALTERNATIVES_RELATION = ReflectionUtils.getField(CheckboxQueryInstance.class, "alternatives");
-	public static Field QUERY_RELATION = ReflectionUtils.getField(CheckboxQueryInstance.class, "query");
+	public static final Field ALTERNATIVES_RELATION = ReflectionUtils.getField(CheckboxQueryInstance.class, "alternatives");
+	public static final Field QUERY_RELATION = ReflectionUtils.getField(CheckboxQueryInstance.class, "query");
 
 	@DAOManaged
 	@Key
@@ -86,6 +92,7 @@ public class CheckboxQueryInstance extends BaseQueryInstance implements FixedAlt
 	}
 
 
+	@Override
 	public String getFreeTextAlternativeValue() {
 		return freeTextAlternativeValue;
 	}
@@ -108,6 +115,7 @@ public class CheckboxQueryInstance extends BaseQueryInstance implements FixedAlt
 	}
 
 
+	@Override
 	public List<CheckboxAlternative> getAlternatives() {
 
 		return alternatives;
@@ -120,10 +128,10 @@ public class CheckboxQueryInstance extends BaseQueryInstance implements FixedAlt
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.alternatives = null;
-		super.reset();
+		super.reset(attributeHandler);
 	}
 
 	public void copyQueryValues() {
@@ -140,40 +148,12 @@ public class CheckboxQueryInstance extends BaseQueryInstance implements FixedAlt
 
 
 	@Override
-	public String getStringValue() {
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
 
-		if(alternatives == null && freeTextAlternativeValue == null){
+		Element element = getBaseExportXML(doc);
 
-			return null;
+		FixedAlternativeQueryUtils.appendExportXMLAlternatives(doc, element, this);
 
-		}
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		if(alternatives != null){
-
-			for(CheckboxAlternative alternative : alternatives){
-
-				if(stringBuilder.length() != 0){
-
-					stringBuilder.append(", ");
-				}
-
-				stringBuilder.append(alternative.getName());
-			}
-		}
-
-		if(freeTextAlternativeValue != null){
-
-			if(stringBuilder.length() != 0){
-
-				stringBuilder.append(", ");
-			}
-
-			stringBuilder.append(freeTextAlternativeValue);
-		}
-
-
-		return stringBuilder.toString();
+		return element;
 	}
 }

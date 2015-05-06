@@ -11,10 +11,10 @@
 		
 		<div class="query">
 			
-			<a name="query{TextAreaQueryInstance/QueryInstanceDescriptor/QueryDescriptor/queryID}"/>
+			<a name="query{ContactDetailQueryInstance/QueryInstanceDescriptor/QueryDescriptor/queryID}"/>
 			
 			<h2>
-				<xsl:value-of select="OrganizationDetailQueryInstance/QueryInstanceDescriptor/QueryDescriptor/name"/>
+				<xsl:value-of select="ContactDetailQueryInstance/QueryInstanceDescriptor/QueryDescriptor/name"/>
 			</h2>
 			
 			<xsl:if test="Description">
@@ -39,7 +39,7 @@
 					<xsl:value-of select="ContactDetailQueryInstance/firstname" /><xsl:text>&#160;</xsl:text><xsl:value-of select="ContactDetailQueryInstance/lastname" />
 				</div>
 				
-				<xsl:if test="ContactDetailQueryInstance/ContactDetailQuery/allowLetter = 'true'">
+				<xsl:if test="ContactDetailQueryInstance/address">
 					
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Address" /></strong><br/>
@@ -61,7 +61,7 @@
 						
 				</xsl:if>
 				
-				<xsl:if test="ContactDetailQueryInstance/ContactDetailQuery/allowPhone = 'true'">
+				<xsl:if test="ContactDetailQueryInstance/phone">
 						
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Phone" /></strong><br/>
@@ -72,7 +72,7 @@
 				
 				</xsl:if>
 				
-				<xsl:if test="ContactDetailQueryInstance/ContactDetailQuery/allowEmail = 'true'">
+				<xsl:if test="ContactDetailQueryInstance/email">
 			
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Email" /></strong><br/>
@@ -83,7 +83,7 @@
 				
 				</xsl:if>
 				
-				<xsl:if test="ContactDetailQueryInstance/ContactDetailQuery/allowSMS = 'true'">
+				<xsl:if test="ContactDetailQueryInstance/mobilePhone">
 			
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.MobilePhone" /></strong><br/>
@@ -93,26 +93,19 @@
 					</div>
 				
 				</xsl:if>
-			
+				<!-- 
 				<div class="floatleft full">
 					<strong><xsl:value-of select="$i18n.ChooseContactChannels" /></strong><br/>
-					<xsl:if test="ContactDetailQueryInstance/contactByLetter = 'true'">
-						<xsl:value-of select="$i18n.ContactByLetter" /><br/>
-					</xsl:if>
 					
-					<xsl:if test="ContactDetailQueryInstance/contactByEmail = 'true'">
+					<xsl:if test="ContactDetailQueryInstance/email">
 						<xsl:value-of select="$i18n.ContactByEmail" /><br/>
 					</xsl:if>
 					
 					<xsl:if test="ContactDetailQueryInstance/contactBySMS = 'true'">
 						<xsl:value-of select="$i18n.ContactBySMS" /><br/>
 					</xsl:if>
-					
-					<xsl:if test="ContactDetailQueryInstance/contactByPhone = 'true'">
-						<xsl:value-of select="$i18n.ContactByPhone" />
-					</xsl:if>
 				</div>
-				
+				 -->
 			</div>
 					
 		</div>

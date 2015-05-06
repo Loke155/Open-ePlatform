@@ -28,11 +28,6 @@ public class SubmitEvent implements Serializable {
 		this.siteProfile = siteProfile;
 	}
 
-	public static long getSerialversionuid() {
-
-		return serialVersionUID;
-	}
-
 	public FlowInstanceManager getFlowInstanceManager() {
 
 		return flowInstanceManager;

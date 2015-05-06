@@ -29,11 +29,12 @@
 	<xsl:variable name="i18n.email">E-postadress</xsl:variable>
 	<xsl:variable name="i18n.saveChanges">Spara ändringar</xsl:variable>
 	<xsl:variable name="i18n.ContactDetails">Kontaktuppgifter</xsl:variable>
-	<xsl:variable name="i18n.name">Namn</xsl:variable>
+	
 	<xsl:variable name="i18n.citizenIdentifier">Personnummer</xsl:variable>
 	<xsl:variable name="i18n.address">Adress</xsl:variable>
 	<xsl:variable name="i18n.zipCode">Postnummer</xsl:variable>
 	<xsl:variable name="i18n.postalAddress">Ort</xsl:variable>
 	<xsl:variable name="i18n.phone">Telefonnummer</xsl:variable>
 	<xsl:variable name="i18n.mobilePhone">Mobiltelefon</xsl:variable>
+	<xsl:variable name="i18n.SMS">Kontakta mig via SMS</xsl:variable>
 </xsl:stylesheet>

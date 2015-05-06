@@ -1,6 +1,7 @@
 package com.nordicpeak.flowengine.beans;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,29 +27,49 @@ public class UserFlowInstanceBrowserProcessCallback implements FlowProcessCallba
 
 	private String submitActionID;
 
-	public UserFlowInstanceBrowserProcessCallback(String saveActionID, String submitActionID, UserFlowInstanceModule userFlowInstanceModule) {
+	private String multiSigningActionID;
+	
+	private String paymentActionID;
+	
+	public UserFlowInstanceBrowserProcessCallback(String saveActionID, String submitActionID, String multiSigningActionID, String paymentActionID, UserFlowInstanceModule userFlowInstanceModule) {
 
 		this.saveActionID = saveActionID;
 		this.submitActionID = submitActionID;
+		this.multiSigningActionID = multiSigningActionID;
+		this.paymentActionID = paymentActionID;
 		this.userFlowInstanceModule = userFlowInstanceModule;
 	}
 
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError flowInstanceManagerClosedValidationError) throws ModuleConfigurationException, SQLException {
+	@Override
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws ModuleConfigurationException, SQLException {
 
-		return userFlowInstanceModule.list(req, res, user, uriParser, flowInstanceManagerClosedValidationError);
+		return userFlowInstanceModule.list(req, res, user, uriParser, validationErrors);
 	}
 
+	@Override
 	public String getSubmitActionID() {
 
 		return submitActionID;
 	}
 
+	@Override
 	public String getSaveActionID() {
 
 		return saveActionID;
 	}
 
 	@Override
-	public void appendFormData(Document doc, Element baseElement, MutableFlowInstanceManager instanceManager, User user) {}
+	public String getPaymentActionID() {
 
+		return paymentActionID;
+	}
+
+	@Override
+	public String getMultiSigningActionID() {
+
+		return multiSigningActionID;
+	}
+
+	@Override
+	public void appendFormData(Document doc, Element baseElement, MutableFlowInstanceManager instanceManager, User user) {}
 }

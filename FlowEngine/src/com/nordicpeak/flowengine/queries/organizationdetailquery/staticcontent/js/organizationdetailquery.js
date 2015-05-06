@@ -13,23 +13,7 @@ function initOrganizationDetailQuery(queryID) {
 	
 	var shortQueryID = "#q" + queryID;
 	
-	$(shortQueryID + "_name, " + shortQueryID + "_address, " + shortQueryID + "_zipcode, " + shortQueryID + "_postaladdress, " + shortQueryID + "_firstname, " + shortQueryID + "_lastname").change(function() {
-		
-		if(($(shortQueryID + "_name").length == 0 || $(shortQueryID + "_name").val() != "")
-				&& ($(shortQueryID + "_firstname").length == 0 || $(shortQueryID + "_firstname").val() != "")
-				&& ($(shortQueryID + "_lastname").length == 0 || $(shortQueryID + "_lastname").val() != "")
-				&& $(shortQueryID + "_address").val() != "" 
-				&& $(shortQueryID + "_zipcode").val() != "" 
-				&& $(shortQueryID + "_postaladdress").val() != "") {
-			$(shortQueryID + "_contactByLetter").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$(shortQueryID + "_contactByLetter").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	
-	$(shortQueryID + "_mobilephone").change(function() {
+	$(shortQueryID + "_mobilephone").keyup(function() {
 		
 		if($(this).val() != "") {
 			$(shortQueryID + "_contactBySMS").removeAttr("disabled").next("label").removeClass("disabled");
@@ -39,27 +23,7 @@ function initOrganizationDetailQuery(queryID) {
 		
 	});
 	
-	$(shortQueryID + "_email").change(function() {
-		
-		if($(this).val() != "") {
-			$(shortQueryID + "_contactByEmail").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$(shortQueryID + "_contactByEmail").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$(shortQueryID + "_phone").change(function() {
-		
-		if($(this).val() != "") {
-			$(shortQueryID + "_contactByPhone").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$(shortQueryID + "_contactByPhone").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$(shortQueryID + "_name, " + shortQueryID + "_address, " + shortQueryID + "_zipcode, " + shortQueryID + "_postaladdress, " + shortQueryID + "_firstname, " + shortQueryID + "_lastname, " + shortQueryID + "_mobilephone, " + shortQueryID + "_email, " + shortQueryID + "_phone").trigger("change");
+	$(shortQueryID + "_mobilephone").trigger("keyup");
 	
 	$(shortQueryID + "_newOrganization").click(function(e) {
 		
@@ -98,20 +62,8 @@ function initOrganizationDetailQuery(queryID) {
 			$(shortQueryID + "_email").val($(id + "_email").val());
 			$(shortQueryID + "_phone").val($(id + "_phone").val());
 			
-			if($(id + "_contactByLetter").val() == "true") {
-				$(shortQueryID + "_contactByLetter").attr("checked", "checked").removeAttr("disabled").next("label").removeClass("disabled");
-			}
-			
 			if($(id + "_contactBySMS").val() == "true") {
 				$(shortQueryID + "_contactBySMS").attr("checked", "checked").removeAttr("disabled").next("label").removeClass("disabled");
-			}
-			
-			if($(id + "_contactByEmail").val() == "true") {
-				$(shortQueryID + "_contactByEmail").attr("checked", "checked").removeAttr("disabled").next("label").removeClass("disabled");
-			}
-			
-			if($(id + "_contactByPhone").val() == "true") {
-				$(shortQueryID + "_contactByPhone").attr("checked", "checked").removeAttr("disabled").next("label").removeClass("disabled");
 			}
 			
 			$(shortQueryID + "_persistOrganization").next("label").text(organizationDetailQueryi18n.UpdateToMyOrganizations);
@@ -153,10 +105,7 @@ function resetOrganizationDetailForm(shortQueryID) {
 	$(shortQueryID + "_email").val("");
 	$(shortQueryID + "_phone").val("");
 	
-	$(shortQueryID + "_contactByLetter").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
 	$(shortQueryID + "_contactBySMS").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-	$(shortQueryID + "_contactByEmail").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-	$(shortQueryID + "_contactByPhone").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
 	
 	$(shortQueryID + "_persistOrganization").removeAttr("checked");
 	

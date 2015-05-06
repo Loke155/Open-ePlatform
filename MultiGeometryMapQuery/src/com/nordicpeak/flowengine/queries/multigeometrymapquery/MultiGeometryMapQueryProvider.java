@@ -17,6 +17,7 @@ import se.unlogic.hierarchy.core.annotations.ModuleSetting;
 import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.arrays.ArrayUtils;
 import se.unlogic.standardutils.collections.CollectionUtils;
 import se.unlogic.standardutils.dao.RelationQuery;
@@ -62,7 +63,7 @@ public class MultiGeometryMapQueryProvider extends BaseMapQueryProviderModule<Mu
 	}
 
 	@Override
-	public void populate(MultiGeometryMapQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(MultiGeometryMapQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		Integer queryID = queryInstance.getQuery().getQueryID();
 
@@ -127,7 +128,7 @@ public class MultiGeometryMapQueryProvider extends BaseMapQueryProviderModule<Mu
 			
 		} else {
 			
-			queryInstance.reset();
+			queryInstance.reset(attributeHandler);
 			
 			return;
 		}
@@ -152,7 +153,7 @@ public class MultiGeometryMapQueryProvider extends BaseMapQueryProviderModule<Mu
 		
 		queryInstance.getQueryInstanceDescriptor().setPopulated(true);
 		
-		generatePNG(queryInstance, user);
+		generateMapImages(queryInstance, user);
 		
 	}
 	
@@ -223,6 +224,7 @@ public class MultiGeometryMapQueryProvider extends BaseMapQueryProviderModule<Mu
 		return CONFIGURE_QUERY_ALIAS;
 	}
 
+	@Override
 	protected List<Field> getMapQueryInstanceExcludedGetRelations() {
 		
 		return Arrays.asList(Geometry.QUERY_INSTANCE_RELATION);

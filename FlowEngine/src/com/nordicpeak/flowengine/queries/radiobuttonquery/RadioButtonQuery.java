@@ -85,11 +85,13 @@ public class RadioButtonQuery extends FixedAlternativesBaseQuery implements Summ
 		return queryID;
 	}
 
+	@Override
 	public String getDescription() {
 
 		return description;
 	}
 
+	@Override
 	public List<RadioButtonAlternative> getAlternatives() {
 
 		return alternatives;
@@ -120,6 +122,7 @@ public class RadioButtonQuery extends FixedAlternativesBaseQuery implements Summ
 		this.alternatives = alternatives;
 	}
 
+	@Override
 	public String getFreeTextAlternative() {
 		return freeTextAlternative;
 	}

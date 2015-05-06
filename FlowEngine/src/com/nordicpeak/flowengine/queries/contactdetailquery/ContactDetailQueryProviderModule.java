@@ -11,7 +11,6 @@ import javax.sql.DataSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import se.unlogic.emailutils.framework.EmailUtils;
 import se.unlogic.emailutils.populators.EmailPopulator;
 import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.beans.MutableUser;
@@ -20,7 +19,6 @@ import se.unlogic.hierarchy.core.exceptions.UnableToUpdateUserException;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
 import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.utils.FCKUtils;
-import se.unlogic.hierarchy.core.validationerrors.TooLongContentValidationError;
 import se.unlogic.standardutils.dao.AnnotatedDAO;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.QueryParameterFactory;
@@ -29,8 +27,10 @@ import se.unlogic.standardutils.dao.TransactionHandler;
 import se.unlogic.standardutils.db.tableversionhandler.TableVersionHandler;
 import se.unlogic.standardutils.db.tableversionhandler.UpgradeResult;
 import se.unlogic.standardutils.db.tableversionhandler.XMLDBScriptProvider;
+import se.unlogic.standardutils.object.ObjectUtils;
 import se.unlogic.standardutils.populators.StringPopulator;
 import se.unlogic.standardutils.string.StringUtils;
+import se.unlogic.standardutils.validation.TooLongContentValidationError;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.validation.ValidationErrorType;
 import se.unlogic.standardutils.validation.ValidationException;
@@ -107,16 +107,16 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		ContactDetailQuery query = new ContactDetailQuery();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		return query;
 	}
-	
+
 	@Override
 	public Query getQuery(MutableQueryDescriptor descriptor) throws SQLException {
 
@@ -179,9 +179,12 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 			return null;
 		}
 
-		FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-		
-		URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+		if(req != null){
+
+			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+		}
 
 		TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
 
@@ -217,6 +220,7 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 		return queryInstanceDAO.get(query);
 	}
 
+	@Override
 	public void save(ContactDetailQueryInstance queryInstance, TransactionHandler transactionHandler) throws Throwable {
 
 		if (queryInstance.getQueryInstanceID() == null || !queryInstance.getQueryInstanceID().equals(queryInstance.getQueryInstanceDescriptor().getQueryInstanceID())) {
@@ -232,7 +236,7 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 	}
 
 	@Override
-	public void populate(ContactDetailQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(ContactDetailQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		StringPopulator stringPopulator = StringPopulator.getPopulator();
 
@@ -240,71 +244,55 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 
 		Integer queryID = queryInstance.getQuery().getQueryID();
 
-		boolean contactByLetter = req.getParameter("q" + queryID + "_contactByLetter") != null;
 		boolean contactBySMS = req.getParameter("q" + queryID + "_contactBySMS") != null;
-		boolean contactByEmail = req.getParameter("q" + queryID + "_contactByEmail") != null;
-		boolean contactByPhone = req.getParameter("q" + queryID + "_contactByPhone") != null;
 		boolean persistUserProfile = req.getParameter("q" + queryID + "_persistUserProfile") != null;
+
+		boolean requireAddressFields = !allowPartialPopulation && queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED && queryInstance.getQuery().requiresAddress();
+
+		String address = ValidationUtils.validateParameter("q" + queryID + "_address", req, requireAddressFields, stringPopulator, errors);
+		String zipCode = ValidationUtils.validateParameter("q" + queryID + "_zipcode", req, requireAddressFields, stringPopulator, errors);
+		String postalAddress = ValidationUtils.validateParameter("q" + queryID + "_postaladdress", req, requireAddressFields, stringPopulator, errors);
+		String mobilePhone = ValidationUtils.validateParameter("q" + queryID + "_mobilephone", req, contactBySMS, stringPopulator, errors);
+		String email = ValidationUtils.validateParameter("q" + queryID + "_email", req, !queryInstance.getQuery().isAllowSMS() && !allowPartialPopulation, EMAIL_POPULATOR, errors);
+		String phone = ValidationUtils.validateParameter("q" + queryID + "_phone", req, false, stringPopulator, errors);
 
 		String firstname;
 		String lastname;
 
 		if (user != null) {
+
+			if(queryInstance.getQueryInstanceDescriptor().getQueryState() != QueryState.VISIBLE_REQUIRED && ObjectUtils.isNull(address, zipCode, postalAddress, mobilePhone, phone, req.getParameter("q" + queryID + "_email"))){
+
+				queryInstance.reset(attributeHandler);
+				return;
+			}
+
 			firstname = user.getFirstname();
 			lastname = user.getLastname();
 		} else {
 			firstname = ValidationUtils.validateParameter("q" + queryID + "_firstname", req, true, stringPopulator, errors);
 			lastname = ValidationUtils.validateParameter("q" + queryID + "_lastname", req, true, stringPopulator, errors);
+
+			if(queryInstance.getQueryInstanceDescriptor().getQueryState() != QueryState.VISIBLE_REQUIRED && ObjectUtils.isNull(address, zipCode, postalAddress, firstname, lastname, mobilePhone, phone, req.getParameter("q" + queryID + "_email"))){
+
+				queryInstance.reset(attributeHandler);
+				return;
+			}
 		}
 
-		String address = ValidationUtils.validateParameter("q" + queryID + "_address", req, contactByLetter, stringPopulator, errors);
-		String zipCode = ValidationUtils.validateParameter("q" + queryID + "_zipcode", req, contactByLetter, stringPopulator, errors);
-		String postalAddress = ValidationUtils.validateParameter("q" + queryID + "_postaladdress", req, contactByLetter, stringPopulator, errors);
-		String mobilePhone = ValidationUtils.validateParameter("q" + queryID + "_mobilephone", req, contactBySMS, stringPopulator, errors);
-		String email = ValidationUtils.validateParameter("q" + queryID + "_email", req, contactByEmail, EMAIL_POPULATOR, errors);
-		String phone = ValidationUtils.validateParameter("q" + queryID + "_phone", req, contactByPhone, stringPopulator, errors);
+		if(!requireAddressFields){
 
-		if (!errors.isEmpty()) {
-
-			if (!allowPartialPopulation && queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED) {
-
-				throw new ValidationException(errors);
+			if (StringUtils.isEmpty(address) && (queryInstance.getQuery().requiresAddress() || (!StringUtils.isEmpty(zipCode) || !StringUtils.isEmpty(postalAddress)))) {
+				errors.add(new ValidationError("q" + queryID + "_address", ValidationErrorType.RequiredField));
 			}
 
-			queryInstance.setContactByLetter(contactByLetter);
-			queryInstance.setContactBySMS(contactBySMS);
-			queryInstance.setContactByEmail(contactByEmail);
-			queryInstance.setContactByPhone(contactByPhone);
+			if (StringUtils.isEmpty(zipCode) && (queryInstance.getQuery().requiresAddress() || (!StringUtils.isEmpty(address) || !StringUtils.isEmpty(postalAddress)))) {
+				errors.add(new ValidationError("q" + queryID + "_zipcode", ValidationErrorType.RequiredField));
+			}
 
-			queryInstance.setFirstname(firstname);
-			queryInstance.setLastname(lastname);
-			queryInstance.setAddress(address);
-			queryInstance.setZipCode(zipCode);
-			queryInstance.setPostalAddress(postalAddress);
-			queryInstance.setMobilePhone(mobilePhone);
-			queryInstance.setEmail(email);
-			queryInstance.setPhone(phone);
-			queryInstance.setPersistUserProfile(persistUserProfile);
-
-			queryInstance.getQueryInstanceDescriptor().setPopulated(queryInstance.isPopulated());
-			return;
-
-		}
-
-		if (queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED && !contactByLetter && !contactBySMS && !contactByEmail && !contactByPhone) {
-			errors.add(new ValidationError("NoContactChannelChoosen"));
-		}
-
-		if (StringUtils.isEmpty(address) && (!StringUtils.isEmpty(zipCode) || !StringUtils.isEmpty(postalAddress))) {
-			errors.add(new ValidationError("q" + queryID + "_address", ValidationErrorType.RequiredField));
-		}
-
-		if (StringUtils.isEmpty(zipCode) && (!StringUtils.isEmpty(address) || !StringUtils.isEmpty(postalAddress))) {
-			errors.add(new ValidationError("q" + queryID + "_zipcode", ValidationErrorType.RequiredField));
-		}
-
-		if (StringUtils.isEmpty(postalAddress) && (!StringUtils.isEmpty(address) || !StringUtils.isEmpty(zipCode))) {
-			errors.add(new ValidationError("q" + queryID + "_postaladdress", ValidationErrorType.RequiredField));
+			if (StringUtils.isEmpty(postalAddress) && (queryInstance.getQuery().requiresAddress() || (!StringUtils.isEmpty(address) || !StringUtils.isEmpty(zipCode)))) {
+				errors.add(new ValidationError("q" + queryID + "_postaladdress", ValidationErrorType.RequiredField));
+			}
 		}
 
 		this.validateFieldLength("q" + queryID + "_firstname", firstname, 255, errors);
@@ -316,10 +304,8 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 		this.validateFieldLength("q" + queryID + "_email", email, 255, errors);
 		this.validateFieldLength("q" + queryID + "_phone", phone, 255, errors);
 
-		if (!StringUtils.isEmpty(email)) {
-			if (!EmailUtils.isValidEmailAddress(email)) {
-				errors.add(new ValidationError("q" + queryID + "_email", ValidationErrorType.InvalidFormat));
-			}
+		if (queryInstance.getQuery().isAllowSMS() && !allowPartialPopulation && queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED && !contactBySMS && email == null) {
+			errors.add(new ValidationError("NoContactChannelChoosen"));
 		}
 
 		if (!errors.isEmpty()) {
@@ -327,10 +313,7 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 			throw new ValidationException(errors);
 		}
 
-		queryInstance.setContactByLetter(contactByLetter);
 		queryInstance.setContactBySMS(contactBySMS);
-		queryInstance.setContactByEmail(contactByEmail);
-		queryInstance.setContactByPhone(contactByPhone);
 
 		queryInstance.setFirstname(firstname);
 		queryInstance.setLastname(lastname);
@@ -362,20 +345,16 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 				}
 			}
 
-			MutableAttributeHandler attributeHandler = mutableUser.getAttributeHandler();
+			MutableAttributeHandler userAttributeHandler = mutableUser.getAttributeHandler();
 
-			if (attributeHandler != null) {
+			if (userAttributeHandler != null) {
 
-				setAttributeValue("address", address, attributeHandler);
-				setAttributeValue("zipCode", zipCode, attributeHandler);
-				setAttributeValue("postalAddress", postalAddress, attributeHandler);
-				setAttributeValue("mobilePhone", mobilePhone, attributeHandler);
-				setAttributeValue("phone", phone, attributeHandler);
-				setAttributeValue("contactByEmail", contactByEmail, attributeHandler);
-				setAttributeValue("contactByLetter", contactByLetter, attributeHandler);
-				setAttributeValue("contactByPhone", contactByPhone, attributeHandler);
-				setAttributeValue("contactBySMS", contactBySMS, attributeHandler);
-
+				setAttributeValue("address", address, userAttributeHandler);
+				setAttributeValue("zipCode", zipCode, userAttributeHandler);
+				setAttributeValue("postalAddress", postalAddress, userAttributeHandler);
+				setAttributeValue("mobilePhone", mobilePhone, userAttributeHandler);
+				setAttributeValue("phone", phone, userAttributeHandler);
+				setAttributeValue("contactBySMS", contactBySMS, userAttributeHandler);
 			}
 
 			if (!errors.isEmpty()) {
@@ -390,7 +369,7 @@ public class ContactDetailQueryProviderModule extends BaseQueryProviderModule<Co
 
 					req.getSession(true).setAttribute("user", user);
 
-					this.systemInterface.getUserHandler().updateUser(mutableUser, false, false, attributeHandler != null);
+					this.systemInterface.getUserHandler().updateUser(mutableUser, false, false, userAttributeHandler != null);
 
 				} catch (UnableToUpdateUserException e) {
 

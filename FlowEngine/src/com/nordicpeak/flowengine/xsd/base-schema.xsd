@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <xs:schema
-	xmlns="http://www.oeplatform.org/version/1.0/schemas/flowinstance" 
+	xmlns="http://www.oeplatform.org/version/1.2/schemas/flowinstance" 
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://www.oeplatform.org/version/1.0/schemas/flowinstance"
+	targetNamespace="http://www.oeplatform.org/version/1.2/schemas/flowinstance"
 	elementFormDefault="qualified"
 	attributeFormDefault="unqualified">
 
@@ -69,7 +69,6 @@
 	<xs:complexType name="Query">
 		<xs:sequence>
 			<xs:element name="QueryID" type="xs:positiveInteger" minOccurs="1" maxOccurs="1" />
-			<!-- <xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1" /> -->
 		</xs:sequence>
 	</xs:complexType>
 

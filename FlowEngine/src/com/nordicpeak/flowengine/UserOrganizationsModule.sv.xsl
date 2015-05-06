@@ -20,6 +20,7 @@
 	<xsl:variable name="i18n.Add">Lägg till</xsl:variable>
 	<xsl:variable name="i18n.UpdateOrganization">Ändra företag</xsl:variable>
 	<xsl:variable name="i18n.Update">Ändra</xsl:variable>
+	<xsl:variable name="i18n.Delete">Ta bort</xsl:variable>
 	<xsl:variable name="i18n.DeleteOrganizationConfirm">Är du säker på att du vill ta bort företaget</xsl:variable>
 	<xsl:variable name="i18n.Email">E-postadress</xsl:variable>
 	<xsl:variable name="i18n.SaveChanges">Spara ändringar</xsl:variable>
@@ -34,12 +35,12 @@
 	<xsl:variable name="i18n.Phone">Telefonnummer</xsl:variable>
 	<xsl:variable name="i18n.MobilePhone">Mobiltelefon</xsl:variable>
 	
-	<xsl:variable name="i18n.ContactWayHeader">Hur ska företaget bli kontaktat i ärenden?</xsl:variable>
-	<xsl:variable name="i18n.ContactWayDescription">Ange förvalda kontaktvägar för kontakt i företagets ärenden. Du kan alltid välja ett annat kontaktsätt separat i samband med en ny ansökan.</xsl:variable>
-	<xsl:variable name="i18n.Letter">Brev</xsl:variable>
-	<xsl:variable name="i18n.SMS">SMS</xsl:variable>
+	
+	
+	
+	<xsl:variable name="i18n.SMS">Kontakta mig via SMS</xsl:variable>
 	<xsl:variable name="i18n.Phone">Telefon</xsl:variable>
-	<xsl:variable name="i18n.MyPages">Mina sidor</xsl:variable>
+	
 	<xsl:variable name="i18n.Cancel">Avbryt</xsl:variable>
 	<xsl:variable name="i18n.NoOrganizations">Du har inga registrerade företag</xsl:variable>
 	

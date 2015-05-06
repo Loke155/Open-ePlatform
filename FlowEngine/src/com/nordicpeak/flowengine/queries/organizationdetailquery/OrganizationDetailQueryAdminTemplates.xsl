@@ -36,47 +36,27 @@
 			
 			<div class="floatleft clearboth">
 			
-				<label class="floatleft clearboth"><xsl:value-of select="$i18n.AllowedContactChannels" /></label>
-				
-				<p class="floatleft clearboth"><xsl:value-of select="$i18n.AllowedContactChannelsDescription" />.</p>
-			
+				<label class="floatleft clearboth"><xsl:value-of select="$i18n.ContactChannelSettings" /></label>
+							
 			</div>
 			
-			<div class="floatleft full marginbottom">
-				<xsl:call-template name="createCheckbox">
-					<xsl:with-param name="id" select="'allowLetter'" />
-					<xsl:with-param name="name" select="'allowLetter'" />
-					<xsl:with-param name="value" select="'true'" />
-					<xsl:with-param name="element" select="OrganizationDetailQuery" />
-				</xsl:call-template>
-				<label for="allowLetter"><xsl:value-of select="$i18n.AllowLetter" /></label>
-			</div>
 			<div class="floatleft full marginbottom">
 				<xsl:call-template name="createCheckbox">
 					<xsl:with-param name="id" select="'allowSMS'" />
 					<xsl:with-param name="name" select="'allowSMS'" />
 					<xsl:with-param name="value" select="'true'" />
-					<xsl:with-param name="element" select="OrganizationDetailQuery" />
+					<xsl:with-param name="element" select="ContactDetailQuery" />
 				</xsl:call-template>
 				<label for="allowSMS"><xsl:value-of select="$i18n.AllowSMS" /></label>
 			</div>
 			<div class="floatleft full marginbottom">
 				<xsl:call-template name="createCheckbox">
-					<xsl:with-param name="id" select="'allowEmail'" />
-					<xsl:with-param name="name" select="'allowEmail'" />
+					<xsl:with-param name="id" select="'requireAddress'" />
+					<xsl:with-param name="name" select="'requireAddress'" />
 					<xsl:with-param name="value" select="'true'" />
-					<xsl:with-param name="element" select="OrganizationDetailQuery" />
+					<xsl:with-param name="element" select="ContactDetailQuery" />
 				</xsl:call-template>
-				<label for="allowEmail"><xsl:value-of select="$i18n.AllowEmail" /></label>
-			</div>
-			<div class="floatleft full marginbottom">
-				<xsl:call-template name="createCheckbox">
-					<xsl:with-param name="id" select="'allowPhone'" />
-					<xsl:with-param name="name" select="'allowPhone'" />
-					<xsl:with-param name="value" select="'true'" />
-					<xsl:with-param name="element" select="OrganizationDetailQuery" />
-				</xsl:call-template>
-				<label for="allowPhone"><xsl:value-of select="$i18n.AllowPhone" /></label>
+				<label for="requireAddress"><xsl:value-of select="$i18n.RequireAddress" /></label>
 			</div>
 			
 			<div class="floatright margintop clearboth">
@@ -93,14 +73,6 @@
 			<xsl:value-of select="$i18n.OrganizationDetailQueryNotFound" />
 		</p>
 		
-	</xsl:template>
-
-	<xsl:template match="validationError[messageKey = 'NoContactChannelChoosen']">
-	
-		<p class="error">
-			<xsl:value-of select="$i18n.NoContactChannelChoosen" />
-		</p>
-	
 	</xsl:template>
 
 	<xsl:template match="fieldName">

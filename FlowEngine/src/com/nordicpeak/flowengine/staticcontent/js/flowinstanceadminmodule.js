@@ -1,6 +1,10 @@
 var flowInstanceAdminURI;
 var i18nChooseManager = "Choose manager";
 var i18nChooseFlowInstance = "Choose";
+var i18nFlow= "Flow";
+var i18nFlowInstanceID = "Flow instance id";
+var i18nFlowInstanceStatus = "Status";
+var i18nFlowInstanceAdded = "Added";
 
 $(document).ready(function() {
 	
@@ -239,11 +243,11 @@ function toggleBookmark(e, trigger, uri) {
 
 			if(response == 1) {
 			
-				$trigger.removeClass("btn-dark").addClass("btn-green");
+				$trigger.removeClass("btn-light").addClass("green");
 				
 			} else if(response == 0) {
 				
-				$trigger.removeClass("btn-green").addClass("btn-dark");
+				$trigger.removeClass("green").addClass("btn-light");
 				
 			}
 			
@@ -284,12 +288,12 @@ function searchFlowInstance() {
 
 						var $flowInstanceRow = $(
 							'<tr>' + 
-								'<td class="icon" />' +
-								'<td class="service">' + flowInstance.name + '</td>' +
-								'<td class="errandno">' + flowInstance.id + '</td>' +
-								'<td class="status">' + flowInstance.status + '</td>' +
-								'<td class="date">' + flowInstance.added + '</td>' +
-								'<td class="link"><a href="' + flowInstanceAdminURI + "/overview/" + flowInstance.id + '" class="btn btn-dark btn-inline">' + i18nChooseFlowInstance + '</a></td>' +
+							'<td class"icon" />' +
+							'<td data-title="' + i18nFlow +  '" class="service">' + flowInstance.name + '</td>' +
+							'<td data-title="' + i18nFlowInstanceID + '" class="errandno">' + flowInstance.id + '</td>' +
+							'<td data-title="' + i18nFlowInstanceStatus + '" class="status">' + flowInstance.status + '</td>' +
+							'<td data-title="' + i18nFlowInstanceAdded + '" class="date">' + flowInstance.added + '</td>' +
+							'<td class="link"><a href="' + flowInstanceAdminURI + "/overview/" + flowInstance.id + '" class="btn btn-dark btn-inline">' + i18nChooseFlowInstance + '</a></td>' +
 							'</tr>'
 						);
 			        	

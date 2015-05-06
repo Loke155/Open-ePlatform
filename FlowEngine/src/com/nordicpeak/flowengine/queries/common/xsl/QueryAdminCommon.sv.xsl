@@ -40,4 +40,5 @@
 	<xsl:variable name="i18n.exportQuery.title">Exportera fråga</xsl:variable>
 	<xsl:variable name="i18n.exportQuery.description">Välj om frågan skall inkluderas i den XML som skickas till andra system.</xsl:variable>
 	<xsl:variable name="i18n.exportQuery">Exportera frågan</xsl:variable>
+	<xsl:variable name="i18n.xsdElementName">XML-elementnamn</xsl:variable>
 </xsl:stylesheet>

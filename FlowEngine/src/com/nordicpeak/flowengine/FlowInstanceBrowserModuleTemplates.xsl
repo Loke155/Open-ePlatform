@@ -10,7 +10,10 @@
 
 	<xsl:variable name="scripts">
 		/js/jquery.blockui.js
+		/js/flowengine.helpdialog.js
 		/js/flowengine.js
+		/js/flowengine.step-navigator.js
+		/js/jquery.expander.min.js
 		/js/flowinstancebrowser.js
 	</xsl:variable>
 
@@ -27,6 +30,9 @@
 			<xsl:apply-templates select="FlowInstanceManagerPreview"/>
 			<xsl:apply-templates select="FlowInstanceManagerSubmitted"/>
 			<xsl:apply-templates select="SigningForm"/>	
+			<xsl:apply-templates select="MultiSigningStatusForm"/>
+			<xsl:apply-templates select="StandalonePaymentForm"/>
+			<xsl:apply-templates select="InlinePaymentForm"/>
 		</div>
 		
 	</xsl:template>
@@ -71,43 +77,74 @@
 		
 		<xsl:variable name="flowID" select="flowID" />
 		<xsl:variable name="flowFamilyID" select="FlowFamily/flowFamilyID" />
+		<xsl:variable name="operatingMessage" select="../OperatingMessage" />
 
 		<xsl:variable name="isInternal">
 			<xsl:if test="not(externalLink)">true</xsl:if>
 		</xsl:variable>
 		
-		<section>
+		<section class="no-pad-tablet">
 		
 				<div class="section-inside">
-  				<div class="heading-wrapper">
-  					<figure>
-	  					<img alt="" src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" />
-	  				</figure>
-	  				<div class="heading">
-  						<h1 id="flow_{$flowID}" class="xl"><xsl:value-of select="name" />
-  							<xsl:if test="../loggedIn and ../userFavouriteModuleAlias">
-  								<i id="flowFamily_{FlowFamily/flowFamilyID}" data-icon-after="*" class="xl favourite">
-  									<xsl:if test="not(../UserFavourite[FlowFamily/flowFamilyID = $flowFamilyID])">
-										<xsl:attribute name="class">xl favourite gray</xsl:attribute>
-									</xsl:if>
-  								</i>
-  							</xsl:if>
-  						</h1>
-  						<xsl:if test="not(../loggedIn) and requireAuthentication = 'true'">
-  							<span data-icon-before="u"><xsl:value-of select="$i18n.AuthenticationRequired" /></span>						
-  						</xsl:if>
-					</div>
-  				</div>
-  				<div class="description">
-  					<h2><xsl:value-of select="$i18n.Description" /></h2>
-  					<xsl:choose>
-  						<xsl:when test="longDescription"><xsl:value-of select="longDescription" disable-output-escaping="yes" /></xsl:when>
-  						<xsl:otherwise><xsl:value-of select="shortDescription" disable-output-escaping="yes" /></xsl:otherwise>
-  					</xsl:choose>
-  					
-  				</div>
+	  				<div class="heading-wrapper">
+	  					<figure>
+		  					<img alt="" src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" />
+		  				</figure>
+		  				<div class="heading">
+	  						<h1 id="flow_{$flowID}" class="xl"><xsl:value-of select="name" />
+	  							<xsl:if test="../loggedIn and ../userFavouriteModuleAlias">
+	  								<i id="flowFamily_{FlowFamily/flowFamilyID}" data-icon-after="*" class="xl favourite">
+	  									<xsl:if test="not(../UserFavourite[FlowFamily/flowFamilyID = $flowFamilyID])">
+											<xsl:attribute name="class">xl favourite gray</xsl:attribute>
+										</xsl:if>
+	  								</i>
+	  							</xsl:if>
+	  						</h1>
+	  						<xsl:if test="not(../loggedIn) and requireAuthentication = 'true'">
+	  							<span data-icon-before="u" class="marginleft"><xsl:value-of select="$i18n.AuthenticationRequired" /></span>
+	  						</xsl:if>
+						</div>
+						<xsl:if test="$operatingMessage/global = 'false'">
+							<section class="modal warning floatleft clearboth border-box full" style=""><i class="icon" style="font-size: 16px; margin-right: 4px; color: rgb(199, 52, 52);">!</i><xsl:value-of select="$operatingMessage/message" /></section>
+						</xsl:if>
+	  				</div>
+	  				<div class="description">
+	  					<a class="btn btn-light btn-inline btn-readmore">LÄS MER</a>
+	  					<xsl:choose>
+	  						<xsl:when test="longDescription"><xsl:value-of select="longDescription" disable-output-escaping="yes" /></xsl:when>
+	  						<xsl:otherwise><xsl:value-of select="shortDescription" disable-output-escaping="yes" /></xsl:otherwise>
+	  					</xsl:choose>
+	  					<xsl:if test="FlowFamily/contactName or FlowFamily/ownerName">
+							<div class="about-flow">
+								<xsl:if test="FlowFamily/contactName">
+									<div class="inner">
+										<h2 class="h1"><xsl:value-of select="$i18n.Questions" /></h2>
+										<xsl:value-of select="FlowFamily/contactName" />
+										<xsl:if test="FlowFamily/contactEmail">
+											<br/><a href="mailto:{FlowFamily/contactEmail}" title="{$i18n.SendMailTo}: {FlowFamily/contactEmail}"><xsl:value-of select="FlowFamily/contactEmail" /></a>
+										</xsl:if>
+										<xsl:if test="FlowFamily/contactPhone">
+											<br /><xsl:value-of select="FlowFamily/contactPhone" />
+										</xsl:if>
+									</div>
+								</xsl:if>
+								<xsl:if test="FlowFamily/ownerName">
+									<div class="inner">
+										<h2 class="h1"><xsl:value-of select="$i18n.Responsible" /></h2>
+										<xsl:value-of select="FlowFamily/ownerName" />
+										<xsl:if test="FlowFamily/ownerEmail">
+											<br /><a href="mailto:{FlowFamily/ownerEmail}" title="{$i18n.SendMailTo}: {FlowFamily/ownerEmail}"><xsl:value-of select="FlowFamily/ownerEmail" /></a>
+										</xsl:if>
+									</div>
+								</xsl:if>
+							</div>
+						</xsl:if>
+	  				</div>
+	  				
  				</div>
  				
+ 			<xsl:variable name="isDisabled" select="$operatingMessage and $operatingMessage/disableFlows = 'true'" />
+ 			
   			<div class="aside-inside">
   				<div class="section yellow">
   					<xsl:if test="Checks/check">
@@ -116,10 +153,13 @@
 	  						<xsl:apply-templates select="Checks/check" mode="overview" />
 	  					</ul>
   					</xsl:if>
-  					<div class="btn-wrapper">
+  					<div class="btn-wrapper hide-tablet">
   						<xsl:choose>
   							<xsl:when test="$isInternal = 'true'">
-  								<a class="btn btn-green xl" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/flow/{flowID}"><xsl:value-of select="$i18n.StartFlow" /></a>
+  								<xsl:choose>
+  									<xsl:when test="$isDisabled"><a class="btn btn-green xl disabled" href="javascript:void(0)" title="{$operatingMessage/message}"><xsl:value-of select="$i18n.StartFlow" /></a></xsl:when>
+  									<xsl:otherwise><a class="btn btn-green xl" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/flow/{flowID}"><xsl:value-of select="$i18n.StartFlow" /></a></xsl:otherwise>
+  								</xsl:choose>
   							</xsl:when>
   							<xsl:otherwise>
   								<a class="btn btn-green xl" href="{externalLink}">
@@ -128,20 +168,23 @@
 		  								<xsl:attribute name="data-icon-after">e</xsl:attribute>
 										<xsl:attribute name="target">_blank</xsl:attribute>
 		  							</xsl:if>
+		  							<xsl:if test="$isDisabled">
+		  								<xsl:attribute name="href">javascript:void(0)</xsl:attribute>
+		  								<xsl:attribute name="class">btn btn-green xl disabled</xsl:attribute>
+		  							</xsl:if>
   									<xsl:value-of select="$i18n.StartFlow" />
   								
   								</a>
   							</xsl:otherwise>
   						</xsl:choose>
-  						
   					</div>
   				</div>
   			</div>
   			
   			<xsl:if test="$isInternal = 'true'">
   			
-	  			<div class="section-full">
-	  				<h2 class="h1"><xsl:value-of select="$i18n.StepDescriptionTitle" />:</h2>
+	  			<div class="section-full no-pad-tablet">
+	  				<h2 class="h1 hide-tablet"><xsl:value-of select="$i18n.StepDescriptionTitle" />:</h2>
 	  				
 	  				<xsl:variable name="submitText">
 						<xsl:choose>
@@ -150,29 +193,46 @@
 						</xsl:choose>			
 					</xsl:variable>
 	  				
-	  				<ul class="service-navigator clearfix">
+	  				<div class="service-navigator-wrap summary">
+	  					<div>
 	  					
-	  					<xsl:apply-templates select="Steps/Step" mode="overview" />
+	  						<a data-icon-after="&lt;" href="#" class="js-prev disabled">
+			  					<span><xsl:value-of select="$i18n.Previous" /></span>
+			  				</a>
+	  						
+	  						<ul class="service-navigator primary navigated">
+	  						
+			  					<xsl:apply-templates select="Steps/Step" mode="overview">
+			  						<xsl:with-param name="flowDisabled" select="$isDisabled" />
+			  					</xsl:apply-templates>
+			  					
+			  					<xsl:variable name="stepCount" select="count(Steps/Step)" />
+			  					
+			  					<xsl:choose>
+			  						<xsl:when test="usePreview = 'true'">
+			  							<li>
+					  						<span data-step="{$stepCount + 1}"><xsl:value-of select="$i18n.preview" /></span>
+					  					</li>
+					  					<li>
+					  						<span data-step="{$stepCount + 2}"><xsl:value-of select="$submitText" /></span>
+					  					</li>
+			  						</xsl:when>
+			  						<xsl:otherwise>
+			  							<li>
+					  						<span data-step="{$stepCount + 1}"><xsl:value-of select="$submitText" /></span>
+					  					</li>
+			  						</xsl:otherwise>
+			  					</xsl:choose>
+		  					
+		  					</ul>
+		  					
+		  					<a data-icon-after="&gt;" href="#" class="js-next">
+			  					<span><xsl:value-of select="$i18n.Next" /></span>
+			  				</a>
+		  					
+	  					</div>
 	  					
-	  					<xsl:variable name="stepCount" select="count(Steps/Step)" />
-	  					
-	  					<xsl:choose>
-	  						<xsl:when test="usePreview = 'true'">
-	  							<li>
-			  						<span data-step="{$stepCount + 1}"><xsl:value-of select="$i18n.preview" /></span>
-			  					</li>
-			  					<li>
-			  						<span data-step="{$stepCount + 2}"><xsl:value-of select="$submitText" /></span>
-			  					</li>
-	  						</xsl:when>
-	  						<xsl:otherwise>
-	  							<li>
-			  						<span data-step="{$stepCount + 1}"><xsl:value-of select="$submitText" /></span>
-			  					</li>
-	  						</xsl:otherwise>
-	  					</xsl:choose>
-	  				
-	  				</ul>
+	  				</div>
 	  			</div>
 	  		
 	  		</xsl:if>
@@ -199,8 +259,21 @@
 	
 	<xsl:template match="Step" mode="overview">
 		
+		<xsl:param name="flowDisabled" />
+		
 		<li>
+			<xsl:if test="position() = 1">
+				<xsl:attribute name="class">begin</xsl:attribute>
+			</xsl:if>
 			<span data-step="{position()}"><xsl:value-of select="name" /></span>
+			
+			<xsl:if test="position() = 1">
+				<xsl:choose>
+					<xsl:when test="$flowDisabled"><a class="btn btn-green btn-inline hide-desktop disabled" href="javascript:void(0)"><xsl:value-of select="$i18n.StartFlow" /></a></xsl:when>
+					<xsl:otherwise><a class="btn btn-green btn-inline hide-desktop" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/flow/{../../flowID}"><xsl:value-of select="$i18n.StartFlow" /></a></xsl:otherwise>
+				</xsl:choose>
+				
+			</xsl:if>
 		</li>
 		
 	</xsl:template>
@@ -216,14 +289,14 @@
 			<xsl:apply-templates select="validationError" />
 		</xsl:if>
 		
-		<section>
+		<section class="no-shadow-btm">
 	  				
 			<div class="search-wrapper">
 				<h2 class="h1"><xsl:value-of select="$i18n.SearchTitle" /></h2>
 				<div class="search">
 					<div class="input-wrapper">
 						<input type="text" placeholder="{$i18n.SearchHints}" name="search" class="noborder" id="search" />
-						<div class="symbol"><i class="xl">r</i></div>
+						<!-- <div class="symbol"><i class="xl">r</i></div> -->
 						<input type="button" value="s" class="btn btn-search" onclick="searchFlow()" />
 					</div>
 				</div>
@@ -243,20 +316,44 @@
 		
 		<section class="search-results">
 			<div class="info">
-				<span class="message"><i>c</i><xsl:value-of select="$i18n.SearchDone" />.</span>
+				<!-- <span class="message"><i>c</i><xsl:value-of select="$i18n.SearchDone" />.</span> -->
 				<span class="close"><a href="#"><xsl:value-of select="$i18n.close" /> <i>x</i></a></span>
 			</div>
 			<h2 class="h1 search-results-title"><span class="title" /><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.Hits.Part1" /><xsl:text>&#160;</xsl:text><span class="hits" /><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.Hits.Part2" /></h2>
 			<ul class="previews" />
 		</section>
 		
-		<xsl:apply-templates select="FlowType" />
+		<xsl:if test="FlowType">
+			
+			<section>
+				<div class="filter-wrapper">
+					<div class="hr-divider popularflows-divider">
+						<span class="label"><xsl:value-of select="$i18n.SortFlowTypes" /></span>
+					</div>
+					<a class="btn btn-dark xl filter-btn" data-icon-after="_"><xsl:value-of select="$i18n.FlowTypeFilter" /></a>
+					<div class="filters">
+						<xsl:apply-templates select="FlowType" mode="filter" />
+					</div>
+				</div>
+			</section>
+			
+			<xsl:apply-templates select="FlowType" />
+				
+		</xsl:if>
 				
 	</xsl:template>
 	
 	<xsl:template match="Tag">
 	
-		<li><a href="#">#<xsl:value-of select="." /></a></li>
+		<li><a href="#"><xsl:value-of select="." /></a></li>
+		
+	</xsl:template>
+	
+	<xsl:template match="FlowType" mode="filter">
+		
+		<xsl:variable name="flowTypeID" select="flowTypeID" />
+		
+		<a class="btn btn-xs btn-light btn-inline" href="#flowtype{flowTypeID}"><xsl:value-of select="name" /><xsl:text>&#160;(</xsl:text><xsl:value-of select="count(../Flow[FlowType/flowTypeID = $flowTypeID])" /><xsl:text>)</xsl:text></a>
 		
 	</xsl:template>
 	
@@ -264,17 +361,25 @@
 		
 		<xsl:param name="flowTypeID" select="flowTypeID" />
 		<xsl:param name="flows" select="../Flow[FlowType/flowTypeID = $flowTypeID]" />
+		<xsl:param name="useCategoryFilter" select="../useCategoryFilter" />
 		
-		<section id="flowtype_{flowTypeID}">
+		<section id="flowtype_{flowTypeID}" class="accordion" data-filter="flowtype{flowTypeID}">
+			
+			<xsl:if test="position() = 1">
+				<xsl:attribute name="class">accordion first</xsl:attribute>
+			</xsl:if>
 			
 			<div class="heading-wrapper">
 				
-				<h2 class="h1"><xsl:value-of select="name" /></h2>
+				<h2 class="h1">
+					<xsl:value-of select="name" />
+					<a class="btn btn-light accordion-toggler count"></a>
+				</h2>
 				
-				<xsl:if test="$flows">
+				<xsl:if test="$flows and $useCategoryFilter">
 					
 					<div class="select-wrapper">
-						<div class="select-box" id="select_{flowTypeID}">
+						<div class="select-box category-select" id="select_{flowTypeID}">
 							<span class="text"><xsl:value-of select="$i18n.MostPopular" /></span>
 							<span class="arrow">_</span>
 							<div class="options">
@@ -306,22 +411,59 @@
 				
 			</div>
 			
-			<ul class="previews">
-			
-				<xsl:choose>
-					<xsl:when test="not($flows)">
+			<xsl:choose>
+				<xsl:when test="$useCategoryFilter">
 					
-						<li><div class="inner"><h2><xsl:value-of select="$i18n.NoFlowsFound"/></h2></div></li>
+					<ul class="previews">
+						<xsl:choose>
+							<xsl:when test="not($flows)">
+								<li><div class="inner"><h2><xsl:value-of select="$i18n.NoFlowsFound"/></h2></div></li>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:apply-templates select="$flows" />
+							</xsl:otherwise>
+						</xsl:choose>
+					</ul>
 					
-					</xsl:when>
-					<xsl:otherwise>
-							
-						<xsl:apply-templates select="$flows" />
+				</xsl:when>
+				<xsl:otherwise>
 					
-					</xsl:otherwise>
-				</xsl:choose>
-			
-			</ul>
+					<xsl:variable name="popularFlows" select="$flows[popular]" />
+					
+					<div class="popularflows-wrapper">
+				
+						<div class="hr-divider popularflows-divider">
+							<span class="label"><xsl:value-of select="$i18n.MostUsedFLows" /></span>
+						</div>
+				
+						<ul class="previews popularflows-list">
+						</ul>
+					
+					</div>
+				
+					<div class="allflows-wrapper hidden">
+				
+						<div class="hr-divider allflows-divider">
+							<span class="label"><xsl:value-of select="$i18n.AllFlows" /></span>
+						</div>
+					
+						<ul class="previews allflows-list">
+							<xsl:choose>
+								<xsl:when test="not($flows)">
+									<li><div class="inner"><h2><xsl:value-of select="$i18n.NoFlowsFound"/></h2></div></li>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:apply-templates select="$flows" />
+								</xsl:otherwise>
+							</xsl:choose>
+						</ul>
+				
+					</div>
+				
+					<a class="footer-button show-all-link"><xsl:value-of select="$i18n.ShowAll" /></a>
+					
+				</xsl:otherwise>
+			</xsl:choose>
 			
 		</section>
 		
@@ -373,34 +515,40 @@
 				<xsl:when test="enabled = 'true'">
 					<a href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/overview/{FlowFamily/flowFamilyID}">
 						<div class="inner">
-							<figure><img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" /></figure>
-							<h2>
-								<xsl:value-of select="name" />
-								<xsl:choose>
-									<xsl:when test="//loggedIn">
-										<xsl:if test="//userFavouriteModuleAlias">
-											<i id="flowFamily_{FlowFamily/flowFamilyID}" data-icon-after="*" class="favourite">
-												<xsl:if test="not(//UserFavourite[FlowFamily/flowFamilyID = $flowFamilyID])">
-													<xsl:attribute name="class">favourite gray</xsl:attribute>
-												</xsl:if>
-											</i>
-										</xsl:if>
-									</xsl:when>
-									<xsl:when test="requireAuthentication = 'true'">
-										<i data-icon-before="u" title="{$i18n.AuthenticationRequired}"></i>
-									</xsl:when>
-								</xsl:choose>
-							</h2>
-							<xsl:value-of select="shortDescription" disable-output-escaping="yes" />
+							<figure><img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" alt="" /></figure>
+							<div>
+								<h2>
+									<xsl:value-of select="name" />
+									<xsl:choose>
+										<xsl:when test="//loggedIn">
+											<xsl:if test="//userFavouriteModuleAlias">
+												<i id="flowFamily_{FlowFamily/flowFamilyID}" data-icon-after="*" class="favourite">
+													<xsl:if test="not(//UserFavourite[FlowFamily/flowFamilyID = $flowFamilyID])">
+														<xsl:attribute name="class">favourite gray</xsl:attribute>
+													</xsl:if>
+												</i>
+											</xsl:if>
+										</xsl:when>
+										<xsl:when test="requireAuthentication = 'true'">
+											<i data-icon-before="u" title="{$i18n.AuthenticationRequired}" class="marginleft"></i>
+										</xsl:when>
+									</xsl:choose>
+								</h2>
+								<span class="description"><xsl:value-of select="shortDescription" disable-output-escaping="yes" /></span>
+							</div>
 						</div>
 					</a>
 				</xsl:when>
 				<xsl:otherwise>
 					<div class="inner">
-						<figure><img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" width="65" /></figure>
-						<h2><xsl:value-of select="name" /></h2>
-						<b>(<xsl:value-of select="$i18n.FlowDisabled" />)</b>
-						<xsl:value-of select="shortDescription" disable-output-escaping="yes" />
+						<figure><img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{flowID}" width="65" alt="" /></figure>
+						<div>
+							<h2><xsl:value-of select="name" /><b class="hidden">(<xsl:value-of select="$i18n.FlowDisabled" />)</b></h2>
+							<span class="description">
+								<b>(<xsl:value-of select="$i18n.FlowDisabled" />)</b><br/>
+								<xsl:value-of select="shortDescription" disable-output-escaping="yes" />
+							</span>
+						</div>
 					</div>
 				</xsl:otherwise>
 			</xsl:choose>

@@ -13,6 +13,6 @@ public interface Query extends Elementable{
 	public String getConfigAlias();
 
 	public String getXSDTypeName();
-	
+
 	public void toXSD(Document doc);
 }

@@ -81,22 +81,7 @@ public class UserOrganization extends GeneratedElementable {
 	@WebPopulate
 	@DAOManaged
 	@XMLElement
-	private boolean contactByLetter;
-
-	@WebPopulate
-	@DAOManaged
-	@XMLElement
-	private boolean contactByEmail;
-
-	@WebPopulate
-	@DAOManaged
-	@XMLElement
 	private boolean contactBySMS;
-
-	@WebPopulate
-	@DAOManaged
-	@XMLElement
-	private boolean contactByPhone;
 
 	@DAOManaged(columnName = "userID")
 	@XMLElement
@@ -212,26 +197,6 @@ public class UserOrganization extends GeneratedElementable {
 		this.email = email;
 	}
 
-	public boolean isContactByLetter() {
-
-		return contactByLetter;
-	}
-
-	public void setContactByLetter(boolean contactByLetter) {
-
-		this.contactByLetter = contactByLetter;
-	}
-
-	public boolean isContactByEmail() {
-
-		return contactByEmail;
-	}
-
-	public void setContactByEmail(boolean contactByEmail) {
-
-		this.contactByEmail = contactByEmail;
-	}
-
 	public boolean isContactBySMS() {
 
 		return contactBySMS;
@@ -240,16 +205,6 @@ public class UserOrganization extends GeneratedElementable {
 	public void setContactBySMS(boolean contactBySMS) {
 
 		this.contactBySMS = contactBySMS;
-	}
-
-	public boolean isContactByPhone() {
-
-		return contactByPhone;
-	}
-
-	public void setContactByPhone(boolean contactByPhone) {
-
-		this.contactByPhone = contactByPhone;
 	}
 
 	public User getUser() {

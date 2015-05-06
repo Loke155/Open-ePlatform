@@ -4,6 +4,10 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.Key;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
@@ -12,7 +16,9 @@ import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.XMLElement;
 
 import com.nordicpeak.flowengine.interfaces.ImmutableAlternative;
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basequery.BaseQueryInstance;
+import com.nordicpeak.flowengine.queries.fixedalternativesquery.FixedAlternativeQueryUtils;
 import com.nordicpeak.flowengine.queries.fixedalternativesquery.FixedAlternativesQueryInstance;
 
 
@@ -68,10 +74,10 @@ public class RadioButtonQueryInstance extends BaseQueryInstance implements Fixed
 	}
 
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.alternative = null;
-		super.reset();
+		super.reset(attributeHandler);
 	}
 
 	public void copyQueryValues() {}
@@ -93,6 +99,7 @@ public class RadioButtonQueryInstance extends BaseQueryInstance implements Fixed
 		this.alternative = alternative;
 	}
 
+	@Override
 	public String getFreeTextAlternativeValue() {
 
 		return freeTextAlternativeValue;
@@ -115,17 +122,12 @@ public class RadioButtonQueryInstance extends BaseQueryInstance implements Fixed
 	}
 
 	@Override
-	public String getStringValue() {
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
 
-		if(alternative != null){
+		Element element = getBaseExportXML(doc);
 
-			return alternative.getName();
+		FixedAlternativeQueryUtils.appendExportXMLAlternatives(doc, element, this);
 
-		}else if(freeTextAlternativeValue != null){
-
-			return freeTextAlternativeValue;
-		}
-
-		return null;
+		return element;
 	}
 }

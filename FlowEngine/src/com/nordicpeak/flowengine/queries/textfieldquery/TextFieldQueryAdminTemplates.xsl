@@ -194,6 +194,7 @@
 		    </div>
 		</div>
 		
+		<!-- 
 		<div class="floatleft full bigmarginbottom">
 			<label for="width" class="floatleft clearboth"><xsl:value-of select="$i18n.Width" /></label>
 			<div class="floatleft full">
@@ -206,6 +207,7 @@
 				</xsl:call-template>
 		    </div>
 		</div>
+		 -->
 		
 		<div class="floatleft full bigmarginbottom">
 			<label for="maxContentLength" class="floatleft clearboth"><xsl:value-of select="$i18n.MaxLength" /></label>

@@ -21,6 +21,7 @@ import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.beans.Breadcrumb;
 import se.unlogic.hierarchy.core.beans.SimpleForegroundModuleResponse;
 import se.unlogic.hierarchy.core.beans.User;
+import se.unlogic.hierarchy.core.enums.EventTarget;
 import se.unlogic.hierarchy.core.exceptions.AccessDeniedException;
 import se.unlogic.hierarchy.core.exceptions.ModuleConfigurationException;
 import se.unlogic.hierarchy.core.exceptions.URINotFoundException;
@@ -43,6 +44,7 @@ import com.nordicpeak.flowengine.accesscontrollers.SessionAccessController;
 import com.nordicpeak.flowengine.accesscontrollers.UserFlowInstanceAccessController;
 import com.nordicpeak.flowengine.beans.ExternalMessage;
 import com.nordicpeak.flowengine.beans.ExternalMessageAttachment;
+import com.nordicpeak.flowengine.beans.Flow;
 import com.nordicpeak.flowengine.beans.FlowInstance;
 import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.beans.Status;
@@ -50,7 +52,9 @@ import com.nordicpeak.flowengine.beans.UserFlowInstanceBrowserProcessCallback;
 import com.nordicpeak.flowengine.cruds.ExternalMessageCRUD;
 import com.nordicpeak.flowengine.enums.ContentType;
 import com.nordicpeak.flowengine.enums.EventType;
+import com.nordicpeak.flowengine.enums.SenderType;
 import com.nordicpeak.flowengine.enums.ShowMode;
+import com.nordicpeak.flowengine.events.ExternalMessageAddedEvent;
 import com.nordicpeak.flowengine.exceptions.FlowEngineException;
 import com.nordicpeak.flowengine.exceptions.evaluation.EvaluationException;
 import com.nordicpeak.flowengine.exceptions.evaluationprovider.EvaluationProviderException;
@@ -71,19 +75,20 @@ import com.nordicpeak.flowengine.interfaces.FlowInstanceAccessController;
 import com.nordicpeak.flowengine.interfaces.FlowProcessCallback;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstance;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstanceEvent;
+import com.nordicpeak.flowengine.interfaces.MultiSigningProvider;
 import com.nordicpeak.flowengine.interfaces.PDFProvider;
+import com.nordicpeak.flowengine.interfaces.PaymentProvider;
 import com.nordicpeak.flowengine.interfaces.SigningProvider;
+import com.nordicpeak.flowengine.interfaces.XMLProvider;
 import com.nordicpeak.flowengine.managers.FlowInstanceManager;
 import com.nordicpeak.flowengine.managers.MutableFlowInstanceManager;
 
 public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
-	protected static final Field [] FLOW_INSTANCE_OVERVIEW_RELATIONS = { FlowInstance.EXTERNAL_MESSAGES_RELATION, ExternalMessage.ATTACHMENTS_RELATION, FlowInstance.FLOW_RELATION, FlowInstance.FLOW_STATE_RELATION, FlowInstance.EVENTS_RELATION, FlowInstanceEvent.ATTRIBUTES_RELATION, FlowInstance.MANAGERS_RELATION};
-	
+	protected static final Field [] FLOW_INSTANCE_OVERVIEW_RELATIONS = { FlowInstance.EXTERNAL_MESSAGES_RELATION, ExternalMessage.ATTACHMENTS_RELATION, FlowInstance.FLOW_RELATION, FlowInstance.FLOW_STATE_RELATION, FlowInstance.EVENTS_RELATION, FlowInstanceEvent.ATTRIBUTES_RELATION, FlowInstance.MANAGERS_RELATION, Flow.FLOW_FAMILY_RELATION};
+
 	public static final String SESSION_ACCESS_CONTROLLER_TAG = UserFlowInstanceModule.class.getName();
-	
-	public static final String SAVE_ACTION_ID = FlowBrowserModule.class.getName() + ".save";
-	public static final String SUBMIT_ACTION_ID = FlowBrowserModule.class.getName() + ".submit";
+
 	public static final String SUBMIT_COMPLETION_ACTION_ID = UserFlowInstanceModule.class.getName() + ".submitcompletion";
 
 	public static final UserFlowInstanceAccessController UPDATE_ACCESS_CONTROLLER = new UserFlowInstanceAccessController(true, false);
@@ -96,11 +101,20 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 	private QueryParameterFactory<FlowInstanceEvent, Timestamp> flowInstanceEventAddedParamFactory;
 
 	@InstanceManagerDependency
-	protected PDFProvider pdfProvider;	
-	
+	protected PDFProvider pdfProvider;
+
 	@InstanceManagerDependency
-	protected SigningProvider signingProvider;	
-	
+	protected SigningProvider signingProvider;
+
+	@InstanceManagerDependency
+	protected MultiSigningProvider multiSigningProvider;
+
+	@InstanceManagerDependency
+	protected PaymentProvider paymentProvider;
+
+	@InstanceManagerDependency
+	protected XMLProvider xmlProvider;
+
 	private FlowProcessCallback defaultFlowProcessCallback;
 
 	private FlowProcessCallback completeFlowProcessCallback;
@@ -117,8 +131,8 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 		flowInstanceEventPosterParamFactory = daoFactory.getFlowInstanceEventDAO().getParamFactory("poster", User.class);
 		flowInstanceEventAddedParamFactory = daoFactory.getFlowInstanceEventDAO().getParamFactory("added", Timestamp.class);
 
-		defaultFlowProcessCallback = new UserFlowInstanceBrowserProcessCallback(SAVE_ACTION_ID, SUBMIT_ACTION_ID, this);
-		completeFlowProcessCallback = new UserFlowInstanceBrowserProcessCallback(null, SUBMIT_COMPLETION_ACTION_ID, this);
+		defaultFlowProcessCallback = new UserFlowInstanceBrowserProcessCallback(FlowBrowserModule.SAVE_ACTION_ID, FlowBrowserModule.SUBMIT_ACTION_ID, FlowBrowserModule.MULTI_SIGNING_ACTION_ID, FlowBrowserModule.PAYMENT_ACTION_ID, this);
+		completeFlowProcessCallback = new UserFlowInstanceBrowserProcessCallback(null, SUBMIT_COMPLETION_ACTION_ID, null, null, this);
 
 		externalMessageCRUD = new ExternalMessageCRUD(daoFactory.getExternalMessageDAO(), daoFactory.getExternalMessageAttachmentDAO(), this);
 	}
@@ -150,11 +164,16 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 	@Override
 	public ForegroundModuleResponse defaultMethod(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception, Throwable {
 
-		return this.list(req, res, user, uriParser, null);
+		return this.list(req, res, user, uriParser, (List<ValidationError>)null);
+	}
+
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws ModuleConfigurationException, SQLException {
+
+		return list(req, res, user, uriParser, CollectionUtils.getGenericSingletonList(validationError));
 	}
 
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws ModuleConfigurationException, SQLException {
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws ModuleConfigurationException, SQLException {
 
 		log.info("User " + user + " listing its flow instances");
 
@@ -176,14 +195,14 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
 				Status status = flowInstance.getStatus();
 
-				if((status.getContentType() == ContentType.NEW)) {
+				if((status.getContentType() == ContentType.NEW || status.getContentType() == ContentType.WAITING_FOR_MULTISIGN || status.getContentType() == ContentType.WAITING_FOR_PAYMENT)) {
 
 					savedFlowInstancesElement.appendChild(flowInstance.toXML(doc));
 
 				} else if(status.getContentType() == ContentType.SUBMITTED || status.getContentType() == ContentType.IN_PROGRESS || status.getContentType() == ContentType.WAITING_FOR_COMPLETION) {
 
 					Element flowInstanceElement = flowInstance.toXML(doc);
-					
+
 					List<FlowInstanceEvent> events = this.getNewFlowInstanceEvents(flowInstance, user);
 
 					if(events != null) {
@@ -193,7 +212,7 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 						}
 
 						XMLUtils.append(doc, flowInstanceElement, "newEvents", events);
-						
+
 					}
 
 					submittedFlowInstancesElement.appendChild(flowInstanceElement);
@@ -213,12 +232,12 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
 		}
 
-		if(validationError != null){
+		if(validationErrors != null){
 
-			listFlowInstancesElement.appendChild(validationError.toXML(doc));
+			XMLUtils.append(doc, listFlowInstancesElement, validationErrors);
 		}
 
-		return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+		return new SimpleForegroundModuleResponse(doc, moduleDescriptor.getName(), this.getDefaultBreadcrumb());
 	}
 
 	@WebPublic(alias = "overview")
@@ -242,7 +261,9 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
 				if(externalMessage != null) {
 
-					this.addFlowInstanceEvent(flowInstance, EventType.CUSTOMER_MESSAGE_SENT, null, user);
+					FlowInstanceEvent flowInstanceEvent = this.addFlowInstanceEvent(flowInstance, EventType.CUSTOMER_MESSAGE_SENT, null, user);
+
+					systemInterface.getEventHandler().sendEvent(FlowInstance.class, new ExternalMessageAddedEvent(flowInstance, flowInstanceEvent, moduleDescriptor, getCurrentSiteProfile(req, user, uriParser), externalMessage, SenderType.USER), EventTarget.ALL);
 
 					res.sendRedirect(req.getContextPath() + uriParser.getFormattedURI() + "#new-message");
 
@@ -258,7 +279,7 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 				showFlowInstanceOverviewElement.appendChild(user.toXML(doc));
 			}
 
-			return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+			return new SimpleForegroundModuleResponse(doc, flowInstance.getFlow().getName(), this.getDefaultBreadcrumb());
 		}
 
 		return list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
@@ -380,8 +401,6 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 		return processImmutableQueryRequest(req, res, user, uriParser, PREVIEW_ACCESS_CONTROLLER, true);
 	}
 
-
-
 	@Override
 	public Breadcrumb getFlowBreadcrumb(ImmutableFlowInstance flowInstance) {
 
@@ -395,11 +414,11 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 		query.addRelations(FlowInstance.FLOW_RELATION, FlowInstance.FLOW_STATE_RELATION);
 
 		if(getEvents) {
-			
+
 			query.addRelation(FlowInstance.EVENTS_RELATION);
-			
+
 		}
-		
+
 		query.addParameter(flowInstancePosterParamFactory.getParameter(user));
 
 		return daoFactory.getFlowInstanceDAO().getAll(query);
@@ -423,41 +442,53 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
 	@WebPublic(alias = "submitted")
 	public ForegroundModuleResponse showSubmittedMessage(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException{
-		
+
 		try {
 			return super.showImmutableFlowInstance(req, res, user, uriParser, new SessionAccessController(req.getSession(), SESSION_ACCESS_CONTROLLER_TAG), this.defaultFlowProcessCallback, ShowMode.SUBMIT);
-			
+
 		} catch (AccessDeniedException e) {
 
 			throw new URINotFoundException(uriParser);
 		}
 	}
-	
+
+	@WebPublic(alias = "multisign")
+	public ForegroundModuleResponse showMultiSignMessage(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException {
+
+		return super.showMultiSignMessage(req, res, user, uriParser, PREVIEW_ACCESS_CONTROLLER, this.defaultFlowProcessCallback);
+	}
+
+	@WebPublic(alias = "pay")
+	public ForegroundModuleResponse showPaymentForm(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException {
+
+		return super.showPaymentForm(req, res, user, uriParser, PREVIEW_ACCESS_CONTROLLER, this.defaultFlowProcessCallback);
+	}
+
 	@Override
 	protected void redirectToSubmitMethod(MutableFlowInstanceManager flowInstanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
 		HttpSession session = req.getSession();
-		
+
 		if(session != null){
-			
+
 			try {
 				SessionAccessController.setSessionAttribute(flowInstanceManager.getFlowInstanceID(), session, SESSION_ACCESS_CONTROLLER_TAG);
 			} catch (IllegalStateException e) {}
-		}			
-		
+		}
+
 		redirectToMethod(req, res, "/submitted/" + flowInstanceManager.getFlowInstanceID());
 	}
-	
+
 	@Override
 	protected void onFlowInstanceClosedRedirect(FlowInstanceManager flowInstanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
 		redirectToMethod(req, res, "/overview/" + flowInstanceManager.getFlowID() + "/" + flowInstanceManager.getFlowInstanceID());
-		
+
 	}
-	
+
 	@WebPublic(alias = "preview")
 	public ForegroundModuleResponse showPreview(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException{
-		
+
 		return super.showImmutableFlowInstance(req, res, user, uriParser, PREVIEW_ACCESS_CONTROLLER, defaultFlowProcessCallback, ShowMode.PREVIEW);
 	}
 
@@ -474,7 +505,7 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 		//TODO add prefix
 		return new Breadcrumb(this, flowInstance.getFlow().getName(), "/submit/" + flowInstance.getFlowInstanceID());
 	}
-	
+
 	@WebPublic(alias = "pdf")
 	public ForegroundModuleResponse getEventPDF(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws URINotFoundException, SQLException, IOException, AccessDeniedException {
 
@@ -482,7 +513,15 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 
 		return null;
 	}
-		
+
+	@WebPublic(alias = "xml")
+	public ForegroundModuleResponse getEventXML(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws URINotFoundException, SQLException, IOException, AccessDeniedException {
+
+		sendEventXML(req, res, user, uriParser, PREVIEW_ACCESS_CONTROLLER, xmlProvider);
+
+		return null;
+	}
+
 	@Override
 	protected String getBaseUpdateURL(HttpServletRequest req, URIParser uriParser, User user, ImmutableFlowInstance flowInstance, FlowInstanceAccessController accessController) {
 
@@ -501,15 +540,21 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 	}
 
 	@Override
-	public String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+	protected MultiSigningProvider getMultiSigningProvider() {
 
-		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/flowinstance/" + instanceManager.getFlowID() + "/" + instanceManager.getFlowInstanceID() + "?preview=1&signprovidererror=1";
+		return multiSigningProvider;
 	}
 
 	@Override
-	public String getSignSuccessURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+	protected PaymentProvider getPaymentProvider() {
 
-		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/submitted/" + instanceManager.getFlowInstanceID();
+		return paymentProvider;
+	}
+
+	@Override
+	public String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+
+		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/flowinstance/" + instanceManager.getFlowID() + "/" + instanceManager.getFlowInstanceID() + "?preview=1&signprovidererror=1";
 	}
 
 	@Override
@@ -522,18 +567,48 @@ public class UserFlowInstanceModule extends BaseFlowBrowserModule {
 	public void signingComplete(MutableFlowInstanceManager instanceManager, FlowInstanceEvent event, HttpServletRequest req, SiteProfile siteProfile, String actionID) {
 
 		super.signingComplete(instanceManager, event, req, siteProfile, actionID);
-		
+
 		SessionAccessController.setSessionAttribute(instanceManager.getFlowInstanceID(), req.getSession(), SESSION_ACCESS_CONTROLLER_TAG);
 	}
-	
+
+	@Override
+	public String getPaymentSuccessURL(FlowInstanceManager instanceManager, HttpServletRequest req) {
+
+		SessionAccessController.setSessionAttribute(instanceManager.getFlowInstanceID(), req.getSession(), SESSION_ACCESS_CONTROLLER_TAG);
+
+		return super.getPaymentSuccessURL(instanceManager, req);
+	}
+
 	@Override
 	protected String getEventPDFLink(FlowInstanceManager instanceManager, ImmutableFlowInstanceEvent event, HttpServletRequest req, User user) {
-		
+
 		if(event.getAttributeHandler().getPrimitiveBoolean("pdf")){
-		
-			return this.getModuleURI(req) + "/pdf/" + instanceManager.getFlowInstanceID() + "/" + event.getEventID();			
+
+			return this.getModuleURI(req) + "/pdf/" + instanceManager.getFlowInstanceID() + "/" + event.getEventID();
 		}
-		
+
 		return null;
-	}	
+	}
+
+	@Override
+	public boolean requiresMultiSigning(FlowInstanceManager instanceManager) {
+
+		if(instanceManager.getFlowState().getContentType() == ContentType.WAITING_FOR_COMPLETION) {
+
+			return false;
+		}
+
+		return super.requiresMultiSigning(instanceManager);
+	}
+
+	@Override
+	public boolean requiresPayment(FlowInstanceManager instanceManager) {
+
+		if(instanceManager.getFlowState().getContentType() == ContentType.WAITING_FOR_COMPLETION) {
+
+			return false;
+		}
+
+		return super.requiresPayment(instanceManager);
+	}
 }

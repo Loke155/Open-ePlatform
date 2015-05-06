@@ -56,34 +56,34 @@ $(document).ready(function() {
 	
 	$("#flowtype").trigger("change");
 	
-	$(".managerlist input[name='group']").change(function(e) {
-		
-		validateManagerUserAccess($(this).val());
-		
-	}).trigger("change");
-	
-	$(".managerlist input[name='user']").change(function(e) {
-		
-		validateManagerUserGroupAccess();
-		
-		var $this = $(this);
-		
-		if(!$this.is(":checked")) {
-			$this.next("input[type='hidden']").remove();
-		}
-		
-	}).trigger("change");
-	
-	$(".managerlist input[name='user'].disabled").each(function(e) {
-
-		var $this = $(this);
-		
-		if($this.is(":checked")) {
-			$this.attr("disabled", "disabled");
-			$this.after($("<input type='hidden' name='user' value='" + $this.val() + "'/>"));
-		}
-		
-	});
+//	$(".managerlist input[name='group']").change(function(e) {
+//		
+//		validateManagerUserAccess($(this).val());
+//		
+//	}).trigger("change");
+//	
+//	$(".managerlist input[name='user']").change(function(e) {
+//		
+//		validateManagerUserGroupAccess();
+//		
+//		var $this = $(this);
+//		
+//		if(!$this.is(":checked")) {
+//			$this.next("input[type='hidden']").remove();
+//		}
+//		
+//	}).trigger("change");
+//	
+//	$(".managerlist input[name='user'].disabled").each(function(e) {
+//
+//		var $this = $(this);
+//		
+//		if($this.is(":checked")) {
+//			$this.attr("disabled", "disabled");
+//			$this.after($("<input type='hidden' name='user' value='" + $this.val() + "'/>"));
+//		}
+//		
+//	});
 	
 	$("#typeOfFlow").change(function(e) {
 		
@@ -105,59 +105,59 @@ $(document).ready(function() {
 	
 });
 
-function validateManagerUserAccess(groupID) {
-	
-	$(".managerlist input[name='user'].group_" + groupID + ":checked").each(function(i) {
-		
-		var $this = $(this);
-		
-		var groups = $this.attr("class").split(" ");
-		
-		var hasAccess = false;
-		
-		$.each(groups, function(i, group) {
-			var trim = group.trim();
-			if(trim != "") {
-				if($("input[name='group']." + trim + ":checked").length > 0) {
-					hasAccess = true;
-					return false;
-				}
-			}
-		});
-		
-		if(!hasAccess) {
-			$this.attr("disabled", "disabled");
-			$this.after($("<input type='hidden' name='user' value='" + $this.val() + "'/>"));
-		} else {
-			$this.removeAttr("disabled");
-			$this.next().remove();
-		}
-		
-	});
-	
-}
-
-function validateManagerUserGroupAccess() {
-	
-	$(".managerlist input[name='group']:checked").each(function(i) {
-		
-		var $this = $(this);
-		
-		var groupID = $this.val();
-
-		if($("input[name='user'].group_" + groupID + ":checked").length != $("input[name='user'].group_" + groupID).length) {
-			if($this.attr("disabled") == undefined) {
-				$this.attr("disabled", "disabled");
-				$this.after($("<input type='hidden' name='group' value='" + $this.val() + "'/>"));
-			}
-		} else {
-			$this.removeAttr("disabled");
-			$this.next().remove();
-		}
-		
-	});
-	
-}
+//function validateManagerUserAccess(groupID) {
+//	
+//	$(".managerlist input[name='user'].group_" + groupID + ":checked").each(function(i) {
+//		
+//		var $this = $(this);
+//		
+//		var groups = $this.attr("class").split(" ");
+//		
+//		var hasAccess = false;
+//		
+//		$.each(groups, function(i, group) {
+//			var trim = group.trim();
+//			if(trim != "") {
+//				if($("input[name='group']." + trim + ":checked").length > 0) {
+//					hasAccess = true;
+//					return false;
+//				}
+//			}
+//		});
+//		
+//		if(!hasAccess) {
+//			$this.attr("disabled", "disabled");
+//			$this.after($("<input type='hidden' name='user' value='" + $this.val() + "'/>"));
+//		} else {
+//			$this.removeAttr("disabled");
+//			$this.next().remove();
+//		}
+//		
+//	});
+//	
+//}
+//
+//function validateManagerUserGroupAccess() {
+//	
+//	$(".managerlist input[name='group']:checked").each(function(i) {
+//		
+//		var $this = $(this);
+//		
+//		var groupID = $this.val();
+//
+//		if($("input[name='user'].group_" + groupID + ":checked").length != $("input[name='user'].group_" + groupID).length) {
+//			if($this.attr("disabled") == undefined) {
+//				$this.attr("disabled", "disabled");
+//				$this.after($("<input type='hidden' name='group' value='" + $this.val() + "'/>"));
+//			}
+//		} else {
+//			$this.removeAttr("disabled");
+//			$this.next().remove();
+//		}
+//		
+//	});
+//	
+//}
 
 function updateSortOrder(obj) {
 	obj.children().each(function(i) {

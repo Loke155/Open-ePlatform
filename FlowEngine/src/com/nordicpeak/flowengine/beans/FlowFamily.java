@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import se.unlogic.emailutils.populators.EmailPopulator;
 import se.unlogic.hierarchy.core.interfaces.AccessInterface;
 import se.unlogic.standardutils.annotations.WebPopulate;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
@@ -15,6 +16,7 @@ import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.GeneratedElementable;
 import se.unlogic.standardutils.xml.XMLElement;
 
+import com.nordicpeak.flowengine.enums.StatisticsMode;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowFamily;
 import com.nordicpeak.flowengine.interfaces.ImmutableUserFavourite;
 
@@ -36,6 +38,36 @@ public class FlowFamily extends GeneratedElementable implements Serializable, Im
 	@DAOManaged
 	@XMLElement
 	private Integer versionCount;
+
+	@DAOManaged
+	@WebPopulate(maxLength = 255)
+	@XMLElement
+	private String contactName;
+
+	@DAOManaged
+	@WebPopulate(maxLength = 255, populator = EmailPopulator.class)
+	@XMLElement
+	private String contactEmail;
+
+	@DAOManaged
+	@WebPopulate(maxLength = 255)
+	@XMLElement
+	private String contactPhone;
+
+	@DAOManaged
+	@WebPopulate(maxLength = 255)
+	@XMLElement
+	private String ownerName;
+
+	@DAOManaged
+	@WebPopulate(maxLength = 255, populator = EmailPopulator.class)
+	@XMLElement
+	private String ownerEmail;
+
+	@DAOManaged
+	@WebPopulate
+	@XMLElement
+	private StatisticsMode statisticsMode;
 
 	@DAOManaged
 	@OneToMany(autoUpdate = true)
@@ -83,6 +115,66 @@ public class FlowFamily extends GeneratedElementable implements Serializable, Im
 	public void setVersionCount(Integer currentIncrement) {
 
 		this.versionCount = currentIncrement;
+	}
+
+	public String getContactName() {
+
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+
+		this.contactName = contactName;
+	}
+
+	public String getContactEmail() {
+
+		return contactEmail;
+	}
+
+	public void setContactEmail(String contactEmail) {
+
+		this.contactEmail = contactEmail;
+	}
+
+	public String getContactPhone() {
+
+		return contactPhone;
+	}
+
+	public void setContactPhone(String contactPhone) {
+
+		this.contactPhone = contactPhone;
+	}
+
+	public String getOwnerName() {
+
+		return ownerName;
+	}
+
+	public void setOwnerName(String ownerName) {
+
+		this.ownerName = ownerName;
+	}
+
+	public String getOwnerEmail() {
+
+		return ownerEmail;
+	}
+
+	public void setOwnerEmail(String ownerEmail) {
+
+		this.ownerEmail = ownerEmail;
+	}
+
+	public void setManagerGroupIDs(List<Integer> managerGroupIDs) {
+
+		this.managerGroupIDs = managerGroupIDs;
+	}
+
+	public void setManagerUserIDs(List<Integer> managerUserIDs) {
+
+		this.managerUserIDs = managerUserIDs;
 	}
 
 	@Override
@@ -198,6 +290,18 @@ public class FlowFamily extends GeneratedElementable implements Serializable, Im
 	public String toString() {
 
 		return "ID: " + flowFamilyID;
+	}
+
+
+	public StatisticsMode getStatisticsMode() {
+
+		return statisticsMode;
+	}
+
+
+	public void setStatisticsMode(StatisticsMode statisticsMode) {
+
+		this.statisticsMode = statisticsMode;
 	}
 
 }

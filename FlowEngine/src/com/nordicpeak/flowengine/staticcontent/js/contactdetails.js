@@ -1,17 +1,6 @@
 $(document).ready(function() {
 	
-	$("#attribute-address, #attribute-zipCode, #attribute-postalAddress").change(function() {
-		
-		if($("#attribute-address").val() != "" && $("#attribute-zipCode").val() != "" && $("#attribute-postalAddress").val() != "") {
-			$("#attribute-contactByLetter").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$("#attribute-contactByLetter").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	
-	$( "#attribute-mobilePhone").change(function() {
+	$( "#attribute-mobilePhone").keyup(function() {
 		
 		if($(this).val() != "") {
 			$("#attribute-contactBySMS").removeAttr("disabled").next("label").removeClass("disabled");
@@ -21,27 +10,7 @@ $(document).ready(function() {
 		
 	});
 	
-	$( "#email").change(function() {
-		
-		if($(this).val() != "") {
-			$( "#attribute-contactByEmail").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$( "#attribute-contactByEmail").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$( "#attribute-phone").change(function() {
-		
-		if($(this).val() != "") {
-			$( "#attribute-contactByPhone").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$( "#attribute-contactByPhone").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$("#attribute-address, #attribute-zipCode, #attribute-postalAddress, #attribute-mobilePhone, #email, #attribute-phone").trigger("change");
+	$("#attribute-mobilePhone").trigger("keyup");
 	
 	if($(".user-updated-message").length > 0) {
 		

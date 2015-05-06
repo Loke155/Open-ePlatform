@@ -24,6 +24,7 @@ import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.TransactionHandler;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.validation.ValidationException;
+import se.unlogic.standardutils.xml.XMLUtils;
 import se.unlogic.webutils.http.BeanRequestPopulator;
 import se.unlogic.webutils.http.URIParser;
 import se.unlogic.webutils.populators.annotated.AnnotatedRequestPopulator;
@@ -83,13 +84,13 @@ public class BaseEvaluatorCRUD<BeanType extends BaseEvaluator, CallbackType exte
 	}
 
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws Exception {
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws Exception {
 
-		if(validationError != null) {
+		if(validationErrors != null) {
 
 			Document doc = callback.createDocument(req, uriParser, user);
 
-			doc.getDocumentElement().appendChild(validationError.toXML(doc));
+			XMLUtils.append(doc, doc.getDocumentElement(), validationErrors);
 
 			return new SimpleForegroundModuleResponse(doc, callback.getDefaultBreadcrumb());
 

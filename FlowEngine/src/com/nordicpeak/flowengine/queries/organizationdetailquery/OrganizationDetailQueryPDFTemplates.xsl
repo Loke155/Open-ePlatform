@@ -48,7 +48,7 @@
 					</xsl:call-template>
 				</div>
 				
-				<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowLetter = 'true'">
+				<xsl:if test="OrganizationDetailQueryInstance/address">
 					
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Address" /></strong><br/>
@@ -86,7 +86,7 @@
 					
 				</div>
 				
-				<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowEmail = 'true'">
+				<xsl:if test="OrganizationDetailQueryInstance/email">
 			
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Email" /></strong><br/>
@@ -97,7 +97,7 @@
 				
 				</xsl:if>
 				
-				<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowPhone = 'true'">
+				<xsl:if test="OrganizationDetailQueryInstance/phone">
 					
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.Phone" /></strong><br/>
@@ -108,7 +108,7 @@
 				
 				</xsl:if>
 				
-				<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowSMS = 'true'">
+				<xsl:if test="OrganizationDetailQueryInstance/mobilePhone">
 		
 					<div class="floatleft fifty bigmarginbottom">
 						<strong><xsl:value-of select="$i18n.MobilePhone" /></strong><br/>
@@ -118,26 +118,19 @@
 					</div>
 				
 				</xsl:if>
-				
+				<!-- 
 				<div class="floatleft full">
 					<strong><xsl:value-of select="$i18n.ChooseContactChannels" /></strong><br/>
-					<xsl:if test="OrganizationDetailQueryInstance/contactByLetter = 'true'">
-						<xsl:value-of select="$i18n.ContactByLetter" /><br/>
-					</xsl:if>
 					
-					<xsl:if test="OrganizationDetailQueryInstance/contactByEmail = 'true'">
+					<xsl:if test="OrganizationDetailQueryInstance/email">
 						<xsl:value-of select="$i18n.ContactByEmail" /><br/>
 					</xsl:if>
 					
 					<xsl:if test="OrganizationDetailQueryInstance/contactBySMS = 'true'">
 						<xsl:value-of select="$i18n.ContactBySMS" /><br/>
 					</xsl:if>
-					
-					<xsl:if test="OrganizationDetailQueryInstance/contactByPhone = 'true'">
-						<xsl:value-of select="$i18n.ContactByPhone" />
-					</xsl:if>
 				</div>
-				
+				 -->
 			</div>
 					
 		</div>

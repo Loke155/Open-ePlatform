@@ -11,13 +11,10 @@
 	
 	<xsl:variable name="i18n.OrganizationDetailQueryNotFound">Den begärda frågan hittades inte!</xsl:variable>
 	
-	<xsl:variable name="i18n.AllowedContactChannels">Tillåtna kontaktvägar</xsl:variable>
-	<xsl:variable name="i18n.AllowedContactChannelsDescription">Välj vilka kontaktvägar som företaget skall få välja på</xsl:variable>
-	<xsl:variable name="i18n.AllowLetter">Brev</xsl:variable>
-	<xsl:variable name="i18n.AllowSMS">SMS</xsl:variable>
-	<xsl:variable name="i18n.AllowEmail">E-post</xsl:variable>
-	<xsl:variable name="i18n.AllowPhone">Telefon</xsl:variable>
+	<xsl:variable name="i18n.AllowSMS">Tillåt SMS som kontaktväg</xsl:variable>
 	
-	<xsl:variable name="i18n.NoContactChannelChoosen">Du måste välja minst en kontaktväg!</xsl:variable>
+	<xsl:variable name="i18n.ContactChannelSettings">Inställningar</xsl:variable>
+	
+	<xsl:variable name="i18n.RequireAddress">Kräv postadress</xsl:variable>
 	
 </xsl:stylesheet>

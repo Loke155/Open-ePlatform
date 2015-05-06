@@ -20,22 +20,40 @@ public class BaseFlowModuleSigningCallback implements SigningCallback {
 
 	private final BaseFlowModule baseFlowModule;
 	private final String actionID;
-	private final EventType eventType;
+	private final EventType submitEventType;
 	private final SiteProfile siteProfile;
+	private final boolean addSubmitEvent;
 	
-	public BaseFlowModuleSigningCallback(BaseFlowModule baseFlowModule, String actionID, EventType eventType, SiteProfile siteProfile) {
+	public BaseFlowModuleSigningCallback(BaseFlowModule baseFlowModule, String actionID, EventType submitEventType, SiteProfile siteProfile, boolean addSubmitEvent) {
 
 		super();
 		this.baseFlowModule = baseFlowModule;
 		this.actionID = actionID;
-		this.eventType = eventType;
+		this.submitEventType = submitEventType;
 		this.siteProfile = siteProfile;
+		this.addSubmitEvent = addSubmitEvent;
 	}
 
 	@Override
-	public FlowInstanceEvent signingConfirmed(MutableFlowInstanceManager instanceManager, User user) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound {
+	public SigningConfirmedResponse signingConfirmed(MutableFlowInstanceManager instanceManager, User user) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound {
 
-		return baseFlowModule.save(instanceManager, user, null, actionID, eventType);
+		FlowInstanceEvent signingEvent = null;
+		
+		FlowInstanceEvent submitEvent = null;
+		
+		if(addSubmitEvent) {
+			
+			signingEvent = baseFlowModule.save(instanceManager, user, null, actionID, EventType.SIGNED);
+			
+			submitEvent = baseFlowModule.save(instanceManager, user, null, actionID, submitEventType);
+			
+		} else {
+		
+			signingEvent = baseFlowModule.save(instanceManager, user, null, actionID, EventType.SIGNED);
+		
+		}
+		
+		return new SigningConfirmedResponse(signingEvent, submitEvent);
 	}
 
 	@Override
@@ -68,6 +86,7 @@ public class BaseFlowModuleSigningCallback implements SigningCallback {
 		return baseFlowModule.getSigningURL(instanceManager, req);
 	}
 
+	@Override
 	public String getActionID() {
 		
 		return actionID;
@@ -76,10 +95,11 @@ public class BaseFlowModuleSigningCallback implements SigningCallback {
 	
 	public EventType getEventType() {
 	
-		return eventType;
+		return submitEventType;
 	}
 
 	
+	@Override
 	public SiteProfile getSiteProfile() {
 	
 		return siteProfile;

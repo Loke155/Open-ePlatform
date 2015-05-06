@@ -17,7 +17,7 @@ public abstract class FixedAlternativesBaseQuery extends BaseQuery implements Fi
 	private static final long serialVersionUID = 7987991587750437624L;
 
 	private Map<Integer,Integer> alternativeConversionMap;
-	
+
 	@Override
 	public Map<Integer, Integer> getAlternativeConversionMap() {
 
@@ -25,7 +25,7 @@ public abstract class FixedAlternativesBaseQuery extends BaseQuery implements Fi
 	}
 
 	public void setAlternativeConversionMap(Map<Integer, Integer> alternativeConversionMap) {
-	
+
 		this.alternativeConversionMap = alternativeConversionMap;
 	}
 
@@ -77,6 +77,20 @@ public abstract class FixedAlternativesBaseQuery extends BaseQuery implements Fi
 				Element enumerationElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:enumeration");
 				enumerationElement.setAttribute("value", alternative.getName());
 				restrictionElement.appendChild(enumerationElement);
+			}
+
+			if(getFreeTextAlternative() != null){
+
+				Element enumerationElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:enumeration");
+				enumerationElement.setAttribute("value", getFreeTextAlternative());
+				restrictionElement.appendChild(enumerationElement);
+
+				Element freeTextElement = doc.createElementNS("http://www.w3.org/2001/XMLSchema","xs:element");
+				freeTextElement.setAttribute("name", "TextAlternative");
+				freeTextElement.setAttribute("type", "xs:string");
+				freeTextElement.setAttribute("minOccurs", "0");
+				freeTextElement.setAttribute("maxOccurs", "1");
+				sequenceElement.appendChild(freeTextElement);
 			}
 
 			doc.getDocumentElement().appendChild(simpleTypeElement);

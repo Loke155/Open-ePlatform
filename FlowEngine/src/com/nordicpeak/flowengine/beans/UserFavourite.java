@@ -48,6 +48,7 @@ public class UserFavourite extends GeneratedElementable implements ImmutableUser
 		return flowFamily;
 	}
 
+	@Override
 	public User getUser() {
 
 		return user;
@@ -58,6 +59,7 @@ public class UserFavourite extends GeneratedElementable implements ImmutableUser
 		this.user = user;
 	}
 
+	@Override
 	public String getFlowName() {
 
 		return flowName;
@@ -68,6 +70,7 @@ public class UserFavourite extends GeneratedElementable implements ImmutableUser
 		this.flowName = flowName;
 	}
 
+	@Override
 	public boolean isFlowEnabled() {
 
 		return flowEnabled;

@@ -69,7 +69,7 @@
 					
 				</fieldset>
 				
-				<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowLetter = 'true'">
+				<xsl:if test="OrganizationDetailQueryInstance/address">
 					
 					<fieldset>
 					
@@ -121,7 +121,7 @@
 					
 					</xsl:if>
 					
-					<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowPhone = 'true'">
+					<xsl:if test="OrganizationDetailQueryInstance/phone">
 						
 						<div class="split">
 							<strong class="block"><xsl:value-of select="$i18n.Phone" /></strong>
@@ -132,33 +132,30 @@
 					
 					</xsl:if>
 					
-					<div class="split">
-						<strong class="block"><xsl:value-of select="$i18n.MobilePhone" /></strong>
-						<xsl:call-template name="printValue">
-							<xsl:with-param name="value" select="OrganizationDetailQueryInstance/mobilePhone" />
-						</xsl:call-template>
-					</div>
+					<xsl:if test="OrganizationDetailQueryInstance/mobilePhone">
+					
+						<div class="split">
+							<strong class="block"><xsl:value-of select="$i18n.MobilePhone" /></strong>
+							<xsl:call-template name="printValue">
+								<xsl:with-param name="value" select="OrganizationDetailQueryInstance/mobilePhone" />
+							</xsl:call-template>
+						</div>
+					
+					</xsl:if>
 					
 				</fieldset>
 				
 				<fieldset>
 					
-					<div class="split">
+					<div>
 						<strong class="block"><xsl:value-of select="$i18n.ChooseContactChannels" /></strong>
-						<xsl:if test="OrganizationDetailQueryInstance/contactByLetter = 'true'">
-							<xsl:value-of select="$i18n.ContactByLetter" /><br/>
-						</xsl:if>
 						
-						<xsl:if test="OrganizationDetailQueryInstance/contactByEmail = 'true'">
+						<xsl:if test="OrganizationDetailQueryInstance/email">
 							<xsl:value-of select="$i18n.ContactByEmail" /><br/>
 						</xsl:if>
 						
 						<xsl:if test="OrganizationDetailQueryInstance/contactBySMS = 'true'">
 							<xsl:value-of select="$i18n.ContactBySMS" /><br/>
-						</xsl:if>
-						
-						<xsl:if test="OrganizationDetailQueryInstance/contactByPhone = 'true'">
-							<xsl:value-of select="$i18n.ContactByPhone" />
 						</xsl:if>
 					</div>
 					
@@ -199,7 +196,7 @@
 			
 			<a name="{$queryID}" />
 		
-			<xsl:if test="ValidationErrors/validationError[messageKey = 'NoContactChannelChoosen'] or ValidationErrors/validationError[messageKey = 'UnableToPersistOrganization']">
+			<xsl:if test="ValidationErrors/validationError">
 				<div id="{$queryID}-validationerrors" class="validationerrors">
 					<xsl:if test="ValidationErrors/validationError[messageKey = 'NoContactChannelChoosen']">
 						<div class="info-box error">
@@ -336,90 +333,87 @@
 						</div>
 						
 					</fieldset>
+						
+					<fieldset>
 					
-					<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowLetter = 'true'">
+						<div class="split">
+							
+							<xsl:variable name="fieldName" select="concat($shortQueryID, '_address')" />
 						
-						<fieldset>
+							<xsl:variable name="class">
+								<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
+									<xsl:text>invalid input-error</xsl:text>
+								</xsl:if>
+							</xsl:variable>
+							
+							<label for="{$fieldName}"><xsl:value-of select="$i18n.Address" /></label>
+							<xsl:call-template name="createTextField">
+								<xsl:with-param name="id" select="$fieldName" />
+								<xsl:with-param name="name" select="$fieldName" />
+								<xsl:with-param name="title" select="$i18n.Address"/>
+								<xsl:with-param name="size" select="50"/>
+								<xsl:with-param name="value" select="OrganizationDetailQueryInstance/address"/>
+								<xsl:with-param name="class" select="$class"/>
+							</xsl:call-template>
+							
+							<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
+							
+						</div>					
 						
-							<div class="split">
-								
-								<xsl:variable name="fieldName" select="concat($shortQueryID, '_address')" />
+						<div class="split">
+							
+							<div class="left">
+							
+								<xsl:variable name="fieldName" select="concat($shortQueryID, '_zipcode')" />
 							
 								<xsl:variable name="class">
 									<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
 										<xsl:text>invalid input-error</xsl:text>
-									</xsl:if>
+									</xsl:if>							
 								</xsl:variable>
 								
-								<label for="{$fieldName}"><xsl:value-of select="$i18n.Address" /></label>
+								<label for="{$fieldName}" class="floatleft"><xsl:value-of select="$i18n.ZipCode" /></label>
 								<xsl:call-template name="createTextField">
 									<xsl:with-param name="id" select="$fieldName" />
 									<xsl:with-param name="name" select="$fieldName" />
-									<xsl:with-param name="title" select="$i18n.Address"/>
-									<xsl:with-param name="size" select="50"/>
-									<xsl:with-param name="value" select="OrganizationDetailQueryInstance/address"/>
-									<xsl:with-param name="class" select="$class"/>
+									<xsl:with-param name="title" select="$i18n.ZipCode"/>
+									<xsl:with-param name="size" select="15"/>
+									<xsl:with-param name="class" select="concat('floatleft clearboth ', $class)"/>
+									<xsl:with-param name="value" select="OrganizationDetailQueryInstance/zipCode"/>
+								</xsl:call-template>
+								
+								<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
+							
+							</div>
+							
+							<div class="right">
+							
+								<xsl:variable name="fieldName" select="concat($shortQueryID, '_postaladdress')" />
+							
+								<xsl:variable name="class">
+									<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
+										<xsl:text>invalid input-error</xsl:text>
+									</xsl:if>							
+								</xsl:variable>
+							
+								<label for="{$fieldName}" class="floatleft"><xsl:value-of select="$i18n.PostalAddress" /></label>
+								<xsl:call-template name="createTextField">
+									<xsl:with-param name="id" select="concat($shortQueryID, '_postaladdress')" />
+									<xsl:with-param name="name" select="concat($shortQueryID, '_postaladdress')" />
+									<xsl:with-param name="title" select="$i18n.PostalAddress"/>
+									<xsl:with-param name="size" select="28"/>
+									<xsl:with-param name="class" select="concat('floatleft clearboth ', $class)"/>
+									<xsl:with-param name="value" select="OrganizationDetailQueryInstance/postalAddress"/>
 								</xsl:call-template>
 								
 								<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
 								
-							</div>					
-							
-							<div class="split">
-								
-								<div class="left">
-								
-									<xsl:variable name="fieldName" select="concat($shortQueryID, '_zipcode')" />
-								
-									<xsl:variable name="class">
-										<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
-											<xsl:text>invalid input-error</xsl:text>
-										</xsl:if>							
-									</xsl:variable>
-									
-									<label for="{$fieldName}" class="floatleft"><xsl:value-of select="$i18n.ZipCode" /></label>
-									<xsl:call-template name="createTextField">
-										<xsl:with-param name="id" select="$fieldName" />
-										<xsl:with-param name="name" select="$fieldName" />
-										<xsl:with-param name="title" select="$i18n.ZipCode"/>
-										<xsl:with-param name="size" select="15"/>
-										<xsl:with-param name="class" select="concat('floatleft clearboth ', $class)"/>
-										<xsl:with-param name="value" select="OrganizationDetailQueryInstance/zipCode"/>
-									</xsl:call-template>
-									
-									<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
-								
-								</div>
-								
-								<div class="right">
-								
-									<xsl:variable name="fieldName" select="concat($shortQueryID, '_postaladdress')" />
-								
-									<xsl:variable name="class">
-										<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
-											<xsl:text>invalid input-error</xsl:text>
-										</xsl:if>							
-									</xsl:variable>
-								
-									<label for="{$fieldName}" class="floatleft"><xsl:value-of select="$i18n.PostalAddress" /></label>
-									<xsl:call-template name="createTextField">
-										<xsl:with-param name="id" select="concat($shortQueryID, '_postaladdress')" />
-										<xsl:with-param name="name" select="concat($shortQueryID, '_postaladdress')" />
-										<xsl:with-param name="title" select="$i18n.PostalAddress"/>
-										<xsl:with-param name="size" select="28"/>
-										<xsl:with-param name="class" select="concat('floatleft clearboth ', $class)"/>
-										<xsl:with-param name="value" select="OrganizationDetailQueryInstance/postalAddress"/>
-									</xsl:call-template>
-									
-									<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
-									
-								</div>
-								
 							</div>
 							
-						</fieldset>
+						</div>
 						
-					</xsl:if>
+					</fieldset>
+						
 					
 					<fieldset>
 						
@@ -473,57 +467,50 @@
 							
 						</div>
 						
-						<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowEmail = 'true'">
 				
-							<div class="split">
-								
-								<xsl:variable name="fieldName" select="concat($shortQueryID, '_email')" />
+						<div class="split">
 							
-								<xsl:variable name="class">
-									<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
-										<xsl:text>invalid input-error</xsl:text>
-									</xsl:if>							
-								</xsl:variable>
-							
-								<label for="{$fieldName}" class="floatleft full"><xsl:value-of select="$i18n.Email" /></label>
-								<xsl:call-template name="createTextField">
-									<xsl:with-param name="id" select="$fieldName" />
-									<xsl:with-param name="name" select="$fieldName" />
-									<xsl:with-param name="title" select="$i18n.Email"/>
-									<xsl:with-param name="size" select="50"/>
-									<xsl:with-param name="class" select="$class"/>
-									<xsl:with-param name="value" select="OrganizationDetailQueryInstance/email"/>
-								</xsl:call-template>
-								
-								<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
-								
-							</div>
+							<xsl:variable name="fieldName" select="concat($shortQueryID, '_email')" />
 						
-						</xsl:if>
+							<xsl:variable name="class">
+								<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
+									<xsl:text>invalid input-error</xsl:text>
+								</xsl:if>							
+							</xsl:variable>
 						
-						<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowPhone = 'true'">
+							<label for="{$fieldName}" class="floatleft full"><xsl:value-of select="$i18n.Email" /></label>
+							<xsl:call-template name="createTextField">
+								<xsl:with-param name="id" select="$fieldName" />
+								<xsl:with-param name="name" select="$fieldName" />
+								<xsl:with-param name="title" select="$i18n.Email"/>
+								<xsl:with-param name="size" select="50"/>
+								<xsl:with-param name="class" select="$class"/>
+								<xsl:with-param name="value" select="OrganizationDetailQueryInstance/email"/>
+							</xsl:call-template>
 							
-							<div class="split">
-								
-								<xsl:variable name="fieldName" select="concat($shortQueryID, '_phone')" />
+							<xsl:apply-templates select="ValidationErrors/validationError[fieldName = $fieldName]"/>
 							
-								<xsl:variable name="class">
-									<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
-										<xsl:text>invalid input-error</xsl:text>
-									</xsl:if>							
-								</xsl:variable>
-								
-								<label for="concat($shortQueryID, '_phone')" class="floatleft full"><xsl:value-of select="$i18n.Phone" /></label>
-								<xsl:call-template name="createTextField">
-									<xsl:with-param name="id" select="$fieldName" />
-									<xsl:with-param name="name" select="$fieldName" />
-									<xsl:with-param name="title" select="$i18n.Phone"/>
-									<xsl:with-param name="size" select="50"/>
-									<xsl:with-param name="value" select="OrganizationDetailQueryInstance/phone"/>
-								</xsl:call-template>
-							</div>
+						</div>
+							
+						<div class="split">
+							
+							<xsl:variable name="fieldName" select="concat($shortQueryID, '_phone')" />
 						
-						</xsl:if>
+							<xsl:variable name="class">
+								<xsl:if test="ValidationErrors/validationError[fieldName = $fieldName]">
+									<xsl:text>invalid input-error</xsl:text>
+								</xsl:if>							
+							</xsl:variable>
+							
+							<label for="concat($shortQueryID, '_phone')" class="floatleft full"><xsl:value-of select="$i18n.Phone" /></label>
+							<xsl:call-template name="createTextField">
+								<xsl:with-param name="id" select="$fieldName" />
+								<xsl:with-param name="name" select="$fieldName" />
+								<xsl:with-param name="title" select="$i18n.Phone"/>
+								<xsl:with-param name="size" select="50"/>
+								<xsl:with-param name="value" select="OrganizationDetailQueryInstance/phone"/>
+							</xsl:call-template>
+						</div>
 						
 						<div class="split">
 							
@@ -553,31 +540,7 @@
 					
 					<fieldset>
 						
-						<div class="split">
-							
-							<label class="marginbottom"><xsl:value-of select="$i18n.ChooseContactChannels" /></label>
-				
-							<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowLetter = 'true'">
-								<xsl:call-template name="createCheckbox">
-									<xsl:with-param name="id" select="concat($shortQueryID, '_contactByLetter')" />
-									<xsl:with-param name="name" select="concat($shortQueryID, '_contactByLetter')" />
-									<xsl:with-param name="value" select="'true'" />
-									<xsl:with-param name="disabled" select="'disabled'" />
-									<xsl:with-param name="checked" select="OrganizationDetailQueryInstance/contactByLetter"/>
-								</xsl:call-template>
-								<label for="{concat($shortQueryID, '_contactByLetter')}" class="checkbox"><xsl:value-of select="$i18n.ContactByLetter" /></label><br/>
-							</xsl:if>
-							
-							<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowEmail = 'true'">
-								<xsl:call-template name="createCheckbox">
-									<xsl:with-param name="id" select="concat($shortQueryID, '_contactByEmail')" />
-									<xsl:with-param name="name" select="concat($shortQueryID, '_contactByEmail')" />
-									<xsl:with-param name="value" select="'true'" />
-									<xsl:with-param name="disabled" select="'disabled'" />
-									<xsl:with-param name="checked" select="OrganizationDetailQueryInstance/contactByEmail"/>
-								</xsl:call-template>
-								<label for="{concat($shortQueryID, '_contactByEmail')}" class="checkbox"><xsl:value-of select="$i18n.ContactByEmail" /></label><br/>
-							</xsl:if>
+						<div>
 							
 							<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowSMS = 'true'">
 								<xsl:call-template name="createCheckbox">
@@ -587,18 +550,7 @@
 									<xsl:with-param name="disabled" select="'disabled'" />
 									<xsl:with-param name="checked" select="OrganizationDetailQueryInstance/contactBySMS"/>
 								</xsl:call-template>
-								<label for="{concat($shortQueryID, '_contactBySMS')}" class="checkbox"><xsl:value-of select="$i18n.ContactBySMS" /></label><br/>
-							</xsl:if>
-							
-							<xsl:if test="OrganizationDetailQueryInstance/OrganizationDetailQuery/allowPhone = 'true'">
-								<xsl:call-template name="createCheckbox">
-									<xsl:with-param name="id" select="concat($shortQueryID, '_contactByPhone')" />
-									<xsl:with-param name="name" select="concat($shortQueryID, '_contactByPhone')" />
-									<xsl:with-param name="value" select="'true'" />
-									<xsl:with-param name="disabled" select="'disabled'" />
-									<xsl:with-param name="checked" select="OrganizationDetailQueryInstance/contactByPhone"/>
-								</xsl:call-template>
-								<label for="{concat($shortQueryID, '_contactByPhone')}" class="checkbox"><xsl:value-of select="$i18n.ContactByPhone" /></label>
+								<label for="{concat($shortQueryID, '_contactBySMS')}" class="checkbox"><xsl:value-of select="$i18n.AllowContactBySMS" /></label><br/>
 							</xsl:if>
 							
 						</div>

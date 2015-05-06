@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.standardutils.validation.ValidationError;
 
@@ -22,4 +25,5 @@ public interface ImmutableQueryInstance {
 
 	public QueryRequestProcessor getQueryRequestProcessor(HttpServletRequest req, User user, QueryHandler queryHandler) throws Exception;
 
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception;
 }

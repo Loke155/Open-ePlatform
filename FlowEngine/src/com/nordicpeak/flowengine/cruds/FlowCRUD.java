@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import se.unlogic.hierarchy.core.beans.Breadcrumb;
 import se.unlogic.hierarchy.core.beans.Group;
+import se.unlogic.hierarchy.core.beans.SimpleForegroundModuleResponse;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.enums.CRUDAction;
 import se.unlogic.hierarchy.core.enums.EventTarget;
@@ -20,19 +22,24 @@ import se.unlogic.hierarchy.core.events.CRUDEvent;
 import se.unlogic.hierarchy.core.exceptions.AccessDeniedException;
 import se.unlogic.hierarchy.core.exceptions.URINotFoundException;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.ViewFragment;
 import se.unlogic.hierarchy.core.utils.AccessUtils;
 import se.unlogic.hierarchy.core.utils.AdvancedIntegerBasedCRUD;
+import se.unlogic.hierarchy.core.utils.ViewFragmentUtils;
 import se.unlogic.standardutils.dao.CRUDDAO;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.TransactionHandler;
 import se.unlogic.standardutils.numbers.NumberUtils;
 import se.unlogic.standardutils.serialization.SerializationUtils;
+import se.unlogic.standardutils.string.StringUtils;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.validation.ValidationErrorType;
 import se.unlogic.standardutils.validation.ValidationException;
 import se.unlogic.standardutils.xml.XMLUtils;
+import se.unlogic.webutils.http.RequestUtils;
 import se.unlogic.webutils.http.URIParser;
 import se.unlogic.webutils.populators.annotated.AnnotatedRequestPopulator;
+import se.unlogic.webutils.populators.annotated.RequestMapping;
 
 import com.nordicpeak.flowengine.FlowAdminModule;
 import com.nordicpeak.flowengine.beans.Category;
@@ -47,8 +54,25 @@ import com.nordicpeak.flowengine.beans.QueryDescriptor;
 import com.nordicpeak.flowengine.beans.StandardStatus;
 import com.nordicpeak.flowengine.beans.Status;
 import com.nordicpeak.flowengine.beans.Step;
+import com.nordicpeak.flowengine.interfaces.FlowSubmitSurveyProvider;
 
 public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
+
+	private static AnnotatedRequestPopulator<FlowFamily> FLOW_FAMILY_POULATOR = new AnnotatedRequestPopulator<FlowFamily>(FlowFamily.class);
+
+	static {
+
+		List<RequestMapping> requestMappings = new ArrayList<RequestMapping>(FLOW_FAMILY_POULATOR.getRequestMappings());
+		
+		for (RequestMapping requestMapping : requestMappings) {
+
+			if(requestMapping.getParamName().equals("group") || requestMapping.getParamName().equals("user")) {
+			
+				FLOW_FAMILY_POULATOR.getRequestMappings().remove(requestMapping);
+			}
+		}
+		
+	}
 
 	public FlowCRUD(CRUDDAO<Flow, Integer> crudDAO, FlowAdminModule callback) {
 
@@ -85,7 +109,19 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 	@Override
 	protected void appendAddFormData(Document doc, Element addTypeElement, User user, HttpServletRequest req, URIParser uriParser) throws Exception {
 
+		if(callback.submitSurveyEnabled()) {
+			XMLUtils.appendNewElement(doc, addTypeElement, "SubmitSurveyEnabled");
+		}
+		
 		callback.appendUserFlowTypes(doc, addTypeElement, user);
+	}
+
+	@Override
+	protected void appendUpdateFormData(Flow bean, Document doc, Element updateTypeElement, User user, HttpServletRequest req, URIParser uriParser) throws Exception {
+
+		if(callback.submitSurveyEnabled()) {
+			XMLUtils.appendNewElement(doc, updateTypeElement, "SubmitSurveyEnabled");
+		}
 	}
 
 	@Override
@@ -114,6 +150,8 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 		callback.getEventHandler().sendEvent(Flow.class, new CRUDEvent<Flow>(CRUDAction.DELETE, bean), EventTarget.ALL);
 
 		if (req.getAttribute("flowFamilyDeleted") != null) {
+
+			callback.getEventHandler().sendEvent(FlowFamily.class, new CRUDEvent<FlowFamily>(CRUDAction.DELETE, bean.getFlowFamily()), EventTarget.ALL);
 
 			return super.beanDeleted(bean, req, res, user, uriParser);
 
@@ -187,18 +225,27 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 			throw new ValidationException(new ValidationError("FlowTypeAccessDenied"));
 		}
 
+		FlowFamily flowFamily = FLOW_FAMILY_POULATOR.populate(req);
+
+		flowFamily.setVersionCount(1);
+		bean.setFlowFamily(flowFamily);
+
 		bean.setFlowType(flowType);
 
-		validateFlowCategory(bean, req);
+		List<ValidationError> errors = new ArrayList<ValidationError>();
+
+		validateFlowCategory(bean, req, errors);
+
+		validateContactFields(bean.getFlowFamily(), errors);
+
+		if (!errors.isEmpty()) {
+
+			throw new ValidationException(errors);
+		}
 
 		bean.setVersion(1);
 
-		FlowFamily flowFamily = new FlowFamily();
-		flowFamily.setVersionCount(1);
-
-		bean.setFlowFamily(flowFamily);
-
-		if(bean.getExternalLink() != null) {
+		if (bean.getExternalLink() != null) {
 
 			bean.setUsePreview(false);
 			bean.setRequireAuthentication(false);
@@ -249,7 +296,13 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 	@Override
 	protected void validateUpdatePopulation(Flow bean, HttpServletRequest req, User user, URIParser uriParser) throws ValidationException, SQLException, Exception {
 
-		validateFlowCategory(bean, req);
+		FLOW_FAMILY_POULATOR.populate(bean.getFlowFamily(), req);
+
+		List<ValidationError> errors = new ArrayList<ValidationError>();
+
+		validateFlowCategory(bean, req, errors);
+
+		validateContactFields(bean.getFlowFamily(), errors);
 
 		if (bean.isInternal() && bean.isEnabled() && bean.isPublished()) {
 
@@ -275,24 +328,42 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 
 						if (!hasAction) {
 
-							throw new ValidationException(new ValidationError("MissingDefaultStatusMapping"));
-
+							errors.add(new ValidationError("MissingDefaultStatusMapping"));
 						}
 
 					}
 
 				} else {
 
-					throw new ValidationException(new ValidationError("MissingDefaultStatusMapping"));
+					errors.add(new ValidationError("MissingDefaultStatusMapping"));
 				}
 
 			}
 
 		}
 
+		if (!errors.isEmpty()) {
+
+			throw new ValidationException(errors);
+		}
+
 	}
 
-	private void validateFlowCategory(Flow flow, HttpServletRequest req) throws ValidationException {
+	private void validateContactFields(FlowFamily flowFamily, List<ValidationError> errors) {
+
+		if ((!StringUtils.isEmpty(flowFamily.getContactEmail()) || !StringUtils.isEmpty(flowFamily.getContactPhone())) && StringUtils.isEmpty(flowFamily.getContactName())) {
+
+			errors.add(new ValidationError("contactName", ValidationErrorType.RequiredField));
+		}
+
+		if (!StringUtils.isEmpty(flowFamily.getOwnerEmail()) && StringUtils.isEmpty(flowFamily.getOwnerName())) {
+
+			errors.add(new ValidationError("ownerName", ValidationErrorType.RequiredField));
+		}
+
+	}
+
+	private void validateFlowCategory(Flow flow, HttpServletRequest req, List<ValidationError> errors) throws ValidationException {
 
 		Integer categoryID = NumberUtils.toInt(req.getParameter("categoryID"));
 
@@ -313,7 +384,10 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 				}
 
 				if (choosenCategory == null) {
-					throw new ValidationException(new ValidationError("CategoryNotFound"));
+
+					errors.add(new ValidationError("CategoryNotFound"));
+
+					return;
 				}
 
 				flow.setCategory(choosenCategory);
@@ -350,13 +424,102 @@ public class FlowCRUD extends AdvancedIntegerBasedCRUD<Flow, FlowAdminModule> {
 
 			XMLUtils.append(doc, showTypeElement, "AllowedUsers", users);
 		}
-
+		
+		FlowSubmitSurveyProvider submitSurveyProvider = callback.getSystemInterface().getInstanceHandler().getInstance(FlowSubmitSurveyProvider.class);
+		
+		if(submitSurveyProvider != null) {
+		
+			XMLUtils.appendNewElement(doc, showTypeElement, "SubmitSurveyEnabled");
+		
+			ViewFragment viewFragment = submitSurveyProvider.getShowFlowSurveysFragment(bean.getFlowID());
+			
+			if(viewFragment != null) {
+				
+				req.setAttribute("ShowFlowSurveysFragment", viewFragment);
+				
+				XMLUtils.appendNewElement(doc, showTypeElement, "ShowFlowSurveysHTML", viewFragment.getHTML());
+				
+			}
+			
+		}
 	}
 
 	@Override
-	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws Exception {
+	protected SimpleForegroundModuleResponse createShowBeanModuleResponse(Flow bean, Document doc, HttpServletRequest req, User user, URIParser uriParser) {
 
-		return callback.list(req, res, user, uriParser, validationError);
+		SimpleForegroundModuleResponse moduleResponse = super.createShowBeanModuleResponse(bean, doc, req, user, uriParser);
+		
+		ViewFragment viewFragment = (ViewFragment) req.getAttribute("ShowFlowSurveysFragment");
+		
+		if(viewFragment != null) {
+			
+			ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+		}
+		
+		return moduleResponse;
+	}
+
+	@Override
+	public ForegroundModuleResponse showBean(Flow bean, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws Exception {
+
+		this.checkShowAccess(bean, user, req, uriParser);
+
+		log.info("User " + user + " viewing " + this.typeLogName + " " + bean);
+
+		Document doc = this.callback.createDocument(req, uriParser, user);
+		Element showTypeElement = doc.createElement("Show" + typeElementName);
+		doc.getFirstChild().appendChild(showTypeElement);
+
+		this.appendBean(bean, showTypeElement, doc, user);
+
+		this.appendShowFormData(bean, doc, showTypeElement, user, req, res, uriParser);
+
+		if (res.isCommitted()) {
+
+			return null;
+		}
+
+		if (validationErrors != null) {
+			XMLUtils.append(doc, showTypeElement, validationErrors);
+			showTypeElement.appendChild(RequestUtils.getRequestParameters(req, doc));
+		}
+
+		SimpleForegroundModuleResponse moduleResponse = createShowBeanModuleResponse(bean, doc, req, user, uriParser);
+
+		if (callback.getNotificationHandler() != null) {
+
+			try {
+				ViewFragment viewFragment = callback.getNotificationHandler().getCurrentSettingsView(bean, req, user, uriParser);
+
+				if (viewFragment != null) {
+
+					Element notificationsElement = viewFragment.toXML(doc);
+					showTypeElement.appendChild(notificationsElement);
+					doc.renameNode(notificationsElement, "", "Notifications");
+
+					ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+				}
+
+			} catch (Exception e) {
+
+				log.error("Error getting view fragment from notification handler for flow " + bean, e);
+			}
+		}
+
+		List<Breadcrumb> breadcrumbs = getShowBreadcrumbs(bean, req, user, uriParser);
+
+		if (breadcrumbs != null) {
+
+			moduleResponse.addBreadcrumbsLast(breadcrumbs);
+		}
+
+		return moduleResponse;
+	}
+
+	@Override
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws Exception {
+
+		return callback.list(req, res, user, uriParser, validationErrors);
 	}
 
 	@Override

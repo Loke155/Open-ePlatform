@@ -59,6 +59,81 @@ $(document).ready(function() {
 		
 	});
 	
+	$(".filters a").click(function(e) {
+        
+		e.preventDefault();
+
+        var elements = $('.filters').find('a');
+
+        $(this).toggleClass('btn-blue').toggleClass('btn-light');
+        elements.showAndHide();
+        
+    });
+	
+	$(".filter-wrapper > a").click( function(e) {
+       
+		e.preventDefault();
+        var el = $(this);
+        
+        el.toggleClass('active');
+        el.attr('data-icon-after', el.hasClass('active') ? '^' : '_');
+
+    });
+	
+	$("a.show-all-link").each(function() {
+		
+		var $this = $(this);
+		
+		var $popularFlowsWrapper = $this.parent().find(".popularflows-wrapper");
+		var $allFlowsWrapper = $this.parent().find(".allflows-wrapper");
+		var $flowsList = $allFlowsWrapper.find("ul.previews");
+		
+		var $popularFlows = $flowsList.find("li.popular:lt(4)").clone();
+		
+		if($popularFlows.length == 0) {
+			
+			$popularFlows = $flowsList.find("li:lt(4)").clone();
+			
+		}
+	
+		if($popularFlows.length == 4) {
+			
+			$popularFlows.removeAttr("id");
+			
+			$popularFlowsWrapper.find("ul.previews").append($popularFlows);
+			
+			fixFlowList($popularFlowsWrapper.find("ul.previews"));
+			
+			$allFlowsWrapper.hide();
+			
+		} else {
+			
+			$popularFlowsWrapper.hide();
+			$allFlowsWrapper.show();
+			$this.hide();
+		}
+		
+		fixFlowList($flowsList);
+		
+		$this.click(function(e) {
+			
+			e.preventDefault();
+			
+			$allFlowsWrapper.show();
+			
+			var currentScroll = $(document).scrollTop();
+			var allFlowsPosition = $this.parent().find(".allflows-wrapper").offset().top - 20;
+			
+			$this.remove();
+			
+			if(currentScroll < allFlowsPosition) {
+				$("html, body").animate({ scrollTop: allFlowsPosition }, "fast");
+			}
+			
+		});
+		
+	});
+	
 	$(document).on("click", "i.favourite", function(e) {
 
 		var $this = $(this);
@@ -69,10 +144,6 @@ $(document).ready(function() {
 			e.stopPropagation();
 			
 			var flowFamilyID = $this.attr("id");
-			
-//			if(flowID === undefined) {
-//				flowID = $this.closest("li").attr("id");
-//			}
 			
 			addUserFavourite($this, flowFamilyID.split("_")[1]);
 		
@@ -92,7 +163,7 @@ $(document).ready(function() {
 	});
 	
 	$("section.search-results").find(".info .close").click(function(e) {
-		$(this).parent().parent().slideUp("fast");
+		$(this).parent().parent().slideUp("fast").removeClass("active");
 	});
 	
 	$(".tags-wrapper .tags a").click(function(e) {
@@ -102,7 +173,51 @@ $(document).ready(function() {
 		
 	});
 	
+	$(document).on("click", ".accordion .accordion-toggler", function(e) {
+        e.preventDefault();
+        e.returnValue = false;
+        $(this).parents("section").toggleClass("active");
+    });
+	
+	$(".section-inside div.description").expander({
+		slicePoint : 110,
+		expandText : "",
+		userCollapseText : "",
+		expandEffect: "show",
+		collapseEffect: "hide",
+		expandSpeed: 0,
+		collapseSpeed: 0
+	});
+	
+	$(document).on("click", ".btn-readmore", function(e) {
+        e.preventDefault();
+        e.returnValue = false;
+        $(this).parents(".description").addClass("active");
+    });
+	
 });
+
+function fixFlowList($flowsList) {
+	
+	$flowsList.find("li").each(function(i) {
+		
+		var $li = $(this);
+		var position = $li.index();
+		if(i % 2 != 0) {
+			$li.css("clear", "none").addClass("odd");
+			$li.before('<li class="separator" />');
+		} else {
+			$li.css("clear", "left").removeClass("odd");
+		}
+		
+		var $description = $li.find("span.description");
+		
+		$description.find("span").removeAttr("style");
+		$description.find("[face]").removeAttr("face");
+		
+	});
+	
+}
 
 function showCategoryFlows($category, $categories, $flowList) {
 	
@@ -217,6 +332,7 @@ function searchFlow() {
 				$searchResultTitle.find(".title").text(searchStr);
 		        $searchResultTitle.find(".hits").text(response.hitCount);
 		        
+		        $searchResultWrapper.addClass("active");
 		        $searchResultWrapper.show();
 				
 			}
@@ -228,6 +344,7 @@ function searchFlow() {
     	
     	$searchResultTitle.find(".title").text("");
     	$searchResultTitle.find(".hits").text(0);
+    	$searchResultWrapper.removeClass("active");
     	$searchResultWrapper.hide();
     	$searchResultList.html("");
  

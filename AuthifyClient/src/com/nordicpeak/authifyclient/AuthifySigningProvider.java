@@ -2,9 +2,6 @@ package com.nordicpeak.authifyclient;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +32,7 @@ import se.unlogic.standardutils.string.StringUtils;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.SigningConfirmedResponse;
 import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.dao.FlowEngineDAOFactory;
 import com.nordicpeak.flowengine.exceptions.flow.FlowDefaultStatusNotFound;
@@ -155,7 +153,7 @@ public class AuthifySigningProvider extends AnnotatedForegroundModule implements
 						signMessage = signMessage.replace("$flowInstance.flowInstanceID", instanceManager.getFlowInstanceID() + "");
 						signMessage = signMessage.replace("$hash", pdfHash);
 						
-						authifyClient.sign(req.getParameter("idp"), getUnescapedText(signMessage), authifySession, signingURL, user, req, res);
+						authifyClient.sign(req.getParameter("idp"), signMessage, authifySession, signingURL, user, req, res);
 	
 						return null;
 						
@@ -189,20 +187,24 @@ public class AuthifySigningProvider extends AnnotatedForegroundModule implements
 
 				log.info("User " + user + " signed flow instance " + instanceManager);
 
-				FlowInstanceEvent event = signingCallback.signingConfirmed(instanceManager, user);
+				SigningConfirmedResponse response = signingCallback.signingConfirmed(instanceManager, user);
+				
+				FlowInstanceEvent signingEvent = response.getSigningEvent();
+				
+				signingEvent.getAttributeHandler().setAttribute("signingProvider", this.getClass().getName());
+				signingEvent.getAttributeHandler().setAttribute("signingXML", authifySession.getSignXML());
+				
+				daoFactory.getFlowInstanceEventDAO().update(signingEvent, EVENT_ATTRIBUTE_RELATION_QUERY);
 
-				event.getAttributeHandler().setAttribute("signingProvider", this.getClass().getName());
-				event.getAttributeHandler().setAttribute("signingXML", authifySession.getSignXML());
-
-				daoFactory.getFlowInstanceEventDAO().update(event, EVENT_ATTRIBUTE_RELATION_QUERY);
-
+				FlowInstanceEvent pdfEvent = response.getSubmitEvent() != null ? response.getSubmitEvent() : signingEvent;
+				
 				if (pdfProvider != null) {
 
 					try {
 
-						if (pdfProvider.saveTemporaryPDF(instanceManager.getFlowInstanceID(), event)) {
+						if (pdfProvider.saveTemporaryPDF(instanceManager.getFlowInstanceID(), pdfEvent)) {
 
-							log.info("Temporary PDF for flow instance " + instanceManager + " requested by user " + user + " saved for event " + event);
+							log.info("Temporary PDF for flow instance " + instanceManager + " requested by user " + user + " saved for event " + pdfEvent);
 
 						} else {
 
@@ -216,7 +218,7 @@ public class AuthifySigningProvider extends AnnotatedForegroundModule implements
 
 				}
 
-				signingCallback.signingComplete(instanceManager, event, req);
+				signingCallback.signingComplete(instanceManager, pdfEvent, req);
 
 				res.sendRedirect(signingCallback.getSignSuccessURL(instanceManager, req));
 
@@ -310,25 +312,4 @@ public class AuthifySigningProvider extends AnnotatedForegroundModule implements
 
 	}
 	
-	private String getUnescapedText(String text) {
-
-		if (text != null) {
-
-			Charset utf8charset = Charset.forName("UTF-8");
-			
-			Charset iso88591charset = Charset.forName("ISO-8859-1");
-			
-			ByteBuffer inputBuffer = ByteBuffer.wrap(text.getBytes());
-			
-			CharBuffer data = utf8charset.decode(inputBuffer);
-
-			ByteBuffer outputBuffer = iso88591charset.encode(data);
-			
-			text = new String(outputBuffer.array());
-			
-		}
-
-		return text;
-	}
-
 }

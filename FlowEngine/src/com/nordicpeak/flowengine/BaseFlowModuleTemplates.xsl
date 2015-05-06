@@ -39,20 +39,30 @@
 					</xsl:with-param>
 				</xsl:call-template>
 			
-				<div class="section-full" />
+				<!-- <div class="section-full" /> -->
 				
-				<ul class="service-navigator clearfix">
-					<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
-				</ul>
+				<div class="service-navigator-wrap">
+					<div>
+						<a data-icon-after="&lt;" href="#" class="js-prev">
+		  					<span><xsl:value-of select="$i18n.Previous" /></span>
+		  				</a>
+						<ul class="service-navigator primary">
+							<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
+						</ul>
+						<a data-icon-after="&gt;" href="#" class="js-next">
+		  					<span><xsl:value-of select="$i18n.Next" /></span>
+		  				</a>
+					</div>
+				</div>
 				
-				<div class="section-full push">
+				<div class="section-full preview">
 					
 					<div class="queries">
 						<xsl:apply-templates select="ManagerResponses/ManagerResponse"/>
 					</div>
 					
 					<div class="navigator-buttons">
-						<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event)"><i class="only-mobile" data-icon-before="&#60;"></i><xsl:value-of select="$i18n.previousStep" /><span class="hide-mobile"><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = last()]/name" /></span></a>
+						<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event)" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = last()]/name" /></span></a>
 						
 						<xsl:if test="not($concurrentModificationLock)">
 						
@@ -69,6 +79,9 @@
 					</div>					
 					
 				</div>
+			
+				<ul id="futureNavigator" class="service-navigator hide-desktop clearfix">
+  				</ul>
 			
 				<div id="submitLoadingMessage" style="display: none">
 					<h1><xsl:value-of select="$i18n.SubmitLoading" />..</h1>
@@ -94,11 +107,21 @@
 				
 				</xsl:call-template>
 			
-				<div class="section-full" />
+				<!-- <div class="section-full" /> -->
 				
-				<ul class="service-navigator clearfix">
-					<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
-				</ul>
+				<div class="service-navigator-wrap">
+					<div>
+						<a data-icon-after="&lt;" href="#" class="js-prev">
+		  					<span><xsl:value-of select="$i18n.Previous" /></span>
+		  				</a>
+						<ul class="service-navigator primary">
+							<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
+						</ul>
+						<a data-icon-after="&gt;" href="#" class="js-next">
+		  					<span><xsl:value-of select="$i18n.Next" /></span>
+		  				</a>
+					</div>
+				</div>
 				
 				<div class="section-full push">
 					
@@ -110,14 +133,14 @@
 						<xsl:when test="FlowInstance/Flow/usePreview = 'true'">
 							
 							<div class="navigator-buttons">
-								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event,'preview=1')"><i class="only-mobile" data-icon-before="&#60;"></i><xsl:value-of select="$i18n.preview" /></a>
+								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event,'preview=1')" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="$i18n.preview" /></span></a>
 							</div>								
 							
 						</xsl:when>
 						<xsl:otherwise>
 							
 							<div class="navigator-buttons">
-								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event)"><i class="only-mobile" data-icon-before="&#60;"></i><xsl:value-of select="$i18n.previousStep" /><span class="hide-mobile"><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = last()]/name" /></span></a>
+								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event)" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = last()]/name" /></span></a>
 							</div>							
 							
 						</xsl:otherwise>
@@ -125,25 +148,151 @@
 										
 				</div>
 			
+				<ul id="futureNavigator" class="service-navigator hide-desktop clearfix">
+  				</ul>
+			
 			</form>
 			
 		</section>
 		
 	</xsl:template>	
+
+	<xsl:template match="MultiSigningStatusForm">
+	
+		<section class="service">
+			
+			<form method="GET" action="{/Document/requestinfo/uri}">
+			
+				<input id="submitmode" type="hidden" value="true" />
+				
+				<xsl:call-template name="createFlowInstanceManagerPreviewHeader">
+					<xsl:with-param name="showSaveButton" select="'false'"/>
+					<xsl:with-param name="showFlowInstanceID" select="'false'"/>
+				</xsl:call-template>
+			
+				<div class="section-full push">
+					
+					<h2 class="h1 hide-tablet"><xsl:value-of select="$i18n.MultiSignStatus" /></h2>
+					
+					<xsl:value-of select="ViewFragment/HTML" disable-output-escaping="yes"/>
+					
+				</div>
+			
+			</form>
+			
+		</section>
+	
+	</xsl:template>
+
+	<xsl:template match="StandalonePaymentForm">
+	
+		<section class="service">
+			
+			<form id="paymentForm" method="POST" action="{/Document/requestinfo/uri}">
+			
+				<xsl:call-template name="createFlowInstanceManagerPreviewHeader">
+					<xsl:with-param name="showSaveButton" select="'false'"/>
+					<xsl:with-param name="showFlowInstanceID" select="'false'"/>
+				</xsl:call-template>
+			
+				<div class="section-full push">
+					
+					<h2 class="h1 hide-tablet"><xsl:value-of select="$i18n.payHeader" /></h2>
+					
+					<xsl:value-of select="ViewFragment/HTML" disable-output-escaping="yes"/>
+					
+					<div class="navigator-buttons clearboth">
+						<a href="#" class="btn btn-light xl next" onclick="$('#paymentForm').submit()" data-icon-after=">"><span><xsl:value-of select="$i18n.payAndSubmit" /></span></a>
+					</div>
+					
+				</div>
+			
+			</form>
+			
+		</section>
+	
+	</xsl:template>
+	
+	<xsl:template match="InlinePaymentForm">
+		
+		<section class="service">
+			
+			<form id="paymentForm" method="GET" action="{/Document/requestinfo/uri}">
+			
+				<input id="submitmode" type="hidden" value="true" />
+				
+				<xsl:call-template name="createFlowInstanceManagerPreviewHeader">
+				
+					<xsl:with-param name="showSaveButton" select="'false'"/>
+				
+				</xsl:call-template>
+			
+				<div class="service-navigator-wrap">
+					<div>
+						<a data-icon-after="&lt;" href="#" class="js-prev">
+		  					<span><xsl:value-of select="$i18n.Previous" /></span>
+		  				</a>
+						<ul class="service-navigator primary">
+							<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
+						</ul>
+						<a data-icon-after="&gt;" href="#" class="js-next">
+		  					<span><xsl:value-of select="$i18n.Next" /></span>
+		  				</a>
+					</div>
+				</div>
+				
+				<div class="section-full push">
+					
+					<h2 class="h1 hide-tablet"><xsl:value-of select="$i18n.payHeader" /></h2>
+					
+					<xsl:value-of select="ViewFragment/HTML" disable-output-escaping="yes"/>
+					
+					<xsl:choose>
+						<xsl:when test="FlowInstance/Flow/usePreview = 'true'">
+							
+							<div class="navigator-buttons clearboth">
+								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event,'preview=1')" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="$i18n.preview" /></span></a>
+								<a href="#" class="btn btn-light xl next" onclick="submitStep('save-submit', event)" data-icon-after=">"><span><xsl:value-of select="$i18n.payAndSubmit" /></span></a>
+							</div>								
+							
+						</xsl:when>
+						<xsl:otherwise>
+							
+							<div class="navigator-buttons clearboth">
+								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="redirectFromPreview(event)" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = last()]/name" /></span></a>
+								<a href="#" class="btn btn-light xl next" onclick="submitStep('save-submit', event)" data-icon-after=">"><span><xsl:value-of select="$i18n.payAndSubmit" /></span></a>
+							</div>							
+							
+						</xsl:otherwise>
+					</xsl:choose>					
+					
+					
+							
+				</div>
+			
+				<ul id="futureNavigator" class="service-navigator hide-desktop clearfix">
+  				</ul>
+			
+			</form>
+			
+		</section>
+		
+	</xsl:template>
 	
 	<xsl:template name="createFlowInstanceManagerPreviewHeader">
 	
 		<xsl:param name="showSaveButton" select="'true'"/>
+		<xsl:param name="showFlowInstanceID" select="'true'"/>
 	
 		<div class="section-inside step">
 			<div class="heading-wrapper">
 				<div class="inner">
 					<figure>
- 						<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+ 						<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	 				</figure>
 	 				<div class="heading">
 						<h1 class="xl"><xsl:value-of select="FlowInstance/Flow/name"/></h1>
-						<xsl:if test="FlowInstance/flowInstanceID">
+						<xsl:if test="$showFlowInstanceID = 'true' and FlowInstance/flowInstanceID">
 							<span class="errandno"><xsl:value-of select="$i18n.FlowInstanceID" /><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/flowInstanceID" /></span>
 						</xsl:if>
 					</div>
@@ -152,12 +301,10 @@
 		</div>
 		
 		<xsl:if test="loggedIn and $showSaveButton = 'true'">
-			<div class="aside-inside step">
+			<div class="aside-inside step hide-mobile hide-tablet">
 				<div class="section yellow">
 					<div class="inner">
 						<xsl:value-of select="$i18n.SaveBoxDescription" />
-					</div>
-					<div class="btn-wrapper">
 						<a class="btn btn-green btn-inline xl" id="save_errand" href="#" onclick="submitStep('save-preview', event)"><xsl:value-of select="$i18n.Save" /></a>
 					</div>
 				</div>
@@ -225,7 +372,13 @@
 		</div>
 		
 		<div class="info-box-message success">
+			
 			<xsl:value-of select="FlowInstance/Flow/submittedMessage" disable-output-escaping="yes"/>
+			
+			<xsl:if test="SubmitSurveyHTML">
+				<xsl:value-of select="SubmitSurveyHTML" disable-output-escaping="yes" />
+			</xsl:if>
+			
 		</div>
 	
 		<section class="service">
@@ -243,7 +396,7 @@
   					</xsl:choose>
   				
   					<figure>
-	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	  				</figure>
 	  				<div class="heading">
   						<h1 class="xl"><xsl:value-of select="$i18n.Receipt" /><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/Flow/name" /></h1>
@@ -272,6 +425,36 @@
 			
 	<xsl:template match="FlowInstanceManagerForm">
 	
+		<xsl:variable name="currentStepID" select="ManagerResponse/currentStepID" />
+		<xsl:variable name="stepCount" select="count(FlowInstance/Flow/Steps/Step)" />
+		<xsl:variable name="totalStepCount">
+			<xsl:choose>
+				<xsl:when test="usePreview = 'true'"><xsl:value-of select="$stepCount + 2" /></xsl:when>
+				<xsl:otherwise><xsl:value-of select="$stepCount + 1" /></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+	
+	 	<div class="panel-wrapper follow" style="display: none">
+	 		<div class="inner">
+	 			<div class="current-step" data-step="1">
+	 				<xsl:value-of select="$i18n.StepDescription.Part1" />
+					<xsl:text>&#160;</xsl:text>
+					<xsl:value-of select="ManagerResponse/currentStepIndex + 1" />
+					<xsl:text>&#160;</xsl:text>
+					<xsl:value-of select="$i18n.StepDescription.Part2" />
+					<xsl:text>&#160;</xsl:text>
+					<xsl:value-of select="$totalStepCount" />
+					<xsl:text>:&#160;</xsl:text>
+					<xsl:value-of select="FlowInstance/Flow/Steps/Step[stepID = $currentStepID]/name" />
+	 			</div>
+	 			<div class="buttons">
+	 				<a href="#" data-action="save_errand" class="btn btn-green" onclick="submitStep('save', event)"><xsl:value-of select="$i18n.save" /><span class="hide-mobile"><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.saveBtnSuffix" /></span></a>
+	 			</div>
+	 		</div>
+	 	</div>
+	 	
+	 	<xsl:call-template name="createMobileSavePanel" />
+	
 		<xsl:if test="ManagerResponse/concurrentModificationLock = 'true'">
 			<section class="modal error">
   				<span data-icon-before="!">
@@ -288,7 +471,7 @@
 	
 		<xsl:apply-templates select="validationError"/>
 
-		<section class="service">
+		<section class="service has-navigator">
 			
 			<form method="post" action="{/Document/requestinfo/uri}" enctype="multipart/form-data">
 			
@@ -305,11 +488,21 @@
 				
 				</xsl:call-template>
 				
-				<div class="section-full" />
+				<!-- <div class="section-full" /> -->
 				
-				<ul class="service-navigator clearfix">
-					<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
-				</ul>
+				<div class="service-navigator-wrap">
+					<div>
+						<a data-icon-after="&lt;" href="#" class="js-prev">
+		  					<span><xsl:value-of select="$i18n.Previous" /></span>
+		  				</a>
+						<ul class="service-navigator primary">
+							<xsl:apply-templates select="FlowInstance/Flow/Steps"/>
+						</ul>
+						<a data-icon-after="&gt;" href="#" class="js-next">
+		  					<span><xsl:value-of select="$i18n.Next" /></span>
+		  				</a>
+					</div>
+				</div>
 				
 				<div class="section-full push">
 					
@@ -327,14 +520,14 @@
 					
 					<div class="navigator-buttons">
 						<xsl:if test="ManagerResponse/currentStepIndex > 0">
-								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="submitStep('back', event)"><i class="only-mobile" data-icon-before="&#60;"></i><xsl:value-of select="$i18n.previousStep" /><span class="hide-mobile"><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = $currentStepIndex]/name" /></span></a>
+								<a href="#" class="btn btn-light xl prev arrow-mobile" onclick="submitStep('back', event)" data-icon-before="&#60;"><span class="only-mobile"><xsl:value-of select="$i18n.previousStep" /></span><span class="hide-mobile"><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = $currentStepIndex]/name" /></span></a>
 						</xsl:if>
 						<xsl:choose>
-							<xsl:when test="ManagerResponse/currentStepID = FlowInstance/Flow/Steps/Step[last()]/stepID">
+							<xsl:when test="$currentStepID = FlowInstance/Flow/Steps/Step[last()]/stepID">
 								
 								<xsl:choose>
 									<xsl:when test="FlowInstance/Flow/usePreview = 'true'">
-										<a href="#" class="btn btn-green xl next arrow-mobile" onclick="submitStep('preview', event)"><i class="only-mobile" data-icon-before=">"></i><xsl:value-of select="$i18n.nextStep" /><span class="hide-mobile"><xsl:text>:&#160;</xsl:text><xsl:value-of select="$i18n.preview" /></span></a>
+										<a href="#" class="btn btn-green xl next arrow-mobile" onclick="submitStep('preview', event)" data-icon-after=">"><span class="only-mobile"><xsl:value-of select="$i18n.nextStep" /></span><span class="hide-mobile"><xsl:value-of select="$i18n.preview" /></span></a>
 									</xsl:when>
 									<xsl:otherwise>
 									
@@ -357,7 +550,7 @@
 							</xsl:when>
 							<xsl:otherwise>
 									<xsl:value-of select="currentStepIndex" />
-									<a href="#" class="btn btn-green xl next arrow-mobile" onclick="submitStep('forward', event)"><i class="only-mobile" data-icon-before=">"></i><xsl:value-of select="$i18n.nextStep" /><span class="hide-mobile"><xsl:text>:&#160;</xsl:text><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = ($currentStepIndex + 2)]/name" /></span></a>
+									<a href="#" class="btn btn-green xl next arrow-mobile" onclick="submitStep('forward', event)" data-icon-after=">"><span class="only-mobile"><xsl:value-of select="$i18n.nextStep" /></span><span class="hide-mobile"><xsl:value-of select="FlowInstance/Flow/Steps/Step[position() = ($currentStepIndex + 2)]/name" /></span></a>
 							</xsl:otherwise>
 						</xsl:choose>
 					</div>
@@ -379,6 +572,9 @@
 					
 				</div>
 			
+				<ul id="futureNavigator" class="service-navigator hide-desktop clearfix">
+  				</ul>
+			
 			</form>
 			
 		</section>
@@ -393,7 +589,7 @@
 			<div class="heading-wrapper">
 				<div class="inner">
 					<figure>
- 						<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+ 						<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	 				</figure>
 	 				<div class="heading">
 						<h1 class="xl"><xsl:value-of select="FlowInstance/Flow/name"/></h1>
@@ -403,12 +599,10 @@
 		</div>
 		
 		<xsl:if test="loggedIn and $showSaveButton = 'true'">
-			<div class="aside-inside step">
+			<div class="aside-inside step hide-mobile hide-tablet">
 				<div class="section yellow">
 					<div class="inner">
 						<xsl:value-of select="$i18n.SaveBoxDescription" />
-					</div>
-					<div class="btn-wrapper">
 						<a class="btn btn-green btn-inline xl" id="save_errand" href="#" onclick="submitStep('save', event)"><xsl:value-of select="$i18n.Save" /></a>
 					</div>
 				</div>
@@ -429,15 +623,24 @@
 	
 	</xsl:template>
 	
+	<xsl:template name="createMobileSavePanel">
+		
+		<div class="panel-wrapper yellow hide-desktop">
+	 		<div class="inner">
+	 			<div class="current-step">
+	 				<xsl:value-of select="$i18n.ShortSaveBoxDescription" />
+	 			</div>
+	 			<div class="buttons">
+	 				<a class="btn btn-green" data-action="save_errand" href="#" onclick="submitStep('save', event)"><xsl:value-of select="$i18n.save" /><span class="hide-mobile"><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.flowInstance" /></span></a>
+	 			</div>
+	 		</div>
+	 	</div>
+		
+	</xsl:template>
+	
 	<xsl:template match="Steps">
 	
 		<xsl:variable name="stepCount" select="count(Step)" />
-		<xsl:variable name="totalStepCount">
-			<xsl:choose>
-				<xsl:when test="../usePreview = 'true'"><xsl:value-of select="$stepCount + 2" /></xsl:when>
-				<xsl:otherwise><xsl:value-of select="$stepCount + 1" /></xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
 		<xsl:variable name="submitText">
 			<xsl:choose>
 				<xsl:when test="../requireSigning = 'true'"><xsl:value-of select="$i18n.signAndSubmit" /></xsl:when>
@@ -445,11 +648,21 @@
 			</xsl:choose>			
 		</xsl:variable>
 	
-		<xsl:apply-templates select="Step">
-			<xsl:with-param name="totalStepCount" select="$totalStepCount" />
-		</xsl:apply-templates>
+		<xsl:apply-templates select="Step" />
 		
-		<xsl:choose>
+		<xsl:if test="../usePreview = 'true'">
+			<li>
+				<xsl:if test="/Document/FlowInstanceManagerPreview">
+					<xsl:attribute name="class">active</xsl:attribute>
+				</xsl:if>
+				
+				<span data-step="{$stepCount+1}">
+					<xsl:value-of select="$i18n.preview"/>
+				</span>
+			</li>
+		</xsl:if>
+		
+		<!-- <xsl:choose>
 			<xsl:when test="../usePreview = 'true'">
 				<li>
 					<xsl:if test="/Document/FlowInstanceManagerPreview">
@@ -460,22 +673,6 @@
 						<xsl:value-of select="$i18n.preview"/>
 					</span>
 				</li>
-				<xsl:if test="/Document/FlowInstanceManagerPreview">
-					<li class="only-mobile">
-						<div class="progress" style="width: {(($stepCount+1) div $totalStepCount) * 100}%;"></div>
-						<div class="text">
-							<xsl:value-of select="$i18n.StepDescription.Part1" />
-							<xsl:text>&#160;</xsl:text>
-							<xsl:value-of select="$stepCount+1" />
-							<xsl:text>&#160;</xsl:text>
-							<xsl:value-of select="$i18n.StepDescription.Part2" />
-							<xsl:text>&#160;</xsl:text>
-							<xsl:value-of select="$totalStepCount" />
-							<xsl:text>:&#160;</xsl:text>
-							<xsl:value-of select="$i18n.preview" />
-						</div>
-					</li>
-				</xsl:if>
 				<xsl:call-template name="createSubmitStep">
 					<xsl:with-param name="step" select="$stepCount+2" />
 					<xsl:with-param name="submitText" select="$submitText" />
@@ -487,7 +684,7 @@
 					<xsl:with-param name="submitText" select="$submitText" />
 				</xsl:call-template>
 			</xsl:otherwise>
-		</xsl:choose>
+		</xsl:choose> -->
 		
 	</xsl:template>
 	
@@ -508,7 +705,6 @@
 	
 	<xsl:template match="Step">
 		
-		<xsl:param name="totalStepCount" />
 		<xsl:variable name="currentStepID" select="../../../../ManagerResponse/currentStepID" />
 		<xsl:variable name="currentStepIndex" select="//ManagerResponse[position() = last()]/currentStepIndex" />
 	
@@ -526,23 +722,6 @@
 				<xsl:value-of select="name"/>
 			</span>
 		</li>
-	
-		<xsl:if test="$currentStepID = stepID">
-			<li class="only-mobile">
-				<div class="progress" style="width: {(position() div $totalStepCount) * 100}%;"></div>
-				<div class="text">
-					<xsl:value-of select="$i18n.StepDescription.Part1" />
-					<xsl:text>&#160;</xsl:text>
-					<xsl:value-of select="position()" />
-					<xsl:text>&#160;</xsl:text>
-					<xsl:value-of select="$i18n.StepDescription.Part2" />
-					<xsl:text>&#160;</xsl:text>
-					<xsl:value-of select="$totalStepCount" />
-					<xsl:text>:&#160;</xsl:text>
-					<xsl:value-of select="name" />
-				</div>
-			</li>
-		</xsl:if>
 	
 	</xsl:template>	
 	
@@ -660,6 +839,43 @@
   			</section>
 			
 		</xsl:if>
+		
+	</xsl:template>
+	
+	<xsl:template name="getEventTypeText">
+		
+		<xsl:choose>
+			<xsl:when test="eventType = 'SUBMITTED'">
+				<xsl:value-of select="$i18n.SubmittedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'SIGNED'">
+				<xsl:value-of select="$i18n.SignedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'PAYED'">
+				<xsl:value-of select="$i18n.PayedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'UPDATED'">
+				<xsl:value-of select="$i18n.UpdatedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'STATUS_UPDATED'">
+				<xsl:value-of select="$i18n.StatusUpdatedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'MANAGERS_UPDATED'">
+				<xsl:value-of select="$i18n.ManagersUpdatedEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'CUSTOMER_NOTIFICATION_SENT'">
+				<xsl:value-of select="$i18n.CustomerNotificationEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'CUSTOMER_MESSAGE_SENT'">
+				<xsl:value-of select="$i18n.CustomerMessageSentEvent" />
+			</xsl:when>
+			<xsl:when test="eventType = 'MANAGER_MESSAGE_SENT'">
+				<xsl:value-of select="$i18n.ManagerMessageSentEvent" />
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$i18n.OtherEvent" />
+			</xsl:otherwise>
+		</xsl:choose>
 		
 	</xsl:template>
 	

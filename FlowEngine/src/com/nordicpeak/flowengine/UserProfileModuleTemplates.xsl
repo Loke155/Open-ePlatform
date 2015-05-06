@@ -153,26 +153,6 @@
 					
 				</article>
 				<article>
-					<div class="heading-wrapper">
-						<h2>Hur vill du bli kontaktad i dina ärenden?</h2>
-					</div>
-					<span class="italic">Ange en förvald kontaktväg för kontakt i dina ärenden. Du kan alltid välja ett annat kontaktsätt separat i samband med en ny ansökan.</span>
-					
-					<xsl:call-template name="createCheckbox">
-						<xsl:with-param name="name" select="'attribute-contactByLetter'" />
-						<xsl:with-param name="id" select="'attribute-contactByLetter'" />
-						<xsl:with-param name="checked" select="user/Attributes/Attribute[Name = 'contactByLetter']/Value" />
-					</xsl:call-template>
-					
-					<label class="checkbox" for="attribute-contactByLetter">Brev</label>
-					
-					<xsl:call-template name="createCheckbox">
-						<xsl:with-param name="name" select="'attribute-contactByEmail'" />
-						<xsl:with-param name="id" select="'attribute-contactByEmail'" />
-						<xsl:with-param name="checked" select="user/Attributes/Attribute[Name = 'contactByEmail']/Value" />
-					</xsl:call-template>
-					
-					<label class="checkbox" for="attribute-contactByEmail">E-post</label>
 					
 					<xsl:call-template name="createCheckbox">
 						<xsl:with-param name="name" select="'attribute-contactBySMS'" />
@@ -180,21 +160,7 @@
 						<xsl:with-param name="checked" select="user/Attributes/Attribute[Name = 'contactBySMS']/Value" />
 					</xsl:call-template>
 					
-					<label class="checkbox" for="attribute-contactBySMS">SMS</label>
-					
-					<xsl:call-template name="createCheckbox">
-						<xsl:with-param name="name" select="'attribute-contactByPhone'" />
-						<xsl:with-param name="id" select="'attribute-contactByPhone'" />
-						<xsl:with-param name="checked" select="user/Attributes/Attribute[Name = 'contactByPhone']/Value" />
-					</xsl:call-template>
-					
-					<label class="checkbox" for="attribute-contactByPhone">Telefon</label>
-					
-					<!-- 
-					<input type="checkbox" disabled="" checked="" value="4" id="input_1_4" name="input_1[]" />
-					
-					<label class="checkbox disabled" for="input_1_4">Mina sidor</label>
-					-->
+					<label class="checkbox" for="attribute-contactBySMS"><xsl:value-of select="$i18n.SMS" /></label>
 					
 				</article>
 				<div class="divider"></div>

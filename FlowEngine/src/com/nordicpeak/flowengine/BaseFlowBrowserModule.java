@@ -1,6 +1,8 @@
 package com.nordicpeak.flowengine;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,7 +44,7 @@ public abstract class BaseFlowBrowserModule extends BaseFlowModule {
 					
 					log.info("Saved flow instance " + instanceManager + " belonging to user " + user + " after previous exception.");
 
-					return list(req, res, user, uriParser, FLOW_INSTANCE_ERROR_DATA_SAVED_VALIDATION_ERROR);					
+					return list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_ERROR_DATA_SAVED_VALIDATION_ERROR));					
 				}
 
 			} catch (FlowInstanceManagerClosedException e1) {
@@ -57,8 +59,9 @@ public abstract class BaseFlowBrowserModule extends BaseFlowModule {
 			}
 		}
 
-		return list(req, res, user, uriParser, FLOW_INSTANCE_ERROR_DATA_NOT_SAVED_VALIDATION_ERROR);
+		return list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_ERROR_DATA_NOT_SAVED_VALIDATION_ERROR));
 	}
 
-	protected abstract ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws ModuleConfigurationException, SQLException;
+	protected abstract ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws ModuleConfigurationException, SQLException;
+
 }

@@ -1115,6 +1115,133 @@
 				) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 	        ]]>
 	    </Query>
-	</Script>  
+	</Script>
+	
+	<Script version="45">
+	   <Query>
+	        <![CDATA[
+				ALTER TABLE `flowengine_query_descriptors` ADD COLUMN `xsdElementName` VARCHAR(255) AFTER `exported`;
+	        ]]>
+	    </Query>
+	    <Query>
+	        <![CDATA[
+				UPDATE flowengine_query_descriptors SET exported = false;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="46">
+	   <Query>
+	        <![CDATA[
+				ALTER TABLE `flowengine_user_organizations` DROP COLUMN `contactByLetter`,
+				 DROP COLUMN `contactByEmail`,
+				 DROP COLUMN `contactByPhone`;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="47">
+	   <Query>
+	        <![CDATA[
+				CREATE TABLE `flowengine_aborted_flow_instances` (
+				  `abortID` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+				  `flowFamilyID` INTEGER UNSIGNED NOT NULL,
+				  `flowID` INTEGER UNSIGNED NOT NULL,
+				  `stepID` INTEGER UNSIGNED NOT NULL,
+				  `added` DATETIME NOT NULL,
+				  PRIMARY KEY (`abortID`),
+				  CONSTRAINT `FK_flowengine_aborted_flow_instances_1` FOREIGN KEY `FK_flowengine_aborted_flow_instances_1` (`flowID`)
+				    REFERENCES `flowengine_flows` (`flowID`)
+				    ON DELETE CASCADE
+				    ON UPDATE CASCADE
+				)
+				ENGINE = InnoDB;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="48">
+	   <Query>
+	        <![CDATA[
+				ALTER TABLE `flowengine_flow_families` ADD COLUMN `contactName` VARCHAR(255) AFTER `versionCount`,
+				 ADD COLUMN `contactEmail` VARCHAR(255) AFTER `contactName`,
+				 ADD COLUMN `contactPhone` VARCHAR(255) AFTER `contactEmail`,
+				 ADD COLUMN `ownerName` VARCHAR(255) AFTER `contactPhone`,
+				 ADD COLUMN `ownerEmail` VARCHAR(255) AFTER `ownerName`;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="49">
+	   <Query>
+	        <![CDATA[
+				ALTER TABLE `flowengine_flows` ADD COLUMN `showSubmitSurvey` TINYINT(1) UNSIGNED NOT NULL AFTER `externalLink`;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="50">
+	   <Query>
+	        <![CDATA[
+				ALTER TABLE `flowengine_flow_families` ADD COLUMN `statisticsMode` VARCHAR(45) AFTER `ownerEmail`;
+	        ]]>
+	    </Query>
+	</Script>	
+	
+	<Script version="51">
+	   <Query>
+	        <![CDATA[
+				CREATE TABLE `flowengine_operating_messages` (
+				  `messageID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				  `message` varchar(255) NOT NULL,
+				  `startTime` datetime NOT NULL,
+				  `endTime` datetime NOT NULL,
+				  `disableFlows` tinyint(1) unsigned NOT NULL,
+				  `global` tinyint(1) unsigned NOT NULL,
+				  `posted` datetime NOT NULL,
+				  `poster` int(10) unsigned NOT NULL,
+				  `updated` datetime DEFAULT NULL,
+				  `editor` int(10) unsigned DEFAULT NULL,
+				  PRIMARY KEY (`messageID`)
+				) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+	        ]]>
+	    </Query>
+	    <Query>
+	        <![CDATA[
+				CREATE TABLE `flowengine_operating_message_flowfamilies` (
+				  `messageID` INTEGER UNSIGNED NOT NULL,
+				  `flowFamilyID` INTEGER UNSIGNED NOT NULL,
+				  PRIMARY KEY (`messageID`, `flowFamilyID`),
+				  CONSTRAINT `FK_flowengine_operating_message_flowfamilies_1` FOREIGN KEY `FK_flowengine_operating_message_flowfamilies_1` (`messageID`)
+				    REFERENCES `flowengine_operating_messages` (`messageID`)
+				    ON DELETE CASCADE
+				    ON UPDATE CASCADE,
+				  CONSTRAINT `FK_flowengine_operating_message_flowfamilies_2` FOREIGN KEY `FK_flowengine_operating_message_flowfamilies_2` (`flowFamilyID`)
+				    REFERENCES `flowengine_flow_families` (`flowFamilyID`)
+				    ON DELETE CASCADE
+				    ON UPDATE CASCADE
+				)
+				ENGINE = InnoDB;
+	        ]]>
+	    </Query>
+	</Script>
+	
+	<Script version="52">
+	   <Query>
+	        <![CDATA[
+				CREATE TABLE `flowengine_flow_instance_attributes` (
+				  `flowInstanceID` INTEGER UNSIGNED NOT NULL,
+				  `name` VARCHAR(255) NOT NULL,
+				  `value` TEXT NOT NULL,
+				  PRIMARY KEY (`flowInstanceID`, `name`),
+				  CONSTRAINT `FK_flowengine_flow_instance_attributes_1` FOREIGN KEY `FK_flowengine_flow_instance_attributes_1` (`flowInstanceID`)
+				    REFERENCES `flowengine_flow_instances` (`flowInstanceID`)
+				    ON DELETE CASCADE
+				    ON UPDATE CASCADE
+				)
+				ENGINE = InnoDB;
+	        ]]>
+	    </Query>
+	</Script>	
 	
 </DBScripts>

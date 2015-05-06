@@ -34,19 +34,8 @@ $(document).ready(function() {
 		}
 
 	});
-	
-	$("#name, #address, #zipCode, #postalAddress, #firstname, #lastname").change(function() {
-		
-		if($("#name").val() != "" && $("#address").val() != "" && $("#zipCode").val() != "" && $("#postalAddress").val() != "" && $("#firstname").val() != "" && $("#lastname").val() != "") {
-			$("#contactByLetter").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$("#contactByLetter").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	
-	$("#mobilePhone").change(function() {
+
+	$("#mobilePhone").keyup(function() {
 		
 		if($(this).val() != "") {
 			$("#contactBySMS").removeAttr("disabled").next("label").removeClass("disabled");
@@ -56,26 +45,6 @@ $(document).ready(function() {
 		
 	});
 	
-	$("#email").change(function() {
-		
-		if($(this).val() != "") {
-			$( "#contactByEmail").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$( "#contactByEmail").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$("#phone").change(function() {
-		
-		if($(this).val() != "") {
-			$( "#contactByPhone").removeAttr("disabled").next("label").removeClass("disabled");
-		} else {
-			$( "#contactByPhone").removeAttr("checked").attr("disabled", "disabled").next("label").addClass("disabled");
-		}
-		
-	});
-	
-	$("#address, #zipCode, #postalAddress, #firstname, #lastname, #mobilePhone, #email, #phone").trigger("change");
+	$("#mobilePhone").trigger("keyup");
 
 });

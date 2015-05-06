@@ -54,5 +54,29 @@
 			]]>
 		</Query>
 	</Script>
-			
+		
+	<Script version="4">
+		<Query>
+			<![CDATA[		
+				ALTER TABLE `contact_detail_queries` DROP COLUMN `allowLetter`,
+				 DROP COLUMN `allowEmail`,
+				 DROP COLUMN `allowPhone`;
+			]]>
+		</Query>
+		<Query>
+			<![CDATA[		
+				ALTER TABLE `contact_detail_query_instances` DROP COLUMN `contactByLetter`,
+				 DROP COLUMN `contactByEmail`,
+				 DROP COLUMN `contactByPhone`;
+			]]>
+		</Query>		
+	</Script>		
+	
+	<Script version="5">
+		<Query>
+			<![CDATA[		
+				ALTER TABLE `contact_detail_queries` ADD COLUMN `requireAddress` BOOLEAN NOT NULL AFTER `allowSMS`;
+			]]>
+		</Query>
+	</Script>
 </DBScripts>

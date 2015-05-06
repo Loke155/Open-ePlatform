@@ -68,4 +68,51 @@
 		</Query>
 	</Script>
 	
+	<Script version="7">
+		<Query>
+			<![CDATA[
+				ALTER TABLE `pud_map_query_instances` CHANGE COLUMN `smallPNG` `firstMapImage` MEDIUMBLOB DEFAULT NULL,
+				 CHANGE COLUMN `largePNG` `secondMapImage` LONGBLOB DEFAULT NULL,
+				 ADD COLUMN `thirdMapImage` LONGBLOB AFTER `secondMapImage`;
+			]]>
+		</Query>
+	</Script>
+	
+	<Script version="8">
+		<Query>
+			<![CDATA[
+				ALTER TABLE `pud_map_query_instances` ADD COLUMN `firstMapImageDpi` INTEGER UNSIGNED AFTER `yCoordinate`,
+				 ADD COLUMN `firstMapImageScale` INTEGER UNSIGNED AFTER `firstMapImageDpi`,
+				 ADD COLUMN `firstMapImageLayout` VARCHAR(255) AFTER `firstMapImageScale`,
+				 ADD COLUMN `firstMapImageFormat` VARCHAR(255) AFTER `firstMapImageLayout`,
+				 ADD COLUMN `secondMapImageDpi` INTEGER UNSIGNED AFTER `firstMapImageFormat`,
+				 ADD COLUMN `secondMapImageScale` INTEGER UNSIGNED AFTER `secondMapImageDpi`,
+				 ADD COLUMN `secondMapImageLayout` VARCHAR(255) AFTER `secondMapImageScale`,
+				 ADD COLUMN `secondMapImageFormat` VARCHAR(255) AFTER `secondMapImageLayout`,
+				 ADD COLUMN `thirdMapImageDpi` INTEGER UNSIGNED AFTER `secondMapImageFormat`,
+				 ADD COLUMN `thirdMapImageScale` INTEGER UNSIGNED AFTER `thirdMapImageDpi`,
+				 ADD COLUMN `thirdMapImageLayout` VARCHAR(255) AFTER `thirdMapImageScale`,
+				 ADD COLUMN `thirdMapImageFormat` VARCHAR(255) AFTER `thirdMapImageLayout`;
+			]]>
+		</Query>
+	</Script>	
+	
+	<Script version="9">
+		<Query>
+			<![CDATA[
+				UPDATE pud_map_query_instances SET firstMapImageDpi = 127, firstMapImageScale = 400, firstMapImageLayout = 'OH_PNG', firstMapImageFormat = 'png' WHERE firstMapImage IS NOT NULL;
+			]]>
+		</Query>
+		<Query>
+			<![CDATA[
+				UPDATE pud_map_query_instances SET secondMapImageDpi = 56, secondMapImageScale = 1000, secondMapImageLayout = 'OH_PNG_LARGE', secondMapImageFormat = 'png' WHERE secondMapImage IS NOT NULL;
+			]]>
+		</Query>
+		<Query>
+			<![CDATA[
+				UPDATE pud_map_query_instances SET thirdMapImageDpi = 127, thirdMapImageScale = 400, thirdMapImageLayout = 'OEP_A4_Landscape', thirdMapImageFormat = 'pdf' WHERE thirdMapImage IS NOT NULL;
+			]]>
+		</Query>
+	</Script>
+	
 </DBScripts>

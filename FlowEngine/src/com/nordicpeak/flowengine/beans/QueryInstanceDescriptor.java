@@ -53,6 +53,7 @@ public class QueryInstanceDescriptor extends GeneratedElementable implements Mut
 		this.queryState = queryDescriptor.getDefaultQueryState();
 	}
 
+	@Override
 	public Integer getQueryInstanceID() {
 
 		return queryInstanceID;
@@ -87,6 +88,7 @@ public class QueryInstanceDescriptor extends GeneratedElementable implements Mut
 		this.populated = values;
 	}
 
+	@Override
 	public QueryDescriptor getQueryDescriptor() {
 
 		return queryDescriptor;
@@ -97,6 +99,7 @@ public class QueryInstanceDescriptor extends GeneratedElementable implements Mut
 		this.queryDescriptor = queryDescriptor;
 	}
 
+	@Override
 	public Integer getFlowInstanceID() {
 
 		return flowInstanceID;

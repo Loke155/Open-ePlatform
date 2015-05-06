@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -97,6 +96,8 @@ public class FlowInstanceIndexer {
 	protected int maxHitCount;
 	protected int maxFilteredHitCount;
 
+	private boolean logIndexing = true;
+	
 	private LinkedBlockingQueue<QueuedIndexEvent> eventQueue = new LinkedBlockingQueue<QueuedIndexEvent>();
 
 	private CallbackThreadPoolExecutor threadPoolExecutor;
@@ -360,7 +361,10 @@ public class FlowInstanceIndexer {
 			try {
 				if (commit) {
 
-					log.info("Committing index changes from last event.");
+					if(logIndexing){
+						log.info("Committing index changes from last event.");
+					}
+					
 					this.indexWriter.commit();
 					this.indexReader = DirectoryReader.open(index);
 					this.searcher = new IndexSearcher(indexReader);
@@ -379,8 +383,9 @@ public class FlowInstanceIndexer {
 					log.debug("No queued search events found, thread pool idle.");
 					return;
 				}
-
-				log.info("Processing " + nextEvent);
+				if(logIndexing){
+					log.info("Processing " + nextEvent);
+				}
 
 				int tasks = nextEvent.queueTasks(threadPoolExecutor, this);
 
@@ -405,8 +410,8 @@ public class FlowInstanceIndexer {
 			Document doc = new Document();
 
 			doc.add(new StringField(ID_FIELD, flowInstance.getFlowInstanceID().toString(), Field.Store.YES));
-			doc.add(new IntField(FLOW_ID_FIELD, flow.getFlowID(), Field.Store.YES));
-			doc.add(new IntField(FLOW_FAMILY_ID_FIELD, flowFamily.getFlowFamilyID(), Field.Store.YES));
+			doc.add(new StringField(FLOW_ID_FIELD, flow.getFlowID().toString(), Field.Store.YES));
+			doc.add(new StringField(FLOW_FAMILY_ID_FIELD, flowFamily.getFlowFamilyID().toString(), Field.Store.YES));
 			doc.add(new TextField(FLOW_NAME_FIELD, flow.getName(), Field.Store.YES));
 			doc.add(new TextField(ADDED_FIELD, DateUtils.DATE_TIME_FORMATTER.format(flowInstance.getAdded()), Field.Store.YES));
 			doc.add(new TextField(STATUS_NAME_FIELD, flowInstance.getStatus().getName(), Field.Store.YES));
@@ -522,5 +527,17 @@ public class FlowInstanceIndexer {
 		query.addRelationParameter(Flow.class, flowEnabledParamFactory.getParameter(true));
 
 		return daoFactory.getFlowFamilyDAO().getAll(query);
+	}
+
+	
+	public boolean isLogIndexing() {
+	
+		return logIndexing;
+	}
+
+	
+	public void setLogIndexing(boolean logIndexing) {
+	
+		this.logIndexing = logIndexing;
 	}
 }

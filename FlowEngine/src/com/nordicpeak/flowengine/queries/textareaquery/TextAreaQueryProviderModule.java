@@ -12,8 +12,8 @@ import org.w3c.dom.Element;
 import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.utils.FCKUtils;
-import se.unlogic.hierarchy.core.validationerrors.TooLongContentValidationError;
 import se.unlogic.standardutils.dao.AnnotatedDAO;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.QueryParameterFactory;
@@ -23,6 +23,7 @@ import se.unlogic.standardutils.db.tableversionhandler.TableVersionHandler;
 import se.unlogic.standardutils.db.tableversionhandler.UpgradeResult;
 import se.unlogic.standardutils.db.tableversionhandler.XMLDBScriptProvider;
 import se.unlogic.standardutils.string.StringUtils;
+import se.unlogic.standardutils.validation.TooLongContentValidationError;
 import se.unlogic.standardutils.validation.ValidationError;
 import se.unlogic.standardutils.validation.ValidationException;
 import se.unlogic.standardutils.xml.XMLGenerator;
@@ -92,18 +93,18 @@ public class TextAreaQueryProviderModule extends BaseQueryProviderModule<TextAre
 
 		return query;
 	}
-	
+
 	@Override
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		TextAreaQuery query = new TextAreaQuery();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		return query;
 	}
 
@@ -164,12 +165,15 @@ public class TextAreaQueryProviderModule extends BaseQueryProviderModule<TextAre
 			return null;
 		}
 
-		FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-		
-		URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+		if(req != null){
+
+			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+		}
 
 		TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
-		
+
 		queryInstance.set(descriptor);
 
 		//If this is a new query instance copy the default values
@@ -208,6 +212,7 @@ public class TextAreaQueryProviderModule extends BaseQueryProviderModule<TextAre
 		return queryInstanceDAO.get(query);
 	}
 
+	@Override
 	public void save(TextAreaQueryInstance queryInstance, TransactionHandler transactionHandler) throws Throwable {
 
 		if(queryInstance.getQueryInstanceID() == null || !queryInstance.getQueryInstanceID().equals(queryInstance.getQueryInstanceDescriptor().getQueryInstanceID())){
@@ -223,7 +228,7 @@ public class TextAreaQueryProviderModule extends BaseQueryProviderModule<TextAre
 	}
 
 	@Override
-	public void populate(TextAreaQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(TextAreaQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		String value = req.getParameter("q" + queryInstance.getQuery().getQueryID() + "_value");
 
@@ -302,14 +307,14 @@ public class TextAreaQueryProviderModule extends BaseQueryProviderModule<TextAre
 
 		queryDAO.add(query, transactionHandler, null);
 	}
-	
+
 	@Override
 	protected void appendPDFData(Document doc, Element showQueryValuesElement, TextAreaQueryInstance queryInstance) {
 
 		super.appendPDFData(doc, showQueryValuesElement, queryInstance);
-		
+
 		if(queryInstance.getQuery().getDescription() != null){
-			
+
 			XMLUtils.appendNewCDATAElement(doc, showQueryValuesElement, "Description", JTidyUtils.getXHTML(queryInstance.getQuery().getDescription()));
 			XMLUtils.appendNewCDATAElement(doc, showQueryValuesElement, "isHTMLDescription", queryInstance.getQuery().getDescription().contains("<") && queryInstance.getQuery().getDescription().contains(">"));
 		}

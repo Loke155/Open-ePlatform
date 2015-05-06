@@ -157,7 +157,7 @@ public class QueryStateEvaluationProviderModule extends BaseEvaluationProviderMo
 				return restoreDefaultQueryStates(queryInstance, evaluator, callback);
 			}
 
-		return applyEvaluatorQueryStates(queryInstance, evaluator, callback);
+			return applyEvaluatorQueryStates(queryInstance, evaluator, callback);
 
 		}else{
 
@@ -214,6 +214,11 @@ public class QueryStateEvaluationProviderModule extends BaseEvaluationProviderMo
 
 	private EvaluationResponse restoreDefaultQueryStates(QueryInstance queryInstance, QueryStateEvaluator evaluator, EvaluationCallback callback) {
 
+		if(evaluator.isDoNotResetQueryState()){
+			
+			return null;
+		}
+		
 		List<QueryModification> queryModifications = null;
 
 		for(Integer queryID : evaluator.getEvaluatorDescriptor().getTargetQueryIDs()){

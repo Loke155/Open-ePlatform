@@ -24,4 +24,6 @@ public interface ImmutableQueryDescriptor extends Serializable, Elementable {
 	public List<? extends ImmutableEvaluatorDescriptor> getEvaluatorDescriptors();
 
 	public boolean isExported();
+
+	public String getXSDElementName();
 }

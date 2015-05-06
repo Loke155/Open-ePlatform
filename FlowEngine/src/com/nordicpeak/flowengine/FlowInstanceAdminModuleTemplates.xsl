@@ -12,7 +12,9 @@
 	<xsl:variable name="scripts">
 		/js/jquery.ui.touch.min.js
 		/js/jquery.blockui.js
+		/js/flowengine.helpdialog.js
 		/js/flowengine.js
+		/js/flowengine.step-navigator.js
 		/js/jquery.tablesorter.min.js
 		/js/flowengine.tablesorter.js
 		/js/flowinstanceadminmodule.js
@@ -47,7 +49,7 @@
 			<xsl:with-param name="view" select="'FLOWINSTANCE'" />
 		</xsl:call-template>
 	
-		<section class="modal warning modal-marginbottom">
+		<section class="modal warning child modal-marginbottom">
 			<xsl:value-of select="$i18n.FlowInstanceFormNotificationTitle.Part1" />
 			<xsl:text>&#160;</xsl:text>
 			<xsl:value-of select="FlowInstance/Flow/name" />
@@ -67,7 +69,7 @@
 		<div class="section-full padtop">
 			<div class="heading-wrapper">
 				<figure>
-					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 				</figure>
 				<div class="heading">
 					<xsl:if test="loggedIn">
@@ -94,7 +96,7 @@
 			<xsl:with-param name="view" select="'FLOWINSTANCE'" />
 		</xsl:call-template>
 
-		<section class="modal warning modal-marginbottom">
+		<section class="modal warning child modal-marginbottom">
 			<xsl:value-of select="$i18n.FlowInstanceFormNotificationTitle.Part1" />
 			<xsl:text>&#160;</xsl:text>
 			<xsl:value-of select="FlowInstance/Flow/name" />
@@ -114,7 +116,7 @@
 		<div class="section-full padtop">
 			<div class="heading-wrapper">
 				<figure>
-					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 				</figure>
 				<div class="heading">
 					<xsl:if test="loggedIn">
@@ -158,6 +160,8 @@
 	
 	</xsl:template>
 	
+	<xsl:template name="createMobileSavePanel" />
+	
 	<xsl:template name="createSubmitStep" />
 	
 	<xsl:template match="OverviewElement">
@@ -175,7 +179,7 @@
 				<div class="split-left">
 					<div class="inner">
 						<div class="heading-wrapper">
-							<h2 class="h1"><xsl:value-of select="i18n.Summary" /></h2>
+							<h2 class="h1"><xsl:value-of select="$i18n.Summary" /></h2>
 						</div>
 						<ul class="summary-buttons">
 							<li class="emergency">
@@ -201,6 +205,10 @@
 				<script type="text/javascript">
 					flowInstanceAdminURI = '<xsl:value-of select="/Document/requestinfo/currentURI" />/<xsl:value-of select="/Document/module/alias" />';
 					i18nChooseFlowInstance = '<xsl:value-of select="$i18n.Choose" />';
+					i18nFlow = '<xsl:value-of select="$i18n.Flow" />';
+					i18nFlowInstanceID = '<xsl:value-of select="$i18n.FlowInstanceID" />';
+					i18nFlowInstanceStatus = '<xsl:value-of select="$i18n.Status" />';
+					i18nFlowInstanceAdded = '<xsl:value-of select="$i18n.Date" />';
 				</script>
 				
 				<div class="split-right search-wrapper">
@@ -239,7 +247,7 @@
   				
   				<h2 class="h1 search-results-title"><span class="title" /><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.Hits.Part1" /><xsl:text>&#160;</xsl:text><span class="hits" /><xsl:text>&#160;</xsl:text><xsl:value-of select="$i18n.Hits.Part2" /></h2>
   				<div class="errands-wrapper" style="display: none">
-  					<table>
+  					<table class="oep-table">
   						<thead>
   							<tr>
   								<th class="icon no-sort"></th>
@@ -263,11 +271,11 @@
   				<div id="tabs">
 	  				
 	  				<ul class="tabs pull-left">
-	  					<li class="active"><a href="#emergency" data-icon-before="O"><xsl:value-of select="$i18n.EmergencyTab" /><span class="count"><xsl:value-of select="$prioritizedInstancesCount" /></span></a></li>
-	  					<li><a href="#owned" data-icon-before="U"><xsl:value-of select="$i18n.OwnedTab" /></a></li>
-	  					<li><a href="#flagged" data-icon-before="f"><xsl:value-of select="$i18n.FlaggedTab" /></a></li>
-	  					<li><a href="#active" data-icon-before="O"><xsl:value-of select="$i18n.ActiveTab" /></a></li>
-	  					<li><a href="#unassigned" data-icon-before="O"><xsl:value-of select="$i18n.UnAssignedTab" /><span class="count"><xsl:value-of select="$unassignedInstancesCount" /></span></a></li>
+	  					<li class="active"><a href="#emergency" data-icon-before="!"><xsl:value-of select="$i18n.EmergencyTab" /><span class="count"><xsl:value-of select="$prioritizedInstancesCount" /></span></a></li>
+	  					<li><a href="#owned" data-icon-before="&#58894;"><xsl:value-of select="$i18n.OwnedTab" /></a></li>
+	  					<li><a href="#flagged" data-icon-before="*"><xsl:value-of select="$i18n.FlaggedTab" /></a></li>
+	  					<li><a href="#active" data-icon-before="o"><xsl:value-of select="$i18n.ActiveTab" /></a></li>
+	  					<li><a href="#unassigned" data-icon-before="o"><xsl:value-of select="$i18n.UnAssignedTab" /><span class="count"><xsl:value-of select="$unassignedInstancesCount" /></span></a></li>
 	  				</ul>
 	  				
 	  				<xsl:call-template name="PrioritizedInstances">
@@ -312,16 +320,13 @@
 							<strong><xsl:value-of select="$instancesCount" /></strong><xsl:text>&#160;</xsl:text>
 							<xsl:value-of select="$i18n.PrioritizedInstancesDescription.Part2" />
 						</h3>
-						<div class="help">
-							<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-							<div class="help-box">
-				  				<span> <a data-icon-after="x" href="#" class="close"></a><xsl:value-of select="$i18n.PrioritizedInstancesHelp" /></span> 
-				  				<div class="marker"></div>
-							</div>
-						</div>
+						<xsl:call-template name="createHelpDialog">
+							<xsl:with-param name="id" select="'prioritized'" />
+							<xsl:with-param name="text" select="$i18n.PrioritizedInstancesHelp" />
+						</xsl:call-template>
 					</div>
 					
-					<table>
+					<table class="oep-table">
 						<thead class="sortable">
 							<tr>
 								<th class="icon no-sort"></th>
@@ -382,13 +387,10 @@
 							<strong><xsl:value-of select="$instancesCount" /></strong><xsl:text>&#160;</xsl:text>
 							<xsl:value-of select="$i18n.UserAssignedInstancesDescription.Part2" />
 						</h3>
-						<div class="help">
-							<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-							<div class="help-box">
-				  				<span> <a data-icon-after="x" href="#" class="close"></a><xsl:value-of select="$i18n.PrioritizedInstancesHelp" /></span> 
-				  				<div class="marker"></div>
-							</div>
-						</div>
+						<xsl:call-template name="createHelpDialog">
+							<xsl:with-param name="id" select="'assigned'" />
+							<xsl:with-param name="text" select="$i18n.UserAssignedInstancesHelp" />
+						</xsl:call-template>
 					</div>
 					
 					<xsl:call-template name="createFlowInstanceList">
@@ -419,13 +421,10 @@
 							<strong><xsl:value-of select="$instancesCount" /></strong><xsl:text>&#160;</xsl:text>
 							<xsl:value-of select="$i18n.BookmarkedInstancesDescription.Part2" />
 						</h3>
-						<div class="help">
-							<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-							<div class="help-box">
-				  				<span> <a data-icon-after="x" href="#" class="close"></a><xsl:value-of select="$i18n.BookmarkedInstancesHelp" /></span> 
-				  				<div class="marker"></div>
-							</div>
-						</div>
+						<xsl:call-template name="createHelpDialog">
+							<xsl:with-param name="id" select="'bookmarked'" />
+							<xsl:with-param name="text" select="$i18n.BookmarkedInstancesHelp" />
+						</xsl:call-template>
 					</div>
 					
 					<xsl:call-template name="createFlowInstanceList">
@@ -456,13 +455,10 @@
 							<strong><xsl:value-of select="$instancesCount" /></strong><xsl:text>&#160;</xsl:text>
 							<xsl:value-of select="$i18n.ActiveInstancesDescription.Part2" />
 						</h3>
-						<div class="help">
-							<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-							<div class="help-box">
-				  				<span> <a data-icon-after="x" href="#" class="close"></a><xsl:value-of select="$i18n.ActiveInstancesHelp" /></span> 
-				  				<div class="marker"></div>
-							</div>
-						</div>
+						<xsl:call-template name="createHelpDialog">
+							<xsl:with-param name="id" select="'active'" />
+							<xsl:with-param name="text" select="$i18n.ActiveInstancesHelp" />
+						</xsl:call-template>
 					</div>
 					
 					<xsl:call-template name="createFlowInstanceList">
@@ -493,13 +489,10 @@
 							<strong><xsl:value-of select="$instancesCount" /></strong><xsl:text>&#160;</xsl:text>
 							<xsl:value-of select="$i18n.UnassignedInstancesDescription.Part2" />
 						</h3>
-						<div class="help">
-							<a data-icon-after="?" href="#" class="open-help"><xsl:value-of select="$i18n.Help" /></a>
-							<div class="help-box">
-				  				<span> <a data-icon-after="x" href="#" class="close"></a><xsl:value-of select="$i18n.UnassignedInstancesHelp" /></span> 
-				  				<div class="marker"></div>
-							</div>
-						</div>
+						<xsl:call-template name="createHelpDialog">
+							<xsl:with-param name="id" select="'unassigned'" />
+							<xsl:with-param name="text" select="$i18n.UnassignedInstancesHelp" />
+						</xsl:call-template>
 					</div>
 					
 					<xsl:call-template name="createFlowInstanceList">
@@ -584,7 +577,7 @@
 		
 		<xsl:param name="flowInstances" />
 		
-		<table>
+		<table class="oep-table">
 			<thead class="sortable">
 				<tr>
 					<th class="icon no-sort"></th>
@@ -639,21 +632,27 @@
 		</xsl:call-template>
 		
 		<section class="child">
-			<div class="section-full header-full">
-  				<div class="heading-wrapper full">
-  					<figure>
-	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{Flow/flowID}" />
-	  				</figure>
-	  				<div class="heading">
-  						<h1 class="xl"><xsl:value-of select="Flow/name" /><xsl:text>&#160;</xsl:text><b>(<xsl:value-of select="Status/name" />)</b></h1>
-						<span class="errandno"><xsl:value-of select="$i18n.FlowInstanceID" /><xsl:text>:&#160;</xsl:text><xsl:value-of select="flowInstanceID" /></span>
+			<div class="section-inside step">
+  				<div class="heading-wrapper">
+  					<div class="inner">
+	  					<figure>
+		  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{Flow/flowID}" alt="" />
+		  				</figure>
+		  				<div class="heading">
+	  						<h1 class="xl"><xsl:value-of select="Flow/name" /><xsl:text>&#160;</xsl:text><b>(<xsl:value-of select="Status/name" />)</b></h1>
+							<span class="errandno hide-mobile"><xsl:value-of select="$i18n.FlowInstanceID" /><xsl:text>:&#160;</xsl:text><xsl:value-of select="flowInstanceID" /></span>
+						</div>
 					</div>
   				</div>
   			</div>
-  			<div class="section-inside header-full">
+  			<div class="section-inside header-full no-pad-top">
   				<div class="description">
   					
   					<xsl:variable name="submittedEvents" select="events/FlowInstanceEvent[eventType='SUBMITTED']" />
+  					
+  					<p class="only-mobile">
+  						<strong><xsl:value-of select="$i18n.FlowInstanceID" /><xsl:text>:&#160;</xsl:text></strong><xsl:value-of select="flowInstanceID" />
+  					</p>
   					
   					<xsl:if test="../Profile">
   					
@@ -808,10 +807,10 @@
 		  					<h2><xsl:value-of select="$i18n.FlowInstanceEvents" /></h2>
 	  					</div>
 	  					
-	  					<table>
+	  					<table class="oep-table">
 	  						<thead class="errand">
 	  							<tr>
-	  								<th class="icon"></th>
+	  								<th class="icon" style="width: 32px;" />
 	  								<th class="service active"><span><xsl:value-of select="$i18n.Action" /></span></th>
 	  								<th class="details"><span><xsl:value-of select="$i18n.Details" /></span></th>
 	  								<th class="date"><span><xsl:value-of select="$i18n.Date" /></span></th>
@@ -935,6 +934,11 @@
 						<img alt="" src="{/Document/requestinfo/contextpath}/static/f/{/Document/module/sectionID}/{/Document/module/moduleID}/pics/pdf.png" />
 					</a>				
 				</xsl:if>
+				<xsl:if test="Attributes/Attribute[Name='xml']/Value = 'true'">
+					<a href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/xml/{../../flowInstanceID}/{eventID}" title="{$i18n.DownloadFlowInstanceXML}">
+						<img alt="" src="{/Document/requestinfo/contextpath}/static/f/{/Document/module/sectionID}/{/Document/module/moduleID}/pics/xml.png" />
+					</a>				
+				</xsl:if>
 			</td>
 			
 			<td data-title="{$i18n.Action}" class="service">
@@ -950,13 +954,11 @@
 			<td data-title="{$i18n.Status}" class="status">
 				<xsl:value-of select="status" />
 				<xsl:if test="statusDescription">
-					<div class="help floatright">
-						<a class="open-help" href="#" data-icon-after="?"></a>
-						<div class="help-box" id="" style="display: none;">
-							<span><a class="close" href="#" data-icon-after="x"></a><xsl:value-of select="statusDescription" /></span>
-							<div class="marker"></div>
-						</div>
-					</div>
+					<xsl:call-template name="createHelpDialog">
+						<xsl:with-param name="id" select="'status'" />
+						<xsl:with-param name="text" select="statusDescription" />
+						<xsl:with-param name="class" select="'floatright'" />
+					</xsl:call-template>
 				</xsl:if>
 			</td>
 			<td data-title="{$i18n.Person}" class="person">
@@ -967,37 +969,6 @@
 		</tr>
 		
 	</xsl:template>
-	
-	<xsl:template name="getEventTypeText">
-		
-		<xsl:choose>
-			<xsl:when test="eventType = 'SUBMITTED'">
-				<xsl:value-of select="$i18n.SubmittedEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'UPDATED'">
-				<xsl:value-of select="$i18n.UpdatedEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'STATUS_UPDATED'">
-				<xsl:value-of select="$i18n.StatusUpdatedEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'MANAGERS_UPDATED'">
-				<xsl:value-of select="$i18n.ManagersUpdatedEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'CUSTOMER_NOTIFICATION_SENT'">
-				<xsl:value-of select="$i18n.CustomerNotificationEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'CUSTOMER_MESSAGE_SENT'">
-				<xsl:value-of select="$i18n.CustomerMessageSentEvent" />
-			</xsl:when>
-			<xsl:when test="eventType = 'MANAGER_MESSAGE_SENT'">
-				<xsl:value-of select="$i18n.ManagerMessageSentEvent" />
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="$i18n.OtherEvent" />
-			</xsl:otherwise>
-		</xsl:choose>
-		
-	</xsl:template>	
 	
 	<xsl:template match="user" mode="manager">
 		
@@ -1098,7 +1069,7 @@
 			<xsl:with-param name="view" select="'PREVIEW'" />
 		</xsl:call-template>
 	
-		<section class="modal warning modal-marginbottom">
+		<section class="modal warning child modal-marginbottom">
 			<xsl:value-of select="$i18n.FlowInstancePreviewNotificationTitle.Part1" />
 			<xsl:text>&#160;</xsl:text>
 			<xsl:value-of select="FlowInstance/Flow/name" />
@@ -1114,7 +1085,7 @@
 			<div class="section-full padtop">
   				<div class="heading-wrapper">
   					<figure>
-	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	  				</figure>
 	  				<div class="heading">
   						<h1 class="xl"><xsl:value-of select="FlowInstance/Flow/name" /></h1>
@@ -1165,7 +1136,7 @@
 			<div class="section-full header-full">
   				<div class="heading-wrapper full">
   					<figure>
-	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	  				</figure>
 	  				<div class="heading">
   						<h1 class="xl"><xsl:value-of select="FlowInstance/Flow/name" /><xsl:text>&#160;</xsl:text><b>(<xsl:value-of select="FlowInstance/Status/name" />)</b></h1>
@@ -1239,7 +1210,7 @@
 			<div class="section-full header-full">
   				<div class="heading-wrapper full">
   					<figure>
-	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" />
+	  					<img src="{/Document/requestinfo/currentURI}/{/Document/module/alias}/icon/{FlowInstance/Flow/flowID}" alt="" />
 	  				</figure>
 	  				<div class="heading">
   						<h1 class="xl"><xsl:value-of select="FlowInstance/Flow/name" /><xsl:text>&#160;</xsl:text><b>(<xsl:value-of select="FlowInstance/Status/name" />)</b></h1>
@@ -1474,6 +1445,28 @@
 				</strong>
 			</span>
 		</div>
+		
+	</xsl:template>
+	
+	<xsl:template name="createHelpDialog">
+		
+		<xsl:param name="id" />
+		<xsl:param name="text" />
+		<xsl:param name="class" select="''" />
+		
+		<div class="help {$class}">
+			<a class="open-help" href="#" data-icon-after="?" data-help-box="helpdialog_{$id}"><span><xsl:value-of select="$i18n.Help" /></span></a>
+			<div class="help-box" data-help-box="helpdialog_{$id}">
+				<div>
+		  			<div> 
+		  				<a class="close" href="#" data-icon-after="x"></a>
+		  				<xsl:copy-of select="$text" />
+		  			</div> 
+				</div>
+			</div>
+		</div>
+		
+		<div class="help-backdrop" data-help-box="helpdialog_{$id}" />
 		
 	</xsl:template>
 	

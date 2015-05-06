@@ -78,6 +78,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 	private String name;
 
 	@DAOManaged
+	@StringTag
 	@XMLElement
 	private Integer version;
 
@@ -142,6 +143,11 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 	@XMLElement
 	private boolean requireSigning;
 
+	@DAOManaged
+	@WebPopulate
+	@XMLElement
+	private boolean showSubmitSurvey;
+	
 	@DAOManaged
 	@OneToMany
 	@SimplifiedRelation(table = "flowengine_flow_tags", remoteValueColumnName = "tag")
@@ -236,6 +242,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.name = name;
 	}
 
+	@Override
 	public Category getCategory() {
 
 		return category;
@@ -256,6 +263,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.statuses = flowStates;
 	}
 
+	@Override
 	public List<Step> getSteps() {
 
 		return steps;
@@ -336,6 +344,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.unPublishDate = unPublishDate;
 	}
 
+	@Override
 	public FlowType getFlowType() {
 
 		return flowType;
@@ -356,6 +365,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.enabled = disabled;
 	}
 
+	@Override
 	public boolean isPublished() {
 
 		Date currentDate = DateUtils.getCurrentSQLDate(false);
@@ -506,6 +516,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.flowInstanceCount = flowInstanceCount;
 	}
 
+	@Override
 	public FlowFamily getFlowFamily() {
 
 		return flowFamily;
@@ -516,6 +527,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.flowFamily = flowFamily;
 	}
 
+	@Override
 	public Integer getVersion() {
 
 		return version;
@@ -536,6 +548,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.latestVersion = latestVersion;
 	}
 
+	@Override
 	public List<String> getTags() {
 
 		return tags;
@@ -546,6 +559,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.tags = tags;
 	}
 
+	@Override
 	public List<String> getChecks() {
 
 		return checks;
@@ -561,6 +575,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		this.requireAuthentication = requireAuthentication;
 	}
 
+	@Override
 	public boolean requiresAuthentication() {
 
 		return requireAuthentication;
@@ -608,6 +623,7 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 		return true;
 	}
 
+	@Override
 	public boolean requiresSigning() {
 
 		return requireSigning;
@@ -616,6 +632,18 @@ public class Flow extends GeneratedElementable implements ImmutableFlow, XMLPars
 	public void setRequireSigning(boolean requireSigning) {
 
 		this.requireSigning = requireSigning;
+	}
+
+	
+	public boolean showsSubmitSurvey() {
+	
+		return showSubmitSurvey;
+	}
+
+	
+	public void setShowSubmitSurvey(boolean showSubmitSurvey) {
+	
+		this.showSubmitSurvey = showSubmitSurvey;
 	}
 
 	public String getExternalLink() {

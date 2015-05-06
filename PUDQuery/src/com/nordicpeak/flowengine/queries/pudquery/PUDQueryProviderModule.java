@@ -31,6 +31,7 @@ import se.unlogic.hierarchy.core.annotations.XSLVariable;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleDescriptor;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.interfaces.SectionInterface;
 import se.unlogic.hierarchy.core.interfaces.SettingHandler;
 import se.unlogic.hierarchy.core.settings.Setting;
@@ -78,16 +79,16 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 
 	@XSLVariable(prefix="java.")
 	protected String lmUserSettingName = "LM user";
-	
+
 	@XSLVariable(prefix="java.")
 	protected String lmUserSettingDescription = "User to use for LM Search";
-	
+
 	@XSLVariable(prefix="java.")
 	protected String searchPrefixSettingName = "LM search prefix";
-	
+
 	@XSLVariable(prefix="java.")
 	protected String searchPrefixSettingDescription = "Search prefix used when searching for pud or address using LM Search";
-	
+
 	@ModuleSetting
 	@CheckboxSettingDescriptor(name = "Enable PUD validation", description = "Controls whether the submitted property unit designation should be validated using LM Search service RMI server or not")
 	protected boolean enablePUDValidation = false;
@@ -131,7 +132,7 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 	protected ValidateLM searchLM;
 
 	protected SiteProfileHandler siteProfileHandler;
-	
+
 	protected TextFieldSetting lmUserSetting;
 
 	protected TextFieldSetting searchPrefixSetting;
@@ -241,19 +242,19 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 		if (!StringUtils.isEmpty(query = req.getParameter("q"))) {
 
 			query = URLEncoder.encode(query, "ISO-8859-1");
-			
+
 			String prefix = getCurrentSiteProfileSettingHandler(req, user).getString("BaseMapQuery-searchPrefix");
-			
+
 			if(!StringUtils.isEmpty(prefix)) {
-				
+
 				if(!query.toLowerCase().startsWith(prefix.toLowerCase())) {
 
 					query = URLEncoder.encode(prefix + " ", "UTF-8") + query;
-					
+
 				}
-				
+
 			}
-			
+
 			sendSearchReqest(req, res, user, search, query, "q");
 
 		} else if (!StringUtils.isEmpty(query = req.getParameter("fnrsimple"))) {
@@ -274,7 +275,17 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 
 			log.info("User " + user + " searching for property unit designation using query " + searchQuery);
 
-			String response = HTTPUtils.sendHTTPGetRequest(searchQuery, null, null, null);
+			String response = null;
+
+			if (searchQuery.startsWith("https://")) {
+
+				response = HTTPUtils.sendHTTPSGetRequest(searchQuery, null, null, null);
+
+			} else {
+
+				response = HTTPUtils.sendHTTPGetRequest(searchQuery, null, null, null);
+
+			}
 
 			HTTPUtils.sendReponse(getUnescapedText(response), JsonUtils.getContentType(), res);
 
@@ -311,16 +322,16 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		PUDQuery query = new PUDQuery();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		return query;
 	}
-	
+
 	@Override
 	public Query getQuery(MutableQueryDescriptor descriptor) throws Throwable {
 
@@ -363,7 +374,7 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 		checkConfiguration();
 
 		PUDQueryInstance queryInstance = null;
-		
+
 		// Check if we should create a new instance or get an existing one
 		if (descriptor.getQueryInstanceID() == null) {
 
@@ -392,14 +403,17 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 
 		}
 
-		FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-		
-		URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req);
-		
+		if(req != null){
+
+			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req);
+		}
+
 		TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
-		
+
 		return queryInstance;
-		
+
 	}
 
 	@Override
@@ -462,7 +476,7 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 	}
 
 	@Override
-	public void populate(PUDQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(PUDQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		Integer queryID = queryInstance.getQuery().getQueryID();
 
@@ -472,12 +486,12 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 
 			if (!allowPartialPopulation && queryInstance.getQueryInstanceDescriptor().getQueryState() == QueryState.VISIBLE_REQUIRED) {
 
-				queryInstance.reset();
+				queryInstance.reset(attributeHandler);
 
 				throw new ValidationException(new ValidationError("RequiredQuery"));
 			}
 
-			queryInstance.reset();
+			queryInstance.reset(attributeHandler);
 
 			return;
 		}
@@ -621,41 +635,41 @@ public class PUDQueryProviderModule extends BaseQueryProviderModule<PUDQueryInst
 
 	@InstanceManagerDependency(required=true)
 	public void setSiteProfileHandler(SiteProfileHandler siteProfileHandler) {
-	
+
 		if(siteProfileHandler != null){
-			
+
 			siteProfileHandler.addSettingProvider(this);
-			
+
 		}else{
-			
+
 			this.siteProfileHandler.removeSettingProvider(this);
 		}
-		
+
 		this.siteProfileHandler = siteProfileHandler;
 	}
-	
+
 	@Override
 	public List<Setting> getSiteProfileSettings() {
 
 		return Arrays.asList((Setting) lmUserSetting, (Setting) searchPrefixSetting);
-		
+
 	}
-	
+
 	protected SettingHandler getCurrentSiteProfileSettingHandler(HttpServletRequest req, User user) {
-		
+
 		return siteProfileHandler != null ? siteProfileHandler.getCurrentSettingHandler(user, req, null) : this.moduleDescriptor.getMutableSettingHandler();
 	}
 
 	@Override
 	public void unload() throws Exception {
-		
+
 		if(siteProfileHandler != null){
-			
+
 			siteProfileHandler.removeSettingProvider(this);
 		}
-		
+
 		super.unload();
-		
+
 	}
-	
+
 }

@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -269,7 +270,7 @@ public class AuthifyClient {
 		parameters.put("v", VERSION);
 		
 		parameters.put("authify_reponse_token", session.getToken());
-		parameters.put("extradata", xml);
+		parameters.put("extradata", URLEncoder.encode(xml, "UTF-8"));
 
 		sendHTTPPOSTRequestResponse(AUTHIFY_SERVER + "/store/", parameters);
 

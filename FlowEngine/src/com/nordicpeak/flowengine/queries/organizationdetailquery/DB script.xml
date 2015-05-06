@@ -58,4 +58,21 @@
 		</Query>
 	</Script>		
 				
+	<Script version="4">
+		<Query>
+			<![CDATA[
+				ALTER TABLE `organization_detail_queries` DROP COLUMN `allowLetter`,
+				 DROP COLUMN `allowEmail`,
+				 DROP COLUMN `allowPhone`,
+				 ADD COLUMN `requireAddress` BOOLEAN NOT NULL AFTER `allowSMS`;
+			]]>
+		</Query>
+		<Query>
+			<![CDATA[
+				ALTER TABLE `organization_detail_query_instances` DROP COLUMN `contactByLetter`,
+				 DROP COLUMN `contactByEmail`,
+				 DROP COLUMN `contactByPhone`;
+			]]>
+		</Query>
+	</Script>
 </DBScripts>

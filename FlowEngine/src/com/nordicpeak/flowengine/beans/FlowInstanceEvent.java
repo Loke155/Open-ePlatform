@@ -6,8 +6,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.handlers.SourceAttributeHandler;
+import se.unlogic.hierarchy.core.interfaces.AttributeHandler;
 import se.unlogic.hierarchy.core.interfaces.AttributeSource;
 import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
@@ -18,6 +22,7 @@ import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.reflection.ReflectionUtils;
 import se.unlogic.standardutils.xml.GeneratedElementable;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
 import com.nordicpeak.flowengine.enums.EventType;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstanceEvent;
@@ -65,7 +70,6 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 	private String shortDate;
 
 	@DAOManaged(dontUpdateIfNull = true)
-	@XMLElement(childName = "poster")
 	private User poster;
 
 	@DAOManaged
@@ -75,6 +79,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 
 	private SourceAttributeHandler attributeHandler;
 
+	@Override
 	public Integer getEventID() {
 		return eventID;
 	}
@@ -83,6 +88,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.eventID = eventID;
 	}
 
+	@Override
 	public FlowInstance getFlowInstance() {
 		return flowInstance;
 	}
@@ -91,6 +97,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.flowInstance = flowInstance;
 	}
 
+	@Override
 	public EventType getEventType() {
 		return eventType;
 	}
@@ -99,6 +106,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.eventType = eventType;
 	}
 
+	@Override
 	public String getStatus() {
 		return status;
 	}
@@ -107,6 +115,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.status = status;
 	}
 
+	@Override
 	public String getStatusDescription() {
 		return statusDescription;
 	}
@@ -115,6 +124,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.statusDescription = statusDescription;
 	}
 
+	@Override
 	public String getDetails() {
 		return details;
 	}
@@ -123,6 +133,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.details = details;
 	}
 
+	@Override
 	public Timestamp getAdded() {
 		return added;
 	}
@@ -131,6 +142,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.added = added;
 	}
 
+	@Override
 	public String getShortDate() {
 		return shortDate;
 	}
@@ -139,6 +151,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.shortDate = shortDate;
 	}
 
+	@Override
 	public User getPoster() {
 		return poster;
 	}
@@ -147,6 +160,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		this.poster = poster;
 	}
 
+	@Override
 	public List<FlowInstanceEventAttribute> getAttributes() {
 
 		return attributes;
@@ -168,6 +182,7 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 		attributes.add(new FlowInstanceEventAttribute(name, value));
 	}
 
+	@Override
 	public synchronized MutableAttributeHandler getAttributeHandler() {
 
 		if(attributeHandler == null){
@@ -182,5 +197,29 @@ public class FlowInstanceEvent extends GeneratedElementable implements Serializa
 	public String toString() {
 
 		return eventType + " (eventID: " + eventID + ")";
+	}
+
+	@Override
+	public Element toXML(Document doc) {
+
+		Element flowInstanceEventElement = super.toXML(doc);
+
+		if(poster != null){
+
+			Element userElement = poster.toXML(doc);
+
+			AttributeHandler attributeHandler = poster.getAttributeHandler();
+
+			if(attributeHandler != null && !attributeHandler.isEmpty()){
+
+				userElement.appendChild(attributeHandler.toXML(doc));
+			}
+
+			Element posterElement = XMLUtils.appendNewElement(doc, flowInstanceEventElement, "poster");
+
+			posterElement.appendChild(userElement);
+		}
+
+		return flowInstanceEventElement;
 	}
 }

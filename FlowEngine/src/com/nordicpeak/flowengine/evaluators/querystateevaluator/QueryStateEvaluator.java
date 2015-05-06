@@ -47,6 +47,11 @@ public class QueryStateEvaluator extends BaseEvaluator {
 	@XMLElement
 	private QueryState queryState;
 
+	@DAOManaged
+	@WebPopulate
+	@XMLElement
+	private boolean doNotResetQueryState;
+	
 	@Override
 	public Integer getEvaluatorID() {
 
@@ -98,5 +103,24 @@ public class QueryStateEvaluator extends BaseEvaluator {
 		
 		requiredAlternativeIDs  = xmlParser.getIntegers("RequiredAlternativeIDs/alternativeID");
 		
+		doNotResetQueryState = xmlParser.getPrimitiveBoolean("doNotResetQueryState");
+	}
+
+	
+	public boolean isDoNotResetQueryState() {
+	
+		return doNotResetQueryState;
+	}
+
+	
+	public void setDoNotResetQueryState(boolean doNotResetQueryState) {
+	
+		this.doNotResetQueryState = doNotResetQueryState;
+	}
+	
+	@Override
+	public String toString(){
+		
+		return evaluatorDescriptor.toString();
 	}
 }

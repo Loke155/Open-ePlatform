@@ -4,7 +4,7 @@ var mapClientLanguages = {
 	"DIMENSION_AND_ANGLE_SETTINGS" : "Dimension and angle settings",
 }
 var mapInstances = {};
-var version = "1.0.4";
+var version = "1.2.0";
 
 var LoadFiles = function(files, callback) {
 
@@ -529,12 +529,16 @@ function MapClientInstance(queryID, mapID){
 			'</div>'
 		);
 
+		instance.map.gui.mapPanel.map.updateSize();
+		
 	};
 
 	instance.removeValidationErrors = function() {
 		
 		$("#query_" + queryID).find("article.jserror").removeClass("error").removeClass("jserror").prev(".jserror").remove();
 
+		instance.map.gui.mapPanel.map.updateSize();
+		
 	};
 
 	instance.showFeatureDialog = function(feature, layer, message, contentSize, showCloseButton) {

@@ -8,7 +8,7 @@
 	<xsl:variable name="java.queryTypeName">Filuppladdningsfråga</xsl:variable>
 	
 	<xsl:variable name="i18n.MaxFileCountReached.part1">Du får maximalt bifoga </xsl:variable>
-	<xsl:variable name="i18n.MaxFileCountReached.part2"> fil(er) till denna.</xsl:variable>
+	<xsl:variable name="i18n.MaxFileCountReached.part2"> fil(er).</xsl:variable>
 	<xsl:variable name="i18n.InvalidFileExtension.part1">Filen </xsl:variable>
 	<xsl:variable name="i18n.InvalidFileExtension.part2"> är av en otillåten filtyp och har därför inte sparats.</xsl:variable>
 	<xsl:variable name="i18n.FileSizeLimitExceeded.part1">Filen </xsl:variable>

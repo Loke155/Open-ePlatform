@@ -71,7 +71,11 @@ import com.nordicpeak.flowengine.cruds.InternalMessageCRUD;
 import com.nordicpeak.flowengine.enums.ContentType;
 import com.nordicpeak.flowengine.enums.EventType;
 import com.nordicpeak.flowengine.enums.Priority;
+import com.nordicpeak.flowengine.enums.SenderType;
 import com.nordicpeak.flowengine.enums.ShowMode;
+import com.nordicpeak.flowengine.events.ExternalMessageAddedEvent;
+import com.nordicpeak.flowengine.events.ManagersChangedEvent;
+import com.nordicpeak.flowengine.events.StatusChangedByManagerEvent;
 import com.nordicpeak.flowengine.exceptions.FlowEngineException;
 import com.nordicpeak.flowengine.exceptions.evaluation.EvaluationException;
 import com.nordicpeak.flowengine.exceptions.evaluationprovider.EvaluationProviderException;
@@ -93,6 +97,7 @@ import com.nordicpeak.flowengine.interfaces.FlowProcessCallback;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstance;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstanceEvent;
 import com.nordicpeak.flowengine.interfaces.PDFProvider;
+import com.nordicpeak.flowengine.interfaces.XMLProvider;
 import com.nordicpeak.flowengine.managers.FlowInstanceManager;
 import com.nordicpeak.flowengine.managers.MutableFlowInstanceManager;
 import com.nordicpeak.flowengine.search.FlowInstanceIndexer;
@@ -101,13 +106,13 @@ import com.nordicpeak.flowengine.validationerrors.UnauthorizedManagerUserValidat
 public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements FlowProcessCallback, SystemStartupListener, EventListener<CRUDEvent<?>> {
 
 	protected static final Field[] FLOW_INSTANCE_OVERVIEW_RELATIONS = { FlowInstance.INTERNAL_MESSAGES_RELATION, InternalMessage.ATTACHMENTS_RELATION, FlowInstance.EXTERNAL_MESSAGES_RELATION, ExternalMessage.ATTACHMENTS_RELATION, FlowInstance.FLOW_RELATION, Flow.FLOW_FAMILY_RELATION, FlowFamily.MANAGER_GROUPS_RELATION, FlowFamily.MANAGER_USERS_RELATION, FlowInstance.FLOW_STATE_RELATION, FlowInstance.EVENTS_RELATION, FlowInstanceEvent.ATTRIBUTES_RELATION, FlowInstance.MANAGERS_RELATION};
-	
+
 	@SuppressWarnings("rawtypes")
 	private static final Class[] EVENT_LISTENER_CLASSES = new Class[] { FlowFamily.class, Flow.class, FlowInstance.class };
 
-	private static final String FLOW_MANAGER_SQL = "SELECT flowID FROM flowengine_flows WHERE enabled = true AND flowFamilyID IN (SELECT ff.flowFamilyID FROM flowengine_flow_families ff LEFT JOIN flowengine_flow_family_manager_users ffu on ff.flowFamilyID = ffu.flowFamilyID LEFT JOIN flowengine_flow_family_manager_groups ffg on ff.flowFamilyID = ffg.flowFamilyID WHERE ffu.userID = ?";
-	private static final String FLOW_INSTANCE_BOOKMARKS_SQL = "SELECT ffi.* FROM flowengine_flow_instances ffi LEFT JOIN flowengine_flow_instance_bookmarks ffib ON ffi.flowInstanceID = ffib.flowInstanceID WHERE ffib.userID = ? AND ffi.flowID IN (";
-	private static final String ACTIVE_FLOWS = "SELECT ffi.* FROM flowengine_flow_instances ffi LEFT JOIN flowengine_flow_statuses ffs ON ffi.statusID = ffs.statusID WHERE ffi.flowID IN ($flowIDs) AND ffs.contentType NOT IN ('" + ContentType.NEW + "', '" + ContentType.ARCHIVED + "')";
+	protected static final String FLOW_MANAGER_SQL = "SELECT flowID FROM flowengine_flows WHERE enabled = true AND flowFamilyID IN (SELECT ff.flowFamilyID FROM flowengine_flow_families ff LEFT JOIN flowengine_flow_family_manager_users ffu on ff.flowFamilyID = ffu.flowFamilyID LEFT JOIN flowengine_flow_family_manager_groups ffg on ff.flowFamilyID = ffg.flowFamilyID WHERE ffu.userID = ?";
+	protected static final String FLOW_INSTANCE_BOOKMARKS_SQL = "SELECT ffi.* FROM flowengine_flow_instances ffi LEFT JOIN flowengine_flow_instance_bookmarks ffib ON ffi.flowInstanceID = ffib.flowInstanceID WHERE ffib.userID = ? AND ffi.flowID IN (";
+	protected static final String ACTIVE_FLOWS = "SELECT ffi.* FROM flowengine_flow_instances ffi LEFT JOIN flowengine_flow_statuses ffs ON ffi.statusID = ffs.statusID WHERE ffi.flowID IN ($flowIDs) AND ffs.contentType NOT IN ('" + ContentType.NEW + "', '" + ContentType.ARCHIVED + "')";
 
 	public static final ManagerFlowInstanceAccessController UPDATE_ACCESS_CONTROLLER = new ManagerFlowInstanceAccessController(true, false);
 	public static final ManagerFlowInstanceAccessController DELETE_ACCESS_CONTROLLER = new ManagerFlowInstanceAccessController(false, true);
@@ -125,11 +130,11 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "High priority lapsed managing time", description = "The precent of the managing time of the current status that has to have elapsed for an instance to be classified as high priority", required = true, formatValidator = PositiveStringIntegerValidator.class)
-	private int highPriorityThreshold = 90;
+	protected int highPriorityThreshold = 90;
 
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "Medium priority lapsed managing time", description = "The precent of the managing time of the current status that has to have elapsed for an instance to be classified as medium priority", required = true, formatValidator = PositiveStringIntegerValidator.class)
-	private int mediumPriorityThreshold = 60;
+	protected int mediumPriorityThreshold = 60;
 
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "Max search hits", description = "Maximum number of hits to get from index when searching", formatValidator = PositiveStringIntegerValidator.class, required = true)
@@ -142,12 +147,19 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 	@ModuleSetting
 	@CheckboxSettingDescriptor(name="Enable site profile support", description="Controls if site profile support is enabled")
 	protected boolean enableSiteProfileSupport;
-	
+
+	@ModuleSetting
+	@CheckboxSettingDescriptor(name="Enable logging of flow instance indexing", description="Enables logging of indexing of flow instances")
+	protected boolean logFlowInstanceIndexing;
+
 	@InstanceManagerDependency
 	protected PDFProvider pdfProvider;
-	
-	private ExternalMessageCRUD externalMessageCRUD;
-	private InternalMessageCRUD internalMessageCRUD;
+
+	@InstanceManagerDependency
+	protected XMLProvider xmlProvider;
+
+	protected ExternalMessageCRUD externalMessageCRUD;
+	protected InternalMessageCRUD internalMessageCRUD;
 
 	private FlowInstanceIndexer flowInstanceIndexer;
 
@@ -203,13 +215,24 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 	}
 
 	@Override
-	public ForegroundModuleResponse defaultMethod(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception {
+	protected void moduleConfigured() throws Exception {
 
-		return this.list(req, res, user, uriParser, null);
+		this.flowInstanceIndexer.setLogIndexing(this.logFlowInstanceIndexing);
 	}
 
 	@Override
+	public ForegroundModuleResponse defaultMethod(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws Exception {
+
+		return this.list(req, res, user, uriParser, (List<ValidationError>)null);
+	}
+
 	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ValidationError validationError) throws SQLException {
+
+		return list(req, res, user, uriParser, CollectionUtils.getGenericSingletonList(validationError));
+	}
+
+	@Override
+	public ForegroundModuleResponse list(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, List<ValidationError> validationErrors) throws SQLException {
 
 		log.info("User " + user + " listing flow instances");
 
@@ -232,7 +255,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 		Element overviewElement = doc.createElement("OverviewElement");
 		doc.getDocumentElement().appendChild(overviewElement);
 
-		XMLUtils.append(doc, overviewElement, validationError);
+		XMLUtils.append(doc, overviewElement, validationErrors);
 
 		Element bookmarkedInstances = doc.createElement("BookmarkedInstances");
 		overviewElement.appendChild(bookmarkedInstances);
@@ -291,19 +314,19 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 		}
 
 		if(enableSiteProfileSupport && this.profileHandler != null){
-			
+
 			XMLUtils.append(doc, overviewElement, "SiteProfiles", this.profileHandler.getProfiles());
 		}
-		
-		return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+
+		return new SimpleForegroundModuleResponse(doc, moduleDescriptor.getName(), this.getDefaultBreadcrumb());
 	}
 
 	@WebPublic(alias = "overview")
-	public ForegroundModuleResponse showFlowInstanceOverview(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws ModuleConfigurationException, SQLException, AccessDeniedException, IOException {
+	public ForegroundModuleResponse showFlowInstanceOverview(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws ModuleConfigurationException, SQLException, AccessDeniedException, IOException, URINotFoundException {
 
 		FlowInstance flowInstance;
 
-		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), CollectionUtils.getList(ExternalMessageAttachment.DATA_FIELD, InternalMessageAttachment.DATA_FIELD), FLOW_INSTANCE_OVERVIEW_RELATIONS)) != null){
+		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), CollectionUtils.getList(ExternalMessageAttachment.DATA_FIELD, InternalMessageAttachment.DATA_FIELD), getFlowInstanceOverviewRelations())) != null && !flowInstance.getStatus().getContentType().equals(ContentType.NEW)){
 
 			GENERAL_ACCESS_CONTROLLER.checkFlowInstanceAccess(flowInstance, user);
 
@@ -321,7 +344,9 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 					if(externalMessage != null){
 
-						this.addFlowInstanceEvent(flowInstance, EventType.MANAGER_MESSAGE_SENT, null, user);
+						FlowInstanceEvent flowInstanceEvent = this.addFlowInstanceEvent(flowInstance, EventType.MANAGER_MESSAGE_SENT, null, user);
+
+						systemInterface.getEventHandler().sendEvent(FlowInstance.class, new ExternalMessageAddedEvent(flowInstance, flowInstanceEvent, moduleDescriptor, getCurrentSiteProfile(req, user, uriParser), externalMessage, SenderType.MANAGER), EventTarget.ALL);
 
 						res.sendRedirect(req.getContextPath() + uriParser.getFormattedURI() + "#new-message");
 
@@ -340,9 +365,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 						return null;
 
 					}
-
 				}
-
 			}
 
 			showFlowInstanceOverviewElement.appendChild(flowInstance.toXML(doc));
@@ -352,17 +375,26 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 			}
 
 			if(enableSiteProfileSupport && flowInstance.getProfileID() != null && this.profileHandler != null){
-				
+
 				XMLUtils.append(doc, showFlowInstanceOverviewElement, profileHandler.getProfile(flowInstance.getProfileID()));
 			}
-			
+
 			appendBookmark(doc, showFlowInstanceOverviewElement, flowInstance, user);
 
-			return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+			appendOverviewData(doc, showFlowInstanceOverviewElement, flowInstance, user);
+
+			return new SimpleForegroundModuleResponse(doc, flowInstance.getFlow().getName(), this.getDefaultBreadcrumb());
 		}
 
 		return list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
 	}
+
+	protected Field[] getFlowInstanceOverviewRelations() {
+
+		return FLOW_INSTANCE_OVERVIEW_RELATIONS;
+	}
+
+	protected void appendOverviewData(Document doc, Element showFlowInstanceOverviewElement, FlowInstance flowInstance, User user) throws SQLException {}
 
 	@WebPublic(alias = "status")
 	public ForegroundModuleResponse updateStatus(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws ModuleConfigurationException, SQLException, AccessDeniedException, IOException {
@@ -371,7 +403,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 		FlowInstance flowInstance;
 
-		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null){
+		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null && !flowInstance.getStatus().getContentType().equals(ContentType.NEW)){
 
 			log.info("User " + user + " requesting update status form for instance " + flowInstance);
 
@@ -399,15 +431,22 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 				}else{
 
-					log.info("User " + user + " setting status of instance " + flowInstance + " to " + status);
+					Status previousStatus = flowInstance.getStatus();
 
-					flowInstance.setStatus(status);
-					flowInstance.setLastStatusChange(TimeUtils.getCurrentTimestamp());
-					this.daoFactory.getFlowInstanceDAO().update(flowInstance);
+					if(!previousStatus.equals(status)){
 
-					addFlowInstanceEvent(flowInstance, EventType.STATUS_UPDATED, null, user);
+						log.info("User " + user + " changing status of instance " + flowInstance + " from " + previousStatus + " to " + status);
 
-					eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, flowInstance), EventTarget.ALL);
+						flowInstance.setStatus(status);
+						flowInstance.setLastStatusChange(TimeUtils.getCurrentTimestamp());
+						this.daoFactory.getFlowInstanceDAO().update(flowInstance);
+
+						FlowInstanceEvent flowInstanceEvent = addFlowInstanceEvent(flowInstance, EventType.STATUS_UPDATED, null, user);
+
+						eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, flowInstance), EventTarget.ALL);
+
+						eventHandler.sendEvent(FlowInstance.class, new StatusChangedByManagerEvent(flowInstance, flowInstanceEvent, moduleDescriptor, getCurrentSiteProfile(req, user, uriParser), previousStatus, user), EventTarget.ALL);
+					}
 
 					redirectToMethod(req, res, "/overview/" + flowInstance.getFlowInstanceID());
 
@@ -421,7 +460,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 			appendBookmark(doc, updateInstanceStatusElement, flowInstance, user);
 
-			return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+			return new SimpleForegroundModuleResponse(doc, flowInstance.getFlow().getName(), this.getDefaultBreadcrumb());
 		}
 
 		return list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
@@ -444,7 +483,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 		FlowInstance flowInstance;
 
-		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null){
+		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null && !flowInstance.getStatus().getContentType().equals(ContentType.NEW)){
 
 			log.info("User " + user + " requesting update managers form for instance " + flowInstance);
 
@@ -465,6 +504,8 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 				String detailString;
 
 				try{
+
+					List<User> previousManagers = flowInstance.getManagers();
 
 					if(userIDs != null){
 
@@ -504,15 +545,20 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 						flowInstance.setManagers(null);
 					}
 
-					log.info("User " + user + " setting managers of instance " + flowInstance + " to " + flowInstance.getManagers());
+					if(!CollectionUtils.equals(previousManagers, flowInstance.getManagers())){
 
-					RelationQuery relationQuery = new RelationQuery(FlowInstance.MANAGERS_RELATION);
+						log.info("User " + user + " setting managers of instance " + flowInstance + " to " + flowInstance.getManagers());
 
-					this.daoFactory.getFlowInstanceDAO().update(flowInstance, relationQuery);
+						RelationQuery relationQuery = new RelationQuery(FlowInstance.MANAGERS_RELATION);
 
-					addFlowInstanceEvent(flowInstance, EventType.MANAGERS_UPDATED, detailString, user);
+						this.daoFactory.getFlowInstanceDAO().update(flowInstance, relationQuery);
 
-					eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, flowInstance), EventTarget.ALL);
+						FlowInstanceEvent flowInstanceEvent = addFlowInstanceEvent(flowInstance, EventType.MANAGERS_UPDATED, detailString, user);
+
+						eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, flowInstance), EventTarget.ALL);
+
+						eventHandler.sendEvent(FlowInstance.class, new ManagersChangedEvent(flowInstance, flowInstanceEvent, moduleDescriptor, getCurrentSiteProfile(req, user, uriParser), previousManagers, user), EventTarget.ALL);
+					}
 
 					redirectToMethod(req, res, "/overview/" + flowInstance.getFlowInstanceID());
 
@@ -532,7 +578,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 			appendBookmark(doc, updateInstanceManagersElement, flowInstance, user);
 
-			return new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+			return new SimpleForegroundModuleResponse(doc, flowInstance.getFlow().getName(), this.getDefaultBreadcrumb());
 		}
 
 		return list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
@@ -543,9 +589,9 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 		FlowInstance flowInstance;
 
-		if(uriParser.size() == 3 && uriParser.getInt(2) != null && (flowInstance = getFlowInstance(uriParser.getInt(2))) != null){
+		if(uriParser.size() == 3 && uriParser.getInt(2) != null && (flowInstance = getFlowInstance(uriParser.getInt(2))) != null && !flowInstance.getStatus().getContentType().equals(ContentType.NEW)){
 
-			DELETE_ACCESS_CONTROLLER.checkFlowInstanceAccess(flowInstance, user);
+			checkDeleteAccess(flowInstance, user);
 
 			log.info("User " + user + " deleting flow instance " + flowInstance);
 
@@ -584,6 +630,8 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 				TransactionHandler.autoClose(transactionHandler);
 			}
 
+			eventHandler.sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.DELETE, flowInstance), EventTarget.ALL);
+
 			redirectToDefaultMethod(req, res);
 
 			return null;
@@ -592,14 +640,19 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 		return list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
 	}
 
+	protected void checkDeleteAccess(FlowInstance flowInstance, User user) throws AccessDeniedException {
+
+		DELETE_ACCESS_CONTROLLER.checkFlowInstanceAccess(flowInstance, user);
+	}
+
 	@WebPublic(alias = "bookmark")
 	public ForegroundModuleResponse toggleBookmark(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws ModuleConfigurationException, SQLException, AccessDeniedException, IOException {
 
-		Field[] relations = { FlowInstance.FLOW_RELATION, Flow.FLOW_FAMILY_RELATION, FlowFamily.MANAGER_GROUPS_RELATION, FlowFamily.MANAGER_USERS_RELATION };
+		Field[] relations = { FlowInstance.FLOW_RELATION, Flow.FLOW_FAMILY_RELATION, FlowFamily.MANAGER_GROUPS_RELATION, FlowFamily.MANAGER_USERS_RELATION, FlowInstance.FLOW_STATE_RELATION};
 
 		FlowInstance flowInstance;
 
-		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null){
+		if(uriParser.size() == 3 && NumberUtils.isInt(uriParser.get(2)) && (flowInstance = getFlowInstance(Integer.valueOf(uriParser.get(2)), null, relations)) != null && !flowInstance.getStatus().getContentType().equals(ContentType.NEW)){
 
 			GENERAL_ACCESS_CONTROLLER.checkFlowInstanceAccess(flowInstance, user);
 
@@ -622,7 +675,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 			}
 
 			res.setContentType("text/html");
-			res.setCharacterEncoding("ISO-8859-1");
+			res.setCharacterEncoding(systemInterface.getEncoding());
 			res.getWriter().write(bookmark != null ? "1" : "0");
 			res.getWriter().flush();
 
@@ -788,7 +841,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 		return internalMessageCRUD.getRequestedMessageAttachment(req, res, user, uriParser, GENERAL_ACCESS_CONTROLLER);
 	}
 
-	private List<Integer> getUserFlowIDs(User user) throws SQLException {
+	protected List<Integer> getUserFlowIDs(User user) throws SQLException {
 
 		String sql;
 
@@ -831,7 +884,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 		return this.daoFactory.getFlowInstanceDAO().getAll(query);
 	}
 
-	private List<FlowInstance> getActiveFlowInstances(User user, List<Integer> flowIDs) throws SQLException {
+	protected List<FlowInstance> getActiveFlowInstances(User user, List<Integer> flowIDs) throws SQLException {
 
 		String sql = ACTIVE_FLOWS.replace("$flowIDs", StringUtils.toCommaSeparatedString(flowIDs));
 
@@ -850,6 +903,18 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 	@Override
 	public String getSaveActionID() {
+
+		return null;
+	}
+
+	@Override
+	public String getPaymentActionID() {
+
+		return null;
+	}
+
+	@Override
+	public String getMultiSigningActionID() {
 
 		return null;
 	}
@@ -945,23 +1010,23 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 	@Override
 	protected void redirectToSubmitMethod(MutableFlowInstanceManager flowInstance, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		
+
 		redirectToMethod(req, res, "/submitted/" + flowInstance.getFlowInstanceID());
 	}
-	
+
 	@Override
 	protected void onFlowInstanceClosedRedirect(FlowInstanceManager flowInstanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
 		redirectToMethod(req, res, "/overview/" + flowInstanceManager.getFlowInstanceID());
-		
+
 	}
-	
+
 	@WebPublic(alias = "submitted")
 	public ForegroundModuleResponse showSubmittedMessage(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException{
-		
+
 		return super.showImmutableFlowInstance(req, res, user, uriParser, GENERAL_ACCESS_CONTROLLER, this, ShowMode.SUBMIT);
 	}
-	
+
 	@WebPublic(alias = "pdf")
 	public ForegroundModuleResponse getEventPDF(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws URINotFoundException, SQLException, IOException, AccessDeniedException {
 
@@ -969,7 +1034,15 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 		return null;
 	}
-		
+
+	@WebPublic(alias = "xml")
+	public ForegroundModuleResponse getEventXML(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws URINotFoundException, SQLException, IOException, AccessDeniedException {
+
+		sendEventXML(req, res, user, uriParser, GENERAL_ACCESS_CONTROLLER, xmlProvider);
+
+		return null;
+	}
+
 	@Override
 	protected String getBaseUpdateURL(HttpServletRequest req, URIParser uriParser, User user, ImmutableFlowInstance flowInstance, FlowInstanceAccessController accessController) {
 
@@ -980,18 +1053,18 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 
 		return getModuleURI(req) + "/flowinstance/" + flowInstance.getFlow().getFlowID() + "/" + flowInstance.getFlowInstanceID();
 	}
-	
+
 	@Override
 	protected String getEventPDFLink(FlowInstanceManager instanceManager, ImmutableFlowInstanceEvent event, HttpServletRequest req, User user) {
-		
+
 		if(event.getAttributeHandler().getPrimitiveBoolean("pdf")){
-		
-			return this.getModuleURI(req) + "/pdf/" + instanceManager.getFlowInstanceID() + "/" + event.getEventID();			
+
+			return this.getModuleURI(req) + "/pdf/" + instanceManager.getFlowInstanceID() + "/" + event.getEventID();
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
 
@@ -999,14 +1072,14 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 	}
 
 	@Override
-	public String getSignSuccessURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
-
-		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/submitted/" + instanceManager.getFlowInstanceID();
-	}
-
-	@Override
 	public String getSigningURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
 
 		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/flowinstance/" + instanceManager.getFlowID() + "/" + instanceManager.getFlowInstanceID() + "?save-submit=1";
+	}
+
+	@Override
+	public int getPriority() {
+
+		return 0;
 	}
 }

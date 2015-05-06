@@ -15,6 +15,7 @@ import se.unlogic.hierarchy.core.annotations.WebPublic;
 import se.unlogic.hierarchy.core.annotations.XSLVariable;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.utils.FCKUtils;
 import se.unlogic.standardutils.collections.CollectionUtils;
 import se.unlogic.standardutils.dao.AnnotatedDAO;
@@ -115,22 +116,22 @@ public class CheckboxQueryProviderModule extends BaseQueryProviderModule<Checkbo
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		CheckboxQuery query = new CheckboxQuery();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		List<Integer> oldAlternativeIDs = FixedAlternativeQueryUtils.getAlternativeIDs(query);
-		
+
 		FixedAlternativeQueryUtils.clearAlternativeIDs(query.getAlternatives());
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		query.setAlternativeConversionMap(FixedAlternativeQueryUtils.getAlternativeConversionMap(query.getAlternatives(), oldAlternativeIDs));
-		
+
 		return query;
 	}
-	
+
 	@Override
 	public Query getQuery(MutableQueryDescriptor descriptor) throws SQLException {
 
@@ -187,13 +188,16 @@ public class CheckboxQueryProviderModule extends BaseQueryProviderModule<Checkbo
 
 			return null;
 		}
-		
-		FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-		
-		URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
-		
+
+		if(req != null){
+
+			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+		}
+
 		TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
-		
+
 		queryInstance.set(descriptor);
 
 		//If this is a new query instance copy the default values
@@ -232,6 +236,7 @@ public class CheckboxQueryProviderModule extends BaseQueryProviderModule<Checkbo
 		return queryInstanceDAO.get(query);
 	}
 
+	@Override
 	public void save(CheckboxQueryInstance queryInstance, TransactionHandler transactionHandler) throws Throwable {
 
 		//Check if the query instance has an ID set and if the ID of the descriptor has changed
@@ -248,14 +253,14 @@ public class CheckboxQueryProviderModule extends BaseQueryProviderModule<Checkbo
 	}
 
 	@Override
-	public void populate(CheckboxQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(CheckboxQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		List<CheckboxAlternative> availableAlternatives = queryInstance.getQuery().getAlternatives();
 
 		if (CollectionUtils.isEmpty(availableAlternatives)) {
 
 			//If the parent query doesn't have any alternatives then there is no population to do
-			queryInstance.reset();
+			queryInstance.reset(attributeHandler);
 			return;
 		}
 
@@ -468,17 +473,17 @@ public class CheckboxQueryProviderModule extends BaseQueryProviderModule<Checkbo
 
 		return table;
 	}
-	
+
 	@Override
 	protected void appendPDFData(Document doc, Element showQueryValuesElement, CheckboxQueryInstance queryInstance) {
 
 		super.appendPDFData(doc, showQueryValuesElement, queryInstance);
-		
+
 		if(queryInstance.getQuery().getDescription() != null){
-			
+
 			XMLUtils.appendNewCDATAElement(doc, showQueryValuesElement, "Description", JTidyUtils.getXHTML(queryInstance.getQuery().getDescription()));
 			XMLUtils.appendNewCDATAElement(doc, showQueryValuesElement, "isHTMLDescription", queryInstance.getQuery().getDescription().contains("<") && queryInstance.getQuery().getDescription().contains(">"));
 		}
 	}
-	
+
 }

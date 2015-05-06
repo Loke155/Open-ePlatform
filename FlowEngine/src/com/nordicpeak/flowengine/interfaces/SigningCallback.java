@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import se.unlogic.hierarchy.core.beans.User;
 import se.unlogic.openhierarchy.foregroundmodules.siteprofile.interfaces.SiteProfile;
 
+import com.nordicpeak.flowengine.SigningConfirmedResponse;
 import com.nordicpeak.flowengine.beans.FlowInstanceEvent;
 import com.nordicpeak.flowengine.exceptions.flow.FlowDefaultStatusNotFound;
 import com.nordicpeak.flowengine.exceptions.flowinstancemanager.FlowInstanceManagerClosedException;
@@ -16,7 +17,7 @@ import com.nordicpeak.flowengine.managers.MutableFlowInstanceManager;
 
 public interface SigningCallback{
 
-	FlowInstanceEvent signingConfirmed(MutableFlowInstanceManager instanceManager, User user) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound;
+	SigningConfirmedResponse signingConfirmed(MutableFlowInstanceManager instanceManager, User user) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound;
 
 	void signingComplete(MutableFlowInstanceManager instanceManager, FlowInstanceEvent event, HttpServletRequest req);
 

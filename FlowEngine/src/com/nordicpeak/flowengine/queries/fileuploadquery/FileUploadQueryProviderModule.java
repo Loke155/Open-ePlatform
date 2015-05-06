@@ -26,6 +26,7 @@ import se.unlogic.hierarchy.core.enums.SystemStatus;
 import se.unlogic.hierarchy.core.exceptions.URINotFoundException;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleDescriptor;
 import se.unlogic.hierarchy.core.interfaces.ForegroundModuleResponse;
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.hierarchy.core.interfaces.SectionInterface;
 import se.unlogic.hierarchy.core.interfaces.SystemStartupListener;
 import se.unlogic.hierarchy.core.utils.FCKUtils;
@@ -33,6 +34,7 @@ import se.unlogic.hierarchy.core.validationerrors.FileCountExceededValidationErr
 import se.unlogic.hierarchy.core.validationerrors.FileSizeLimitExceededValidationError;
 import se.unlogic.hierarchy.core.validationerrors.InvalidFileExtensionValidationError;
 import se.unlogic.standardutils.collections.CollectionUtils;
+import se.unlogic.standardutils.crypto.Base64;
 import se.unlogic.standardutils.dao.AnnotatedDAO;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.QueryParameterFactory;
@@ -197,16 +199,16 @@ public class FileUploadQueryProviderModule extends BaseQueryProviderModule<FileU
 	public Query importQuery(MutableQueryDescriptor descriptor, TransactionHandler transactionHandler) throws Throwable {
 
 		FileUploadQuery query = new FileUploadQuery();
-		
+
 		query.setQueryID(descriptor.getQueryID());
-		
+
 		query.populate(descriptor.getImportParser().getNode(XMLGenerator.getElementName(query.getClass())));
-		
+
 		this.queryDAO.add(query, transactionHandler, null);
-		
+
 		return query;
 	}
-	
+
 	@Override
 	public Query getQuery(MutableQueryDescriptor descriptor) throws SQLException {
 
@@ -258,9 +260,12 @@ public class FileUploadQueryProviderModule extends BaseQueryProviderModule<FileU
 				return null;
 			}
 
-			FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
-			
-			URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+			if(req != null){
+
+				FCKUtils.setAbsoluteFileUrls(queryInstance.getQuery(), RequestUtils.getFullContextPathURL(req) + ckConnectorModuleAlias);
+
+				URLRewriter.setAbsoluteLinkUrls(queryInstance.getQuery(), req, true);
+			}
 
 			TextTagReplacer.replaceTextTags(queryInstance.getQuery(), instanceMetadata.getSiteProfile());
 
@@ -402,6 +407,7 @@ public class FileUploadQueryProviderModule extends BaseQueryProviderModule<FileU
 		return queryInstanceDAO.get(query);
 	}
 
+	@Override
 	public void save(FileUploadQueryInstance queryInstance, TransactionHandler transactionHandler) throws Throwable {
 
 		checkConfiguration();
@@ -451,7 +457,7 @@ public class FileUploadQueryProviderModule extends BaseQueryProviderModule<FileU
 	}
 
 	@Override
-	public void populate(FileUploadQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation) throws ValidationException {
+	public void populate(FileUploadQueryInstance queryInstance, HttpServletRequest req, User user, boolean allowPartialPopulation, MutableAttributeHandler attributeHandler) throws ValidationException {
 
 		checkConfiguration();
 
@@ -867,6 +873,58 @@ public class FileUploadQueryProviderModule extends BaseQueryProviderModule<FileU
 		XMLUtils.appendNewElement(doc, doc.getDocumentElement(), "FormatedMaxAllowedFileSize", BinarySizeFormater.getFormatedSize(maxAllowedFileSize * BinarySizes.MegaByte));
 
 		return doc;
+	}
+
+	public void appendFileExportXML(Document doc, Element targetElement, FileUploadQueryInstance queryInstance) throws IOException {
+
+		if (CollectionUtils.isEmpty(queryInstance.getFiles())) {
+
+			return;
+		}
+
+		//Immutable query
+		if (queryInstance.getInstanceManagerID() == null) {
+
+			for (FileDescriptor fileDescriptor : queryInstance.getFiles()) {
+
+				File file = new File(getFilePath(fileDescriptor, queryInstance.getQueryInstanceDescriptor()));
+
+				if (!file.exists()) {
+
+					continue;
+				}
+
+				appendFileXML(doc, targetElement, fileDescriptor, file);
+			}
+
+			//Mutable query
+		} else {
+
+			for (FileDescriptor fileDescriptor : queryInstance.getFiles()) {
+
+				File file = new File(getTemporaryFilePath(fileDescriptor, queryInstance.getQueryInstanceDescriptor(), queryInstance.getInstanceManagerID()));
+
+				if (!file.exists()) {
+
+					continue;
+				}
+
+				appendFileXML(doc, targetElement, fileDescriptor, file);
+			}
+		}
+
+	}
+
+	private void appendFileXML(Document doc, Element targetElement, FileDescriptor fileDescriptor, File file) throws IOException {
+
+		Element fileElement = doc.createElement("File");
+
+		XMLUtils.appendNewElement(doc, fileElement, "ID", fileDescriptor.getFileID());
+		XMLUtils.appendNewCDATAElement(doc, fileElement, "Name", fileDescriptor.getName());
+		XMLUtils.appendNewElement(doc, fileElement, "Size", fileDescriptor.getSize());
+		XMLUtils.appendNewElement(doc, fileElement, "EncodedData", Base64.encodeFromFile(file));
+
+		targetElement.appendChild(fileElement);
 	}
 
 }

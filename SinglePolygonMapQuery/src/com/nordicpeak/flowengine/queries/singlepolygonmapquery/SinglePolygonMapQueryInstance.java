@@ -3,11 +3,17 @@ package com.nordicpeak.flowengine.queries.singlepolygonmapquery;
 import java.util.Arrays;
 import java.util.List;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import se.unlogic.hierarchy.core.interfaces.MutableAttributeHandler;
 import se.unlogic.standardutils.dao.annotations.DAOManaged;
 import se.unlogic.standardutils.dao.annotations.ManyToOne;
 import se.unlogic.standardutils.dao.annotations.Table;
 import se.unlogic.standardutils.xml.XMLElement;
+import se.unlogic.standardutils.xml.XMLUtils;
 
+import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.queries.basemapquery.BaseMapQueryInstance;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -20,18 +26,18 @@ public class SinglePolygonMapQueryInstance extends BaseMapQueryInstance<SinglePo
 	@DAOManaged
 	@XMLElement
 	private String polygon;
-	
+
 	@DAOManaged
 	@XMLElement
 	private String polygonConfig;
-	
+
 	@DAOManaged(columnName = "queryID")
 	@ManyToOne
 	@XMLElement
 	private SinglePolygonMapQuery query;
 
 	private Geometry geometry;
-	
+
 	public String getPolygon() {
 		return polygon;
 	}
@@ -54,33 +60,42 @@ public class SinglePolygonMapQueryInstance extends BaseMapQueryInstance<SinglePo
 
 	@Override
 	public void setQuery(SinglePolygonMapQuery query) {
-		
+
 		this.query = query;
 	}
 
 	@Override
 	public SinglePolygonMapQuery getQuery() {
-		
+
 		return this.query;
 	}
-	
+
 	@Override
 	public List<Geometry> getPrintableGeometries() {
-		
+
 		return Arrays.asList(geometry);
 	}
-	
+
 	@Override
-	public void reset() {
+	public void reset(MutableAttributeHandler attributeHandler) {
 
 		this.polygon = null;
 
-		super.reset();
+		super.reset(attributeHandler);
 	}
 
 	@Override
 	public String toString() {
 		return "SinglePolygonMapQueryInstance [queryInstanceID=" + getQueryInstanceID() + ", propertyUnitNumber=" + getPropertyUnitDesignation() + "]";
 	}
-	
+
+	@Override
+	public Element toExportXML(Document doc, QueryHandler queryHandler) throws Exception {
+
+		Element element = getBaseExportXML(doc);
+
+		XMLUtils.appendNewElement(doc, element, "Polygon", polygon);
+
+		return element;
+	}
 }

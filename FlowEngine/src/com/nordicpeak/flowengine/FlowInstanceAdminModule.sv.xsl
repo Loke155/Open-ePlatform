@@ -33,22 +33,38 @@
 	
 	<xsl:variable name="i18n.PrioritizedInstancesDescription.Part1">Du har</xsl:variable>
 	<xsl:variable name="i18n.PrioritizedInstancesDescription.Part2">ärenden som du behöver agera på, klicka på knappen "Välj" för att fortsätta.</xsl:variable>
-	<xsl:variable name="i18n.PrioritizedInstancesHelp">Hjälptext här...</xsl:variable>
+	<xsl:variable name="i18n.PrioritizedInstancesHelp">
+<h2 data-icon-before="?" class="h1 full">Ärenden du behöver agera på</h2>
+Hjälptext här...
+	</xsl:variable>
 	
 	<xsl:variable name="i18n.UserAssignedInstancesDescription.Part1">Du har</xsl:variable>
 	<xsl:variable name="i18n.UserAssignedInstancesDescription.Part2">tilldelade ärenden, klicka på knappen "Välj" för att fortsätta.</xsl:variable>
+	<xsl:variable name="i18n.UserAssignedInstancesHelp">
+<h2 data-icon-before="?" class="h1 full">Tilldelade ärenden</h2>
+Hjälptext här...
+	</xsl:variable>
 	
 	<xsl:variable name="i18n.BookmarkedInstancesDescription.Part1">Det finns</xsl:variable>
 	<xsl:variable name="i18n.BookmarkedInstancesDescription.Part2">ärenden som du behöver agera på, klicka på knappen "Välj" för att fortsätta.</xsl:variable>
-	<xsl:variable name="i18n.BookmarkedInstancesHelp">Hjälptext här...</xsl:variable>
+	<xsl:variable name="i18n.BookmarkedInstancesHelp">
+<h2 data-icon-before="?" class="h1 full">Flaggade ärenden</h2>
+Hjälptext här...
+	</xsl:variable>
 	
 	<xsl:variable name="i18n.ActiveInstancesDescription.Part1">Du har</xsl:variable>
 	<xsl:variable name="i18n.ActiveInstancesDescription.Part2">aktiva ärenden, klicka på knappen "Välj" för att fortsätta.</xsl:variable>
-	<xsl:variable name="i18n.ActiveInstancesHelp">Hjälptext här...</xsl:variable>
+	<xsl:variable name="i18n.ActiveInstancesHelp">
+<h2 data-icon-before="?" class="h1 full">Aktiva ärenden</h2>
+Hjälptext här...
+	</xsl:variable>
 	
 	<xsl:variable name="i18n.UnassignedInstancesDescription.Part1">Du har</xsl:variable>
 	<xsl:variable name="i18n.UnassignedInstancesDescription.Part2">obehandlade ärenden, klicka på knappen "Välj" för att fortsätta.</xsl:variable>
-	<xsl:variable name="i18n.UnassignedInstancesHelp">Hjälptext här...</xsl:variable>
+	<xsl:variable name="i18n.UnassignedInstancesHelp">
+<h2 data-icon-before="?" class="h1 full">Obehandlade ärenden</h2>
+Hjälptext här...
+	</xsl:variable>
 	
 	<xsl:variable name="i18n.NoFlowInstances">Inga ärenden</xsl:variable>
 	<xsl:variable name="i18n.Choose">Välj</xsl:variable>
@@ -105,15 +121,6 @@
 	<xsl:variable name="i18n.Hits.Part2">träffar</xsl:variable>
 	<xsl:variable name="i18n.SearchDone">Sökningen är klar</xsl:variable>
 	
-	<xsl:variable name="i18n.SubmittedEvent">Inskickad</xsl:variable>
-	<xsl:variable name="i18n.UpdatedEvent">Ändrad</xsl:variable>
-	<xsl:variable name="i18n.StatusUpdatedEvent">Status ändrad</xsl:variable>
-	<xsl:variable name="i18n.ManagersUpdatedEvent">Handläggare ändrad</xsl:variable>
-	<xsl:variable name="i18n.CustomerNotificationEvent">Notifiering skickad</xsl:variable>
-	<xsl:variable name="i18n.CustomerMessageSentEvent">Meddelande skickat till handläggare</xsl:variable>
-	<xsl:variable name="i18n.ManagerMessageSentEvent">Meddelande skickat till kund</xsl:variable>
-	<xsl:variable name="i18n.OtherEvent">Annan händelse</xsl:variable>
-	
 	<xsl:variable name="i18n.InternalMessages">Interna noteringar</xsl:variable>
 	<xsl:variable name="i18n.SubmitInternalMessage">Spara notering</xsl:variable>
 	<xsl:variable name="i18n.InternalMessage">Notering</xsl:variable>
@@ -150,6 +157,10 @@
 	
 	<xsl:variable name="i18n.DownloadFlowInstancePDF">Hämta kvittens i PDF-format</xsl:variable>	
 	 
+	 <xsl:variable name="i18n.saveBtnSuffix">och stäng</xsl:variable>
+	 
 	<xsl:variable name="i18n.SiteProfile">Kommun</xsl:variable>
+	<xsl:variable name="i18n.Summary">Sammanfattning av öppna ärenden</xsl:variable>
+	<xsl:variable name="i18n.DownloadFlowInstanceXML">Hämta ansökan i XML-format</xsl:variable>
 
 </xsl:stylesheet>

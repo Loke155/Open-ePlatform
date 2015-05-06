@@ -48,7 +48,7 @@
 				
 				</xsl:if>
 				
-					<table>
+					<table class="oep-table">
 						<thead class="sortable">
 							<tr>
 								<th class="icon"></th>
@@ -69,7 +69,7 @@
 								</xsl:when>
 								<xsl:otherwise>
 									<tr>
-										<td />
+										<td class="icon" />
 										<td colspan="3"><xsl:value-of select="$i18n.NoOrganizations" /></td>
 									</tr>
 								</xsl:otherwise>
@@ -93,12 +93,12 @@
 	<xsl:template match="Organization" mode="list">
 	
 		<tr>
-			<td />
+			<td class="icon" />
 			<td data-title="{$i18n.Organization}" class="organization"><xsl:value-of select="name" /></td>
 			<td data-title="{$i18n.OrganizationNumber}" class="organizationNumber"><xsl:value-of select="organizationNumber" /></td>
 			<td class="link">
 				<a class="btn btn-green vertical-align-middle" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/update/{organizationID}"><xsl:value-of select="$i18n.Update" /></a>
-				<a class="btn btn-red vertical-align-middle" style="margin-left: 2px" data-icon-before="x" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/delete/{organizationID}" onclick="return confirm('{$i18n.DeleteOrganizationConfirm}: {name}?');"></a>
+				<a class="btn btn-red vertical-align-middle" style="margin-left: 2px" href="{/Document/requestinfo/currentURI}/{/Document/module/alias}/delete/{organizationID}" onclick="return confirm('{$i18n.DeleteOrganizationConfirm}: {name}?');"><xsl:value-of select="$i18n.Delete" /></a>
 			</td>
 		</tr>
 		
@@ -308,27 +308,6 @@
 			
 		</article>
 		<article>
-			<div class="heading-wrapper">
-				<h2><xsl:value-of select="$i18n.ContactWayHeader" /></h2>
-			</div>
-			<span class="italic"><xsl:value-of select="$i18n.ContactWayDescription" /></span>
-			
-			<xsl:call-template name="createCheckbox">
-				<xsl:with-param name="name" select="'contactByLetter'" />
-				<xsl:with-param name="id" select="'contactByLetter'" />
-				<xsl:with-param name="element" select="$organization" />
-			</xsl:call-template>
-			
-			<label class="checkbox" for="contactByLetter"><xsl:value-of select="$i18n.Letter" /></label>
-			
-			<xsl:call-template name="createCheckbox">
-				<xsl:with-param name="name" select="'contactByEmail'" />
-				<xsl:with-param name="id" select="'contactByEmail'" />
-				<xsl:with-param name="element" select="$organization" />
-			</xsl:call-template>
-			
-			<label class="checkbox" for="contactByEmail"><xsl:value-of select="$i18n.Email" /></label>
-			
 			<xsl:call-template name="createCheckbox">
 				<xsl:with-param name="name" select="'contactBySMS'" />
 				<xsl:with-param name="id" select="'contactBySMS'" />
@@ -336,14 +315,6 @@
 			</xsl:call-template>
 			
 			<label class="checkbox" for="contactBySMS"><xsl:value-of select="$i18n.SMS" /></label>
-			
-			<xsl:call-template name="createCheckbox">
-				<xsl:with-param name="name" select="'contactByPhone'" />
-				<xsl:with-param name="id" select="'contactByPhone'" />
-				<xsl:with-param name="element" select="$organization" />
-			</xsl:call-template>
-			
-			<label class="checkbox" for="contactByPhone"><xsl:value-of select="$i18n.Phone" /></label>
 			
 			<!-- 
 			<input type="checkbox" disabled="" checked="" value="4" id="mypages" name="mypages" />

@@ -182,7 +182,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 			if(styleSheetURL != null){
 
 				try {
-					queryTransformer = new URIXSLTransformer(styleSheetURL.toURI(),ClassPathURIResolver.getInstance());
+					queryTransformer = new URIXSLTransformer(styleSheetURL.toURI(),ClassPathURIResolver.getInstance(), true);
 
 					parseQueryXSLStyleSheet(styleSheetURL);
 
@@ -211,7 +211,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 			if(styleSheetURL != null){
 
 				try {
-					pdfTransformer = new URIXSLTransformer(styleSheetURL.toURI(),ClassPathURIResolver.getInstance());
+					pdfTransformer = new URIXSLTransformer(styleSheetURL.toURI(),ClassPathURIResolver.getInstance(), true);
 
 					log.info("Succesfully parsed PDF stylesheet " + pdfStyleSheet);
 
@@ -250,6 +250,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 		}
 	}
 
+	@Override
 	public QueryResponse getShowHTML(QI queryInstance, HttpServletRequest req, User user, String updateURL, String queryRequestURL) throws TransformerConfigurationException, TransformerException {
 
 		Document doc = createDocument(req, user);
@@ -265,6 +266,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 		return createQueryResponse(doc, queryInstance.getQueryInstanceDescriptor().getQueryDescriptor());
 	}
 
+	@Override
 	public QueryResponse getFormHTML(QI queryInstance, HttpServletRequest req, User user, List<ValidationError> validationErrors, boolean enableAjaxPosting, String queryRequestURL) throws TransformerConfigurationException, TransformerException {
 
 		Document doc = createDocument(req, user);
@@ -401,6 +403,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 		return queryTypeDescriptor;
 	}
 
+	@Override
 	public synchronized <InstanceType extends QueryHandler> void instanceAdded(Class<QueryHandler> key, InstanceType instance) {
 
 		addQueryProvider(instance);
@@ -426,6 +429,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 		return getQueryInstance(descriptor, null, req, null, instanceMetadata);
 	}
 
+	@Override
 	public FlowAdminModule getFlowAdminModule() {
 		return flowAdminModule;
 	}

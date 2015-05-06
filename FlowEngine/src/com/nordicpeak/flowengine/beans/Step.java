@@ -58,6 +58,7 @@ public class Step extends GeneratedElementable implements ImmutableStep, XMLPars
 	@XMLElement(fixCase=true)
 	private List<QueryDescriptor> queryDescriptors;
 
+	@Override
 	public Integer getStepID() {
 
 		return stepID;
@@ -101,6 +102,7 @@ public class Step extends GeneratedElementable implements ImmutableStep, XMLPars
 		this.flow = flow;
 	}
 
+	@Override
 	public List<QueryDescriptor> getQueryDescriptors() {
 
 		return queryDescriptors;

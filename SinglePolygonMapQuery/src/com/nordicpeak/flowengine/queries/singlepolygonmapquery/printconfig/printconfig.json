@@ -1,13 +1,13 @@
 {
    "units":"m",
-   "outputFormat":"png",
+   "outputFormat":"$outputFormat",
    "layout":"$layout",
    "srs":"$srs",
    "dpi":$dpi,
    "attribution": "Kartan har ingen rättsverkan du kan alltså INTE se exakta gränser i denna karttjänst ©Lantmäteriet Geodatasamverkan",
    "layers":[
       {
-         "baseURL":"http://extmap.sundsvall.se/geoserver/wms",
+         "baseURL":"https://extmap.sundsvall.se/geoserver/wms",
          "opacity":1,
          "singleTile":true,
          "type":"WMS",
@@ -20,7 +20,7 @@
          ]
       },
       {
-         "baseURL":"http://extmap.sundsvall.se/geoserver/wms",
+         "baseURL":"https://extmap.sundsvall.se/geoserver/wms",
          "opacity":1,
          "singleTile":true,
          "type":"WMS",
@@ -48,12 +48,12 @@
                 "strokeColor": "#2969bf"
             },
             "Line": {
-            	"strokeWidth": 3,
+            	"strokeWidth": 1.5,
             	"strokeColor": "#2969bf",
 				"strokeOpacity": 1
             },
             "Polygon": {
-                "strokeWidth": 3,
+                "strokeWidth": 1.5,
                 "strokeOpacity": 1,
                 "strokeColor": "#29bf4c",
                 "fillColor": "#e8ffee",

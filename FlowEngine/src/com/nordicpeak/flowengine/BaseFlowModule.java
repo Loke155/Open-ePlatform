@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
+import javax.xml.transform.TransformerException;
 
 import org.apache.commons.fileupload.FileUploadBase.FileSizeLimitExceededException;
 import org.apache.commons.fileupload.FileUploadBase.SizeLimitExceededException;
@@ -42,6 +44,7 @@ import se.unlogic.hierarchy.core.utils.ViewFragmentUtils;
 import se.unlogic.hierarchy.foregroundmodules.AnnotatedForegroundModule;
 import se.unlogic.openhierarchy.foregroundmodules.siteprofile.interfaces.SiteProfile;
 import se.unlogic.openhierarchy.foregroundmodules.siteprofile.interfaces.SiteProfileHandler;
+import se.unlogic.standardutils.collections.CollectionUtils;
 import se.unlogic.standardutils.collections.ReverseListIterator;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.QueryParameterFactory;
@@ -79,6 +82,7 @@ import com.nordicpeak.flowengine.enums.ContentType;
 import com.nordicpeak.flowengine.enums.EventType;
 import com.nordicpeak.flowengine.enums.FlowAction;
 import com.nordicpeak.flowengine.enums.FlowDirection;
+import com.nordicpeak.flowengine.enums.QueryState;
 import com.nordicpeak.flowengine.enums.ShowMode;
 import com.nordicpeak.flowengine.events.SigningEvent;
 import com.nordicpeak.flowengine.events.SubmitEvent;
@@ -116,15 +120,24 @@ import com.nordicpeak.flowengine.interfaces.EvaluationHandler;
 import com.nordicpeak.flowengine.interfaces.FlowEngineInterface;
 import com.nordicpeak.flowengine.interfaces.FlowInstanceAccessController;
 import com.nordicpeak.flowengine.interfaces.FlowProcessCallback;
+import com.nordicpeak.flowengine.interfaces.FlowSubmitSurveyProvider;
+import com.nordicpeak.flowengine.interfaces.ImmutableFlow;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstance;
 import com.nordicpeak.flowengine.interfaces.ImmutableFlowInstanceEvent;
 import com.nordicpeak.flowengine.interfaces.ImmutableQueryInstance;
 import com.nordicpeak.flowengine.interfaces.InstanceMetadata;
+import com.nordicpeak.flowengine.interfaces.InvoiceLine;
+import com.nordicpeak.flowengine.interfaces.MultiSigningProvider;
+import com.nordicpeak.flowengine.interfaces.MultiSigningQuery;
+import com.nordicpeak.flowengine.interfaces.OperatingStatus;
 import com.nordicpeak.flowengine.interfaces.PDFProvider;
+import com.nordicpeak.flowengine.interfaces.PaymentProvider;
+import com.nordicpeak.flowengine.interfaces.PaymentQuery;
 import com.nordicpeak.flowengine.interfaces.QueryHandler;
 import com.nordicpeak.flowengine.interfaces.QueryRequestProcessor;
 import com.nordicpeak.flowengine.interfaces.SigningCallback;
 import com.nordicpeak.flowengine.interfaces.SigningProvider;
+import com.nordicpeak.flowengine.interfaces.XMLProvider;
 import com.nordicpeak.flowengine.managers.FlowInstanceManager;
 import com.nordicpeak.flowengine.managers.ImmutableFlowInstanceManager;
 import com.nordicpeak.flowengine.managers.ManagerResponse;
@@ -134,6 +147,8 @@ import com.nordicpeak.flowengine.validationerrors.FileUploadValidationError;
 
 public abstract class BaseFlowModule extends AnnotatedForegroundModule implements FlowEngineInterface {
 
+	public static final Field[] FLOW_INSTANCE_RELATIONS = {FlowInstance.EVENTS_RELATION, FlowInstanceEvent.ATTRIBUTES_RELATION, FlowInstance.FLOW_RELATION, FlowInstance.FLOW_STATE_RELATION, Flow.FLOW_TYPE_RELATION, Flow.FLOW_FAMILY_RELATION, FlowType.ALLOWED_GROUPS_RELATION, FlowType.ALLOWED_USERS_RELATION, Flow.STEPS_RELATION, Flow.FLOW_FAMILY_RELATION, FlowFamily.MANAGER_GROUPS_RELATION, FlowFamily.MANAGER_USERS_RELATION, Step.QUERY_DESCRIPTORS_RELATION, QueryDescriptor.EVALUATOR_DESCRIPTORS_RELATION, Flow.DEFAULT_FLOW_STATE_MAPPINGS_RELATION, DefaultStatusMapping.FLOW_STATE_RELATION, QueryDescriptor.QUERY_INSTANCE_DESCRIPTORS_RELATION, FlowInstance.ATTRIBUTES_RELATION};
+	
 	public static final ValidationError PREVIEW_NOT_ENABLED_VALIDATION_ERROR = new ValidationError("PreviewNotEnabledForCurrentFlow");
 	public static final ValidationError PREVIEW_ONLY_WHEN_FULLY_POPULATED_VALIDATION_ERROR = new ValidationError("PreviewOnlyAvailableWhenFlowFullyPopulated");
 	public static final ValidationError SUBMIT_ONLY_WHEN_FULLY_POPULATED_VALIDATION_ERROR = new ValidationError("SubmitOnlyAvailableWhenFlowFullyPopulated");
@@ -145,10 +160,13 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	public static final ValidationError FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR = new ValidationError("RequestedFlowInstanceNotFound");
 	public static final ValidationError INVALID_LINK_VALIDATION_ERROR = new ValidationError("InvalidLinkRequested");
 	public static final ValidationError FLOW_DISABLED_VALIDATION_ERROR = new ValidationError("FlowDisabled");
-	
+
 	public static final ValidationError FLOW_INSTANCE_PREVIEW_VALIDATION_ERROR = new ValidationError("FlowInstancePreviewError");
-	
+	public static final ValidationError UNABLE_TO_LOAD_FLOW_INSTANCE_VALIDATION_ERROR = new ValidationError("FlowInstanceLoadError");
+
 	public static final ValidationError SIGNING_PROVIDER_NOT_FOUND_VALIDATION_ERROR = new ValidationError("SigningProviderNotFoundError");
+	public static final ValidationError PAYMENT_PROVIDER_NOT_FOUND_VALIDATION_ERROR = new ValidationError("PaymentProviderNotFoundError");
+	public static final ValidationError MULTI_SIGNING_PROVIDER_NOT_FOUND_VALIDATION_ERROR = new ValidationError("MultiSigningProviderNotFoundError");
 
 	@ModuleSetting(allowsNull = true)
 	@TextFieldSettingDescriptor(name = "Temp dir", description = "Directory for temporary files. Should be on the same filesystem as the file store for best performance. If not set system default temp directory will be used")
@@ -171,6 +189,9 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	@InstanceManagerDependency
 	protected SiteProfileHandler profileHandler;
 
+	@InstanceManagerDependency
+	protected OperatingMessageModule operatingMessageModule;
+	
 	protected EventHandler eventHandler;
 
 	protected FlowEngineDAOFactory daoFactory;
@@ -231,12 +252,12 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 					throw e;
 				}
 
-				if(dbFlowInstance.getUpdated() != null && (instanceManager.getFlowInstance().getUpdated() == null || instanceManager.getFlowInstance().getUpdated().before(dbFlowInstance.getUpdated()))){
-					
+				if (dbFlowInstance.getUpdated() != null && (instanceManager.getFlowInstance().getUpdated() == null || instanceManager.getFlowInstance().getUpdated().before(dbFlowInstance.getUpdated()))) {
+
 					instanceManager.setConcurrentModificationLock(true);
 				}
-				
-				if(log.isDebugEnabled()){
+
+				if (log.isDebugEnabled()) {
 
 					log.debug("Found flow instance " + instanceManager.getFlowInstance() + " in session of user " + user);
 				}
@@ -258,7 +279,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			callback.checkFlowInstanceAccess(flowInstance, user);
 
-			if (checkEnabled && !flowInstance.getFlow().isEnabled()) {
+			if (checkEnabled && (!flowInstance.getFlow().isEnabled() || isOperatingStatusDisabled(flowInstance.getFlow()))) {
 
 				throw new FlowDisabledException(flowInstance.getFlow());
 			}
@@ -271,7 +292,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 			log.info("Opening copy of flow instance " + flowInstance + " for user " + user);
 
 			InstanceMetadata instanceMetadata = new DefaultInstanceMetadata(getCurrentSiteProfile(req, user, uriParser));
-			
+
 			// TODO handle IllegalStateException's from session object
 			instanceManager = new MutableFlowInstanceManager(flowInstance, queryHandler, evaluationHandler, getNewInstanceManagerID(user), req, user, instanceMetadata);
 
@@ -321,7 +342,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			callback.checkNewFlowInstanceAccess(flow, user);
 
-			if (checkEnabled && !flow.isEnabled()) {
+			if (checkEnabled && (!flow.isEnabled() || isOperatingStatusDisabled(flow))) {
 
 				throw new FlowDisabledException(flow);
 			}
@@ -334,7 +355,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 			log.info("Creating new instance of flow " + flow + " for user " + user);
 
 			InstanceMetadata instanceMetadata = new DefaultInstanceMetadata(getCurrentSiteProfile(req, user, uriParser));
-			
+
 			// TODO handle IllegalStateException's from session object
 			instanceManager = new MutableFlowInstanceManager(flow, queryHandler, evaluationHandler, getNewInstanceManagerID(user), req, user, instanceMetadata);
 
@@ -346,6 +367,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	}
 
 	protected void checkFlowLimit(User user, Flow flow) throws FlowLimitExceededException, SQLException {
+
 	}
 
 	protected void checkFlow(MutableFlowInstanceManager instanceManager, HttpSession session, boolean checkPublishDate, boolean checkEnabled) throws FlowNoLongerAvailableException, SQLException, FlowDisabledException, FlowNotPublishedException {
@@ -360,7 +382,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 			throw new FlowNoLongerAvailableException(instanceManager.getFlowInstance().getFlow());
 		}
 
-		if (checkEnabled && !flow.isEnabled()) {
+		if (checkEnabled && (!flow.isEnabled() || isOperatingStatusDisabled(instanceManager.getFlowInstance().getFlow()))) {
 
 			this.removeMutableFlowInstanceManagerFromSession(instanceManager, session);
 
@@ -374,8 +396,23 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 			throw new FlowNotPublishedException(instanceManager.getFlowInstance().getFlow());
 		}
 	}
+	
+	public boolean isOperatingStatusDisabled(ImmutableFlow flow) {
+		
+		if(operatingMessageModule != null) {
+			
+			OperatingStatus operatingStatus = operatingMessageModule.getOperatingStatus(flow.getFlowFamily().getFlowFamilyID());
+			
+			if(operatingStatus != null && operatingStatus.isDisabled()) {
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
-	protected ImmutableFlowInstanceManager getImmutableFlowInstanceManager(int flowInstanceID, FlowInstanceAccessController accessController, User user, boolean checkEnabled, HttpServletRequest req) throws AccessDeniedException, SQLException, FlowDisabledException, DuplicateFlowInstanceManagerIDException, MissingQueryInstanceDescriptor, QueryProviderNotFoundException, InvalidFlowInstanceStepException, QueryProviderErrorException, QueryInstanceNotFoundInQueryProviderException {
+	public ImmutableFlowInstanceManager getImmutableFlowInstanceManager(int flowInstanceID, FlowInstanceAccessController accessController, User user, boolean checkEnabled, HttpServletRequest req) throws AccessDeniedException, SQLException, FlowDisabledException, DuplicateFlowInstanceManagerIDException, MissingQueryInstanceDescriptor, QueryProviderNotFoundException, InvalidFlowInstanceStepException, QueryProviderErrorException, QueryInstanceNotFoundInQueryProviderException {
 
 		// User does not have the requested flow instance open, get flow
 		// instance from DB and create a new instance manager
@@ -388,7 +425,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		accessController.checkFlowInstanceAccess(flowInstance, user);
 
-		if (checkEnabled && !flowInstance.getFlow().isEnabled()) {
+		if (checkEnabled && (!flowInstance.getFlow().isEnabled() || isOperatingStatusDisabled(flowInstance.getFlow()))) {
 
 			throw new FlowDisabledException(flowInstance.getFlow());
 		}
@@ -427,7 +464,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	}
 
 	public ForegroundModuleResponse processFlowRequest(MutableFlowInstanceManager instanceManager, FlowProcessCallback callback, FlowInstanceAccessController accessController, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, boolean enableSaving) throws UnableToGetQueryInstanceFormHTMLException, SQLException, IOException, UnableToGetQueryInstanceShowHTMLException, ModuleConfigurationException, FlowInstanceManagerClosedException, FlowDefaultStatusNotFound, EvaluationException {
-		
+
 		MultipartRequest multipartRequest = null;
 
 		try {
@@ -472,7 +509,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 							}
 
-							HTTPUtils.sendReponse(response, "application/json;charset=ISO-8859-1", "ISO-8859-1", res);
+							HTTPUtils.sendReponse(response, "application/json;charset=" + systemInterface.getEncoding(), systemInterface.getEncoding(), res);
 
 							return null;
 						}
@@ -490,18 +527,18 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 					}
 				}
 
-				if(instanceManager.isConcurrentModificationLocked()){
-					
-					if(flowAction == FlowAction.SAVE_AND_CLOSE || flowAction == FlowAction.SAVE_AND_SUBMIT || flowAction == FlowAction.SAVE){
-						
+				if (instanceManager.isConcurrentModificationLocked()) {
+
+					if (flowAction == FlowAction.SAVE_AND_CLOSE || flowAction == FlowAction.SAVE_AND_SUBMIT || flowAction == FlowAction.SAVE) {
+
 						flowAction = null;
-					
-					}else if(flowAction == FlowAction.SAVE_AND_PREVIEW){
-						
+
+					} else if (flowAction == FlowAction.SAVE_AND_PREVIEW) {
+
 						flowAction = FlowAction.PREVIEW;
 					}
 				}
-				
+
 				if (flowAction == null) {
 
 					Integer stepID = NumberUtils.toInt(req.getParameter("step"));
@@ -524,20 +561,20 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 				} else if (flowAction == FlowAction.CLOSE_AND_REOPEN) {
 
 					log.info("User " + user + " closing and reopening flow instance " + instanceManager.getFlowInstance());
-					
+
 					try {
 						instanceManager.close(queryHandler);
 					} catch (Exception e) {
-						
+
 						log.error("Error closing flow instance " + instanceManager.getFlowInstance() + " in session of user " + user, e);
 					}
-					
+
 					removeMutableFlowInstanceManagerFromSession(instanceManager, req.getSession());
-					
+
 					reOpenFlowInstance(instanceManager.getFlowID(), instanceManager.getFlowInstanceID(), req, user, uriParser);
-					
+
 					res.sendRedirect(uriParser.getRequestURL());
-					
+
 					return null;
 
 				} else if (flowAction == FlowAction.SAVE) {
@@ -607,103 +644,164 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 						return showCurrentStepForm(instanceManager, callback, req, res, user, uriParser, managerResponse, SUBMIT_ONLY_WHEN_FULLY_POPULATED_VALIDATION_ERROR, flowAction);
 					}
 
-					if(enableSaving && instanceManager.getFlowInstance().getFlow().requiresSigning()){
-						
+					if (enableSaving && instanceManager.getFlowInstance().getFlow().requiresSigning()) {
+
 						SigningProvider signingProvider = getSigningProvider();
-						
-						if(signingProvider == null){
-							
-							if(instanceManager.getFlowInstance().getFlow().usesPreview()){
-								
+
+						if (signingProvider == null) {
+
+							if (instanceManager.getFlowInstance().getFlow().usesPreview()) {
+
 								return showPreview(req, user, uriParser, instanceManager, callback, flowAction, getBaseUpdateURL(req, uriParser, user, instanceManager.getFlowInstance(), accessController), SIGNING_PROVIDER_NOT_FOUND_VALIDATION_ERROR);
-								
-							}else{
+
+							} else {
 
 								return showCurrentStepForm(instanceManager, callback, req, res, user, uriParser, managerResponse, SIGNING_PROVIDER_NOT_FOUND_VALIDATION_ERROR, flowAction);
 							}
 						}
-						
+
 						boolean previouslySaved = instanceManager.isPreviouslySaved();
 						boolean savedDuringCurrentRequest;
-						
-						if(instanceManager.hasUnsavedChanges()){
+
+						if (instanceManager.hasUnsavedChanges()) {
 
 							log.info("User " + user + " saving and preparing to sign flow instance " + instanceManager.getFlowInstance());
-							
+
 							save(instanceManager, user, req, callback.getSaveActionID(), EventType.UPDATED);
 							savedDuringCurrentRequest = true;
-							
-						}else{
-							
+
+						} else {
+
 							log.info("User " + user + " preparing to sign flow instance " + instanceManager.getFlowInstance());
-							
+
 							savedDuringCurrentRequest = false;
 						}
-						
-						if(!previouslySaved){
-							
+
+						if (!previouslySaved) {
+
 							res.sendRedirect(getSigningURL(instanceManager, req));
-							
+
 							return null;
 						}
-						
+
 						try {
-							ViewFragment viewFragment = signingProvider.sign(req, res, user, instanceManager, getSigningCallback(instanceManager, EventType.SUBMITTED, callback.getSubmitActionID(), getCurrentSiteProfile(req, user, uriParser)), savedDuringCurrentRequest);
-						
-							if(res.isCommitted()){
-								
+
+							SigningCallback signingCallback;
+
+							if (requiresMultiSigning(instanceManager)) {
+
+								signingCallback = getSigningCallback(instanceManager, null, callback.getMultiSigningActionID(), getCurrentSiteProfile(req, user, uriParser), false);
+
+							} else if (requiresPayment(instanceManager)) {
+
+								signingCallback = getSigningCallback(instanceManager, null, callback.getPaymentActionID(), getCurrentSiteProfile(req, user, uriParser), false);
+
+							} else {
+
+								signingCallback = getSigningCallback(instanceManager, EventType.SUBMITTED, callback.getSubmitActionID(), getCurrentSiteProfile(req, user, uriParser), true);
+							}
+
+							ViewFragment viewFragment = signingProvider.sign(req, res, user, instanceManager, signingCallback, savedDuringCurrentRequest);
+
+							if (res.isCommitted()) {
+
 								return null;
-								
-							}else if(viewFragment == null){
-								
+
+							} else if (viewFragment == null) {
+
 								log.warn("Signing provider returned no view fragment and not committed not direct response for signing of flow instance " + instanceManager + " by user " + user);
-								
+
 								redirectToSignError(req, res, uriParser, instanceManager, previouslySaved);
-								
+
 								return null;
 							}
-							
+
 							return showSigningForm(instanceManager, req, res, user, uriParser, viewFragment);
-							
+
 						} catch (Exception e) {
-							
+
 							log.error("Error ivoking signing provider " + signingProvider + " for flow instance " + instanceManager + " requested by user " + user, e);
 
 							redirectToSignError(req, res, uriParser, instanceManager, previouslySaved);
-							
+
 							return null;
 						}
+
+					} else if (enableSaving && requiresPayment(instanceManager)) {
+
+						PaymentProvider paymentProvider = getPaymentProvider();
+
+						try {
+
+							if (paymentProvider == null) {
+
+								if (instanceManager.getFlowInstance().getFlow().usesPreview()) {
+
+									return showPreview(req, user, uriParser, instanceManager, callback, flowAction, getBaseUpdateURL(req, uriParser, user, instanceManager.getFlowInstance(), accessController), PAYMENT_PROVIDER_NOT_FOUND_VALIDATION_ERROR);
+
+								} else {
+
+									return showCurrentStepForm(instanceManager, callback, req, res, user, uriParser, managerResponse, PAYMENT_PROVIDER_NOT_FOUND_VALIDATION_ERROR, flowAction);
+								}
+							}
+
+							ViewFragment viewFragment = paymentProvider.pay(req, res, user, instanceManager, new BaseFlowModuleInlinePaymentCallback(this, callback.getSubmitActionID()));
+
+							if (res.isCommitted()) {
+
+								return null;
+
+							} else if (viewFragment == null) {
+
+								log.warn("Payment provider returned no view fragment and not committed not direct response for pay of flow instance " + instanceManager + " by user " + user);
+
+								redirectToPaymentError(multipartRequest, res, uriParser, instanceManager, instanceManager.isPreviouslySaved());
+
+								return null;
+							}
+
+							return showInlinePaymentForm(instanceManager, req, res, user, uriParser, viewFragment);
+
+						} catch (Exception e) {
+
+							log.error("Error ivoking payment provider " + paymentProvider + " for flow instance " + instanceManager + " requested by user " + user, e);
+
+							redirectToPaymentError(multipartRequest, res, uriParser, instanceManager, instanceManager.isPreviouslySaved());
+
+							return null;
+						}
+
 					}
-					
+
 					log.info("User " + user + " saving and submitting flow instance " + instanceManager.getFlowInstance());
 
 					FlowInstanceEvent event = save(instanceManager, user, req, callback.getSubmitActionID(), EventType.SUBMITTED);
 
-					if(enableSaving){
-						
+					if (enableSaving) {
+
 						sendSubmitEvent(instanceManager, event, callback.getSubmitActionID(), getCurrentSiteProfile(req, user, uriParser));
 					}
-					
+
 					removeFlowInstanceManagerFromSession(instanceManager.getFlowID(), instanceManager.getFlowInstanceID(), req.getSession(false));
 
 					closeSubmittedFlowInstanceManager(instanceManager, req);
-					
+
 					redirectToSubmitMethod(instanceManager, req, res);
-					
+
 					return null;
 
-				} else if(flowAction == FlowAction.SAVE_AND_CLOSE && user != null) {
-					
+				} else if (flowAction == FlowAction.SAVE_AND_CLOSE && user != null) {
+
 					log.info("User " + user + " saving and closing flow instance " + instanceManager.getFlowInstance());
-					
+
 					save(instanceManager, user, req, callback.getSaveActionID(), EventType.UPDATED);
-										
+
 					removeMutableFlowInstanceManagerFromSession(instanceManager, req.getSession(false));
-					
+
 					onFlowInstanceClosedRedirect(instanceManager, req, res);
-					
+
 					return null;
-					
+
 				} else {
 
 					throw new RuntimeException("Unhandled " + FlowAction.class.getSimpleName() + " enum value " + flowAction);
@@ -712,11 +810,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		} catch (FileUploadException e) {
 
-			if(!(e instanceof FileSizeLimitExceededException) && !(e instanceof SizeLimitExceededException)) {
-				
+			if (!(e instanceof FileSizeLimitExceededException) && !(e instanceof SizeLimitExceededException)) {
+
 				log.warn("Unable to parse request for flow instance " + instanceManager + " from user " + user, e);
 			}
-			
+
 			return showCurrentStepForm(instanceManager, callback, req, res, user, uriParser, null, new FileUploadValidationError(this.maxRequestSize), null);
 
 		} catch (UnableToPopulateQueryInstanceException e) {
@@ -746,19 +844,21 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		}
 	}
 
-	protected void reOpenFlowInstance(Integer flowID, Integer flowInstanceID, HttpServletRequest req, User user, URIParser uriParser) {}
+	protected void reOpenFlowInstance(Integer flowID, Integer flowInstanceID, HttpServletRequest req, User user, URIParser uriParser) {
+
+	}
 
 	protected void closeSubmittedFlowInstanceManager(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
 
 		instanceManager.close(queryHandler);
-	}	
-	
-	protected SigningCallback getSigningCallback(MutableFlowInstanceManager instanceManager, EventType eventType, String actionID, SiteProfile siteProfile) {
-
-		return new BaseFlowModuleSigningCallback(this, actionID, eventType, siteProfile);
 	}
 
-	protected  void redirectToSignError(HttpServletRequest req, HttpServletResponse res, URIParser uriParser, MutableFlowInstanceManager instanceManager, boolean previouslySaved) throws IOException {
+	protected SigningCallback getSigningCallback(MutableFlowInstanceManager instanceManager, EventType eventType, String actionID, SiteProfile siteProfile, boolean addSubmitEvent) {
+
+		return new BaseFlowModuleSigningCallback(this, actionID, eventType, siteProfile, addSubmitEvent);
+	}
+
+	protected void redirectToSignError(HttpServletRequest req, HttpServletResponse res, URIParser uriParser, MutableFlowInstanceManager instanceManager, boolean previouslySaved) throws IOException {
 
 		if (!previouslySaved) {
 
@@ -767,7 +867,19 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		} else {
 
 			res.sendRedirect(uriParser.getRequestURL() + "?preview=1&signprovidererror=1");
-		}		
+		}
+	}
+
+	protected void redirectToPaymentError(HttpServletRequest req, HttpServletResponse res, URIParser uriParser, MutableFlowInstanceManager instanceManager, boolean previouslySaved) throws IOException {
+
+		if (!previouslySaved) {
+
+			res.sendRedirect(uriParser.getRequestURL() + "/" + instanceManager.getFlowInstanceID() + "?preview=1&paymentprovidererror=1");
+
+		} else {
+
+			res.sendRedirect(uriParser.getRequestURL() + "?preview=1&paymentprovidererror=1");
+		}
 	}
 
 	protected SigningProvider getSigningProvider() {
@@ -775,31 +887,41 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		return null;
 	}
 
+	protected PaymentProvider getPaymentProvider() {
+
+		return null;
+	}
+
+	protected MultiSigningProvider getMultiSigningProvider() {
+
+		return null;
+	}
+
 	protected abstract void redirectToSubmitMethod(MutableFlowInstanceManager instanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException;
-	
+
 	protected abstract void onFlowInstanceClosedRedirect(FlowInstanceManager instanceManager, HttpServletRequest req, HttpServletResponse res) throws IOException;
 
 	protected SiteProfile getCurrentSiteProfile(HttpServletRequest req, User user, URIParser uriParser) {
 
-		if(this.profileHandler != null){
+		if (this.profileHandler != null) {
 
 			return profileHandler.getCurrentProfile(user, req, uriParser);
 		}
 
 		return null;
 	}
-	
-	protected void processQueryRequest(FlowInstanceManager instanceManager, int queryID, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws QueryInstanceNotFoundInFlowInstanceManagerException, QueryRequestsNotSupported, QueryRequestException	{
+
+	protected void processQueryRequest(FlowInstanceManager instanceManager, int queryID, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser) throws QueryInstanceNotFoundInFlowInstanceManagerException, QueryRequestsNotSupported, QueryRequestException {
 
 		ImmutableQueryInstance queryInstance;
 
 		QueryRequestProcessor queryRequestProcessor;
 
-		synchronized(instanceManager){
+		synchronized (instanceManager) {
 
 			queryInstance = instanceManager.getQueryInstance(queryID);
 
-			if(queryInstance == null){
+			if (queryInstance == null) {
 
 				//TODO change hierarchy for this exception
 				throw new QueryInstanceNotFoundInFlowInstanceManagerException(queryID, instanceManager.getFlowInstance());
@@ -810,10 +932,10 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			} catch (Exception e) {
 
-				throw new QueryRequestException(queryInstance.getQueryInstanceDescriptor(),e);
+				throw new QueryRequestException(queryInstance.getQueryInstanceDescriptor(), e);
 			}
 
-			if(queryRequestProcessor == null){
+			if (queryRequestProcessor == null) {
 
 				throw new QueryRequestsNotSupported(queryInstance.getQueryInstanceDescriptor());
 			}
@@ -824,11 +946,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		} catch (Exception e) {
 
-			throw new QueryRequestException(queryInstance.getQueryInstanceDescriptor(),e);
+			throw new QueryRequestException(queryInstance.getQueryInstanceDescriptor(), e);
 
-		}finally{
+		} finally {
 
-			if(queryRequestProcessor != null){
+			if (queryRequestProcessor != null) {
 
 				try {
 					queryRequestProcessor.close();
@@ -847,11 +969,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		String baseURL = req.getContextPath() + this.getFullAlias() + "/mquery/" + instanceManager.getFlowID();
 
-		if(instanceManager.isPreviouslySaved()){
+		if (instanceManager.isPreviouslySaved()) {
 
 			baseURL += "/" + instanceManager.getFlowInstanceID() + "/q/";
 
-		}else{
+		} else {
 
 			baseURL += "/q/";
 		}
@@ -867,11 +989,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	protected FlowInstanceEvent save(MutableFlowInstanceManager instanceManager, User user, HttpServletRequest req, String actionID, EventType eventType) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException, FlowDefaultStatusNotFound {
 
 		HttpSession session = null;
-		
-		if(req != null) {
+
+		if (req != null) {
 			session = req.getSession(false);
 		}
-		
+
 		boolean wasPreviouslySaved = instanceManager.isPreviouslySaved();
 
 		log.info("User " + user + " saving flow instance " + instanceManager.getFlowInstance());
@@ -879,19 +1001,19 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		setFlowStatus(instanceManager, actionID);
 
 		if (!wasPreviouslySaved) {
-			
+
 			SiteProfile siteProfile = getCurrentSiteProfile(req, user, null);
-			
-			if(siteProfile != null) {
-				
+
+			if (siteProfile != null) {
+
 				FlowInstance flowInstance = (FlowInstance) instanceManager.getFlowInstance();
-				
+
 				flowInstance.setProfileID(siteProfile.getProfileID());
-				
+
 			}
-			
+
 		}
-		
+
 		instanceManager.saveInstance(this, user);
 
 		CRUDAction crudAction;
@@ -921,7 +1043,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 	protected void setFlowStatus(MutableFlowInstanceManager instanceManager, String actionID) throws FlowDefaultStatusNotFound {
 
-		if(actionID != null) {
+		if (actionID != null) {
 
 			instanceManager.setFlowState((Status) instanceManager.getFlowInstance().getFlow().getDefaultState(actionID));
 
@@ -935,11 +1057,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 	protected void rebindFlowInstance(HttpSession session, MutableFlowInstanceManager instanceManager) {
 
-		if(session == null){
-			
+		if (session == null) {
+
 			return;
 		}
-		
+
 		FlowInstanceManagerRegistery registery = FlowInstanceManagerRegistery.getInstance();
 
 		try {
@@ -985,11 +1107,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		} else if (req.getParameter("save-preview") != null) {
 
 			return FlowAction.SAVE_AND_PREVIEW;
-		
+
 		} else if (req.getParameter("save-close") != null) {
 
 			return FlowAction.SAVE_AND_CLOSE;
-			
+
 		} else if (req.getParameter("close-reopen") != null) {
 
 			return FlowAction.CLOSE_AND_REOPEN;
@@ -1014,7 +1136,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		flowInstanceManagerFormElement.appendChild(instanceManager.getFlowInstance().toXML(doc));
 		flowInstanceManagerFormElement.appendChild(managerResponse.toXML(doc));
 
-		if(lastFlowAction == null && req.getParameter("saved") != null) {
+		if (lastFlowAction == null && req.getParameter("saved") != null) {
 			lastFlowAction = FlowAction.SAVE;
 		}
 
@@ -1031,13 +1153,13 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		callback.appendFormData(doc, flowInstanceManagerFormElement, instanceManager, user);
 
-		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb(), this.getFlowBreadcrumb(instanceManager.getFlowInstance()));
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, instanceManager.getFlowInstance().getFlow().getName(), this.getDefaultBreadcrumb(), this.getFlowBreadcrumb(instanceManager.getFlowInstance()));
 
 		appendLinksAndScripts(moduleResponse, managerResponse);
 
 		return moduleResponse;
 	}
-	
+
 	protected ForegroundModuleResponse showPreview(HttpServletRequest req, User user, URIParser uriParser, MutableFlowInstanceManager instanceManager, FlowProcessCallback callback, FlowAction lastFlowAction, String baseUpdateURL, ValidationError validationError) throws UnableToGetQueryInstanceShowHTMLException, FlowInstanceManagerClosedException {
 
 		log.info("User " + user + " requested preview of flow instance " + instanceManager.getFlowInstance());
@@ -1061,12 +1183,12 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		if (validationError != null) {
 
 			flowInstanceManagerPreviewElement.appendChild(validationError.toXML(doc));
-		}		
-		
+		}
+
 		callback.appendFormData(doc, flowInstanceManagerPreviewElement, instanceManager, user);
 
 		// TODO breadcrumbs
-		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc);
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, instanceManager.getFlowInstance().getFlow().getName());
 
 		appendLinksAndScripts(moduleResponse, managerResponses);
 
@@ -1085,75 +1207,93 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		signFormElement.appendChild(viewFragment.toXML(doc));
 
 		//TODO fix add breadcrumbs
-		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, instanceManager.getFlowInstance().getFlow().getName(), this.getDefaultBreadcrumb());
 
 		ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
 
 		return moduleResponse;
-	}		
-	
+	}
+
+	protected ForegroundModuleResponse showInlinePaymentForm(MutableFlowInstanceManager instanceManager, HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, ViewFragment viewFragment) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceFormHTMLException {
+
+		log.info("User " + user + " requested payment form flow instance " + instanceManager.getFlowInstance());
+
+		Document doc = createDocument(req, uriParser, user);
+		Element paymentFormElement = doc.createElement("InlinePaymentForm");
+		doc.getDocumentElement().appendChild(paymentFormElement);
+
+		paymentFormElement.appendChild(instanceManager.getFlowInstance().toXML(doc));
+		paymentFormElement.appendChild(viewFragment.toXML(doc));
+
+		//TODO fix add breadcrumbs
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, instanceManager.getFlowInstance().getFlow().getName(), this.getDefaultBreadcrumb());
+
+		ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+
+		return moduleResponse;
+	}
+
 	protected ForegroundModuleResponse showImmutableFlowInstance(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceAccessController accessController, FlowProcessCallback callback, ShowMode showMode) throws UnableToGetQueryInstanceShowHTMLException, FlowInstanceManagerClosedException, AccessDeniedException, SQLException, ModuleConfigurationException {
 
 		Integer flowInstanceID = null;
 		ImmutableFlowInstanceManager instanceManager;
 
-		try{
-			if(uriParser.size() == 3 &&  (flowInstanceID = uriParser.getInt(2)) != null){
+		try {
+			if (uriParser.size() == 3 && (flowInstanceID = uriParser.getInt(2)) != null) {
 
 				//Get saved instance from DB or session
 				instanceManager = getImmutableFlowInstanceManager(flowInstanceID, accessController, user, true, req);
 
-				if(instanceManager == null){
+				if (instanceManager == null) {
 
 					log.info("User " + user + " requested non-existing flow instance with ID " + flowInstanceID + ", listing flows");
-					return callback.list(req, res, user, uriParser, FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR);
+					return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR));
 				}
 
-			}else{
+			} else {
 
 				log.info("User " + user + " requested invalid URL, listing flows");
-				return callback.list(req, res, user, uriParser, INVALID_LINK_VALIDATION_ERROR);
+				return callback.list(req, res, user, uriParser, Collections.singletonList(INVALID_LINK_VALIDATION_ERROR));
 			}
 
-
-		}catch(FlowDisabledException e){
+		} catch (FlowDisabledException e) {
 
 			log.info("User " + user + " requested flow " + e.getFlow() + " which is not enabled.");
-			return callback.list(req, res, user, uriParser, FLOW_DISABLED_VALIDATION_ERROR);
+			return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_DISABLED_VALIDATION_ERROR));
 
-		}catch (FlowEngineException e) {
+		} catch (FlowEngineException e) {
 
 			log.info("Error generating preview of flowInstanceID " + flowInstanceID + " for user " + user, e);
-			return callback.list(req, res, user, uriParser, FLOW_INSTANCE_PREVIEW_VALIDATION_ERROR);
+			return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_PREVIEW_VALIDATION_ERROR));
 		}
 
 		String elementName;
-		
-		if(showMode == ShowMode.SUBMIT){
-			
-			elementName = "FlowInstanceManagerSubmitted";
-			
-		}else{
-			
-			elementName = "ImmutableFlowInstanceManagerPreview";
-		}		
-		
-		Breadcrumb breadcrumb;
-		
-		if(showMode == ShowMode.SUBMIT){
-			
-			breadcrumb = this.getFlowInstanceSubmitBreadcrumb(instanceManager.getFlowInstance(), req, uriParser);
-			
-		}else{
-			
-			breadcrumb = this.getFlowInstancePreviewBreadcrumb(instanceManager.getFlowInstance(), req, uriParser);
-		}		
-		
-		return showFlowInstance(req, res, user, uriParser, instanceManager, accessController, elementName, breadcrumb);
-	}	
 
-	protected ForegroundModuleResponse showFlowInstance(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceManager instanceManager, FlowInstanceAccessController accessController, String elementName, Breadcrumb breadcrumb) throws UnableToGetQueryInstanceShowHTMLException, FlowInstanceManagerClosedException, AccessDeniedException, SQLException, ModuleConfigurationException {
-		
+		if (showMode == ShowMode.SUBMIT) {
+
+			elementName = "FlowInstanceManagerSubmitted";
+
+		} else {
+
+			elementName = "ImmutableFlowInstanceManagerPreview";
+		}
+
+		Breadcrumb breadcrumb;
+
+		if (showMode == ShowMode.SUBMIT) {
+
+			breadcrumb = this.getFlowInstanceSubmitBreadcrumb(instanceManager.getFlowInstance(), req, uriParser);
+
+		} else {
+
+			breadcrumb = this.getFlowInstancePreviewBreadcrumb(instanceManager.getFlowInstance(), req, uriParser);
+		}
+
+		return showFlowInstance(req, res, user, uriParser, instanceManager, accessController, elementName, breadcrumb, showMode);
+	}
+
+	protected ForegroundModuleResponse showFlowInstance(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceManager instanceManager, FlowInstanceAccessController accessController, String elementName, Breadcrumb breadcrumb, ShowMode showMode) throws UnableToGetQueryInstanceShowHTMLException, FlowInstanceManagerClosedException, AccessDeniedException, SQLException, ModuleConfigurationException {
+
 		log.info("User " + user + " requested preview of flow instance " + instanceManager.getFlowInstance());
 
 		String baseUpdateURL = getBaseUpdateURL(req, uriParser, user, instanceManager.getFlowInstance(), accessController);
@@ -1168,31 +1308,62 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		XMLUtils.append(doc, flowInstanceManagerElement, "ManagerResponses", managerResponses);
 
-		if(instanceManager.getFlowInstance().getEvents() != null){
-			
-			for(ImmutableFlowInstanceEvent event : new ReverseListIterator<ImmutableFlowInstanceEvent>(instanceManager.getFlowInstance().getEvents())){
-				
-				if(event.getEventType() == EventType.SUBMITTED){
-					
-					XMLUtils.appendNewCDATAElement(doc, flowInstanceManagerElement, "PDFLink", getEventPDFLink(instanceManager, event, req, user));
-					
-					break;
+		if (instanceManager.getFlowInstance().getEvents() != null) {
+
+			for (ImmutableFlowInstanceEvent event : new ReverseListIterator<ImmutableFlowInstanceEvent>(instanceManager.getFlowInstance().getEvents())) {
+
+				if (event.getEventType() == EventType.SUBMITTED || event.getEventType() == EventType.SIGNED) {
+
+					String pdfLink = getEventPDFLink(instanceManager, event, req, user);
+
+					if (pdfLink != null) {
+
+						XMLUtils.appendNewCDATAElement(doc, flowInstanceManagerElement, "PDFLink", pdfLink);
+
+						break;
+
+					}
 				}
 			}
 		}
+
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, instanceManager.getFlowInstance().getFlow().getName(), this.getDefaultBreadcrumb());
 		
-		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
-				
-		if(breadcrumb != null){
-			
+		if (instanceManager.getFlowInstance().getFlow().showsSubmitSurvey() && showMode == ShowMode.SUBMIT) {
+
+			FlowSubmitSurveyProvider instance = systemInterface.getInstanceHandler().getInstance(FlowSubmitSurveyProvider.class);
+
+			if (instance != null) {
+
+				try {
+
+					ViewFragment viewFragment = instance.getSurveyFormFragment(req, user, (FlowInstanceManager) instanceManager);
+
+					if (viewFragment != null) {
+						
+						ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+						
+						XMLUtils.appendNewElement(doc, flowInstanceManagerElement, "SubmitSurveyHTML", viewFragment.getHTML());
+					}
+
+				} catch (TransformerException e) {
+
+					log.error("Unable to get view fragment for flow submit survey", e);
+				}
+			}
+
+		}
+
+		if (breadcrumb != null) {
+
 			moduleResponse.addBreadcrumbLast(breadcrumb);
 		}
-		
+
 		appendLinksAndScripts(moduleResponse, managerResponses);
 
-		return moduleResponse;		
+		return moduleResponse;
 	}
-	
+
 	protected Breadcrumb getFlowInstancePreviewBreadcrumb(ImmutableFlowInstance flowInstance, HttpServletRequest req, URIParser uriParser) {
 
 		return null;
@@ -1319,11 +1490,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 	}
 
 	protected void sendSubmitEvent(FlowInstanceManager instanceManager, FlowInstanceEvent event, String actionID, SiteProfile siteProfile) {
-		
+
 		eventHandler.sendEvent(FlowInstanceManager.class, new SubmitEvent(instanceManager, event, moduleDescriptor, actionID, siteProfile), EventTarget.ALL);
 	}
 
-	protected FlowInstanceEvent addFlowInstanceEvent(ImmutableFlowInstance flowInstance, EventType eventType, String details, User user) throws SQLException {
+	public FlowInstanceEvent addFlowInstanceEvent(ImmutableFlowInstance flowInstance, EventType eventType, String details, User user) throws SQLException {
 
 		FlowInstanceEvent flowInstanceEvent = new FlowInstanceEvent();
 		flowInstanceEvent.setFlowInstance((FlowInstance) flowInstance);
@@ -1359,9 +1530,9 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		return daoFactory.getFlowDAO().get(query);
 	}
 
-	protected FlowInstance getFlowInstance(int flowInstanceID) throws SQLException {
+	public FlowInstance getFlowInstance(int flowInstanceID) throws SQLException {
 
-		HighLevelQuery<FlowInstance> query = new HighLevelQuery<FlowInstance>(FlowInstance.EVENTS_RELATION, FlowInstanceEvent.ATTRIBUTES_RELATION, FlowInstance.FLOW_RELATION, FlowInstance.FLOW_STATE_RELATION, Flow.FLOW_TYPE_RELATION, Flow.FLOW_FAMILY_RELATION, FlowType.ALLOWED_GROUPS_RELATION, FlowType.ALLOWED_USERS_RELATION, Flow.STEPS_RELATION, Flow.FLOW_FAMILY_RELATION, FlowFamily.MANAGER_GROUPS_RELATION, FlowFamily.MANAGER_USERS_RELATION, Step.QUERY_DESCRIPTORS_RELATION, QueryDescriptor.EVALUATOR_DESCRIPTORS_RELATION, Flow.DEFAULT_FLOW_STATE_MAPPINGS_RELATION, DefaultStatusMapping.FLOW_STATE_RELATION, QueryDescriptor.QUERY_INSTANCE_DESCRIPTORS_RELATION);
+		HighLevelQuery<FlowInstance> query = new HighLevelQuery<FlowInstance>(FLOW_INSTANCE_RELATIONS);
 
 		query.addParameter(flowInstanceIDParamFactory.getParameter(flowInstanceID));
 
@@ -1374,7 +1545,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		HighLevelQuery<FlowInstance> query = new HighLevelQuery<FlowInstance>(relations);
 
-		if(excludedFields != null) {
+		if (excludedFields != null) {
 			query.addExcludedFields(excludedFields);
 		}
 
@@ -1415,7 +1586,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		Integer flowID = null;
 
-		if(uriParser.size() < 5 || (flowID = NumberUtils.toInt(uriParser.get(2))) == null){
+		if (uriParser.size() < 5 || (flowID = NumberUtils.toInt(uriParser.get(2))) == null) {
 
 			throw new URINotFoundException(uriParser);
 		}
@@ -1424,14 +1595,14 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		MutableFlowInstanceManager instanceManager = null;
 
 		try {
-			if(uriParser.get(3).equals("q") && NumberUtils.isInt(uriParser.get(4))){
+			if (uriParser.get(3).equals("q") && NumberUtils.isInt(uriParser.get(4))) {
 
 				queryID = NumberUtils.toInt(uriParser.get(4));
 
 				//Get instance from session
 				instanceManager = getUnsavedMutableFlowInstanceManager(flowID, accessController, req.getSession(true), user, uriParser, req, false, checkEnabled, checkPublishDate);
 
-			}else if(uriParser.size() > 5 && NumberUtils.isInt(uriParser.get(3)) && uriParser.get(4).equals("q") && NumberUtils.isInt(uriParser.get(5))){
+			} else if (uriParser.size() > 5 && NumberUtils.isInt(uriParser.get(3)) && uriParser.get(4).equals("q") && NumberUtils.isInt(uriParser.get(5))) {
 
 				Integer flowInstanceID = NumberUtils.toInt(uriParser.get(3));
 				queryID = NumberUtils.toInt(uriParser.get(5));
@@ -1441,7 +1612,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			}
 
-			if(instanceManager == null || queryID == null){
+			if (instanceManager == null || queryID == null) {
 
 				throw new URINotFoundException(uriParser);
 			}
@@ -1456,11 +1627,11 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			throw new URINotFoundException(uriParser);
 
-		}  catch (FlowInstanceNoLongerAvailableException e) {
+		} catch (FlowInstanceNoLongerAvailableException e) {
 
 			throw new URINotFoundException(uriParser);
 
-		}  catch (QueryRequestsNotSupported e) {
+		} catch (QueryRequestsNotSupported e) {
 
 			throw new URINotFoundException(uriParser);
 
@@ -1479,7 +1650,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		Integer flowInstanceID = null;
 		Integer queryID = null;
 
-		if(uriParser.size() < 6 || (flowInstanceID = NumberUtils.toInt(uriParser.get(3))) == null || !uriParser.get(4).equals("q") || (queryID = NumberUtils.toInt(uriParser.get(5))) == null){
+		if (uriParser.size() < 6 || (flowInstanceID = NumberUtils.toInt(uriParser.get(3))) == null || !uriParser.get(4).equals("q") || (queryID = NumberUtils.toInt(uriParser.get(5))) == null) {
 
 			throw new URINotFoundException(uriParser);
 		}
@@ -1489,7 +1660,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		try {
 			instanceManager = this.getImmutableFlowInstanceManager(flowInstanceID, accessController, user, checkEnabled, req);
 
-			if(instanceManager == null || queryID == null){
+			if (instanceManager == null || queryID == null) {
 
 				throw new URINotFoundException(uriParser);
 			}
@@ -1504,7 +1675,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 			throw new URINotFoundException(uriParser);
 
-		}  catch (QueryRequestsNotSupported e) {
+		} catch (QueryRequestsNotSupported e) {
 
 			throw new URINotFoundException(uriParser);
 
@@ -1574,6 +1745,180 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		throw new URINotFoundException(uriParser);
 	}
 
+	public ForegroundModuleResponse showMultiSignMessage(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceAccessController accessController, FlowProcessCallback callback) throws FlowInstanceManagerClosedException, UnableToGetQueryInstanceShowHTMLException, AccessDeniedException, ModuleConfigurationException, SQLException, URINotFoundException {
+
+		Integer flowInstanceID = null;
+		ImmutableFlowInstanceManager instanceManager;
+
+		try {
+
+			if (uriParser.size() == 3 && (flowInstanceID = uriParser.getInt(2)) != null) {
+
+				//Get saved instance from DB or session
+				instanceManager = getImmutableFlowInstanceManager(flowInstanceID, accessController, user, true, req);
+
+				if (instanceManager == null) {
+
+					log.info("User " + user + " requested non-existing flow instance with ID " + flowInstanceID + ", listing flows");
+					return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR));
+				}
+
+			} else {
+
+				log.info("User " + user + " requested invalid URL, listing flows");
+				return callback.list(req, res, user, uriParser, Collections.singletonList(INVALID_LINK_VALIDATION_ERROR));
+			}
+
+		} catch (FlowDisabledException e) {
+
+			log.info("User " + user + " requested flow " + e.getFlow() + " which is not enabled.");
+			return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_DISABLED_VALIDATION_ERROR));
+
+		} catch (FlowEngineException e) {
+
+			log.info("Error generating preview of flowInstanceID " + flowInstanceID + " for user " + user, e);
+			return callback.list(req, res, user, uriParser, Collections.singletonList(UNABLE_TO_LOAD_FLOW_INSTANCE_VALIDATION_ERROR));
+		}
+
+		if (instanceManager.getFlowState().getContentType() != ContentType.WAITING_FOR_MULTISIGN) {
+
+			//TODO show correct view
+			throw new URINotFoundException(uriParser);
+		}
+
+		MultiSigningProvider multiSigningProvider = getMultiSigningProvider();
+
+		if (multiSigningProvider == null) {
+
+			return callback.list(req, res, user, uriParser, Collections.singletonList(MULTI_SIGNING_PROVIDER_NOT_FOUND_VALIDATION_ERROR));
+		}
+
+		ViewFragment viewFragment;
+
+		try {
+			viewFragment = multiSigningProvider.getSigningStatus(req, user, uriParser, instanceManager);
+		} catch (Exception e) {
+			viewFragment = null;
+			log.error("Error getting view fragment from multi signing provider " + multiSigningProvider, e);
+		}
+
+		if (viewFragment == null) {
+
+			log.warn("No viewfragement returned from multi signing provider " + multiSigningProvider);
+		}
+
+		log.info("User " + user + " requested multi signing status for flow instance " + instanceManager.getFlowInstance());
+
+		Document doc = createDocument(req, uriParser, user);
+		Element multiSigningStatusElement = doc.createElement("MultiSigningStatusForm");
+		doc.getDocumentElement().appendChild(multiSigningStatusElement);
+
+		multiSigningStatusElement.appendChild(instanceManager.getFlowInstance().toXML(doc));
+
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+
+		if (viewFragment != null) {
+
+			multiSigningStatusElement.appendChild(viewFragment.toXML(doc));
+			ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+		}
+
+		//TODO fix add breadcrumbs
+
+		return moduleResponse;
+
+	}
+
+	public ForegroundModuleResponse showPaymentForm(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceAccessController accessController, FlowProcessCallback callback) throws ModuleConfigurationException, SQLException, AccessDeniedException, URINotFoundException {
+
+		Integer flowInstanceID = null;
+		ImmutableFlowInstanceManager instanceManager;
+
+		try {
+
+			if (uriParser.size() == 3 && (flowInstanceID = uriParser.getInt(2)) != null) {
+
+				//Get saved instance from DB or session
+				instanceManager = getImmutableFlowInstanceManager(flowInstanceID, accessController, user, true, req);
+
+				if (instanceManager == null) {
+
+					log.info("User " + user + " requested non-existing flow instance with ID " + flowInstanceID + ", listing flows");
+					return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_INSTANCE_NOT_FOUND_VALIDATION_ERROR));
+				}
+
+			} else {
+
+				log.info("User " + user + " requested invalid URL, listing flows");
+				return callback.list(req, res, user, uriParser, Collections.singletonList(INVALID_LINK_VALIDATION_ERROR));
+			}
+
+		} catch (FlowDisabledException e) {
+
+			log.info("User " + user + " requested flow " + e.getFlow() + " which is not enabled.");
+			return callback.list(req, res, user, uriParser, Collections.singletonList(FLOW_DISABLED_VALIDATION_ERROR));
+
+		} catch (FlowEngineException e) {
+
+			log.info("Error generating preview of flowInstanceID " + flowInstanceID + " for user " + user, e);
+			return callback.list(req, res, user, uriParser, Collections.singletonList(UNABLE_TO_LOAD_FLOW_INSTANCE_VALIDATION_ERROR));
+		}
+
+		if (instanceManager.getFlowState().getContentType() != ContentType.WAITING_FOR_PAYMENT) {
+
+			//TODO show correct view
+			throw new URINotFoundException(uriParser);
+		}
+
+		PaymentProvider paymentProvider = getPaymentProvider();
+
+		if (paymentProvider == null) {
+
+			return callback.list(req, res, user, uriParser, Collections.singletonList(PAYMENT_PROVIDER_NOT_FOUND_VALIDATION_ERROR));
+		}
+
+		ViewFragment viewFragment;
+
+		try {
+
+			viewFragment = paymentProvider.pay(req, res, user, instanceManager, new BaseFlowModuleStandalonePaymentCallback(this, callback.getSubmitActionID()));
+
+		} catch (Exception e) {
+
+			viewFragment = null;
+			log.error("Error getting view fragment from payment provider " + paymentProvider, e);
+
+		}
+
+		if (res.isCommitted()) {
+
+			return null;
+
+		} else if (viewFragment == null) {
+
+			log.warn("No view fragment returned from payment provider " + paymentProvider);
+		}
+
+		log.info("User " + user + " requested payment form for flow instance " + instanceManager.getFlowInstance());
+
+		Document doc = createDocument(req, uriParser, user);
+		Element paymentFormElement = doc.createElement("StandalonePaymentForm");
+		doc.getDocumentElement().appendChild(paymentFormElement);
+
+		paymentFormElement.appendChild(instanceManager.getFlowInstance().toXML(doc));
+
+		//TODO fix add breadcrumbs
+		SimpleForegroundModuleResponse moduleResponse = new SimpleForegroundModuleResponse(doc, this.getDefaultBreadcrumb());
+
+		if (viewFragment != null) {
+
+			paymentFormElement.appendChild(viewFragment.toXML(doc));
+			ViewFragmentUtils.appendLinksAndScripts(moduleResponse, viewFragment);
+		}
+
+		return moduleResponse;
+	}
+
 	protected Flow getBareFlow(Integer flowID) throws SQLException {
 
 		HighLevelQuery<Flow> query = new HighLevelQuery<Flow>();
@@ -1583,6 +1928,7 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		return daoFactory.getFlowDAO().get(query);
 	}
 
+	@Override
 	public EvaluationHandler getEvaluationHandler() {
 
 		return evaluationHandler;
@@ -1613,14 +1959,14 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 		Integer flowInstanceID;
 		Integer eventID;
 
-		if(uriParser.size() != 4 || (flowInstanceID = uriParser.getInt(2)) == null || (eventID = uriParser.getInt(3)) == null || pdfProvider == null){
+		if (uriParser.size() != 4 || (flowInstanceID = uriParser.getInt(2)) == null || (eventID = uriParser.getInt(3)) == null || pdfProvider == null) {
 
 			throw new URINotFoundException(uriParser);
 		}
 
 		FlowInstance flowInstance = getFlowInstance(flowInstanceID);
 
-		if(flowInstance == null){
+		if (flowInstance == null) {
 
 			throw new URINotFoundException(uriParser);
 		}
@@ -1629,13 +1975,43 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 		File pdfFile = pdfProvider.getPDF(flowInstanceID, eventID);
 
-		if(pdfFile == null){
+		if (pdfFile == null) {
 
 			throw new URINotFoundException(uriParser);
 		}
 
 		log.info("Sending PDF for flow instance " + flowInstance + ", event " + eventID + " to user " + user);
 		HTTPUtils.sendFile(pdfFile, flowInstance.getFlow().getName() + " - " + flowInstance.getFlowInstanceID() + ".pdf", req, res, ContentDisposition.ATTACHMENT);
+	}
+
+	public void sendEventXML(HttpServletRequest req, HttpServletResponse res, User user, URIParser uriParser, FlowInstanceAccessController accessController, XMLProvider xmlProvider) throws URINotFoundException, SQLException, IOException, AccessDeniedException {
+
+		Integer flowInstanceID;
+		Integer eventID;
+
+		if (uriParser.size() != 4 || (flowInstanceID = uriParser.getInt(2)) == null || (eventID = uriParser.getInt(3)) == null || xmlProvider == null) {
+
+			throw new URINotFoundException(uriParser);
+		}
+
+		FlowInstance flowInstance = getFlowInstance(flowInstanceID);
+
+		if (flowInstance == null) {
+
+			throw new URINotFoundException(uriParser);
+		}
+
+		accessController.checkFlowInstanceAccess(flowInstance, user);
+
+		File pdfFile = xmlProvider.getXML(flowInstanceID, eventID);
+
+		if (pdfFile == null) {
+
+			throw new URINotFoundException(uriParser);
+		}
+
+		log.info("Sending export XML for flow instance " + flowInstance + ", event " + eventID + " to user " + user);
+		HTTPUtils.sendFile(pdfFile, flowInstance.getFlow().getName() + " - " + flowInstance.getFlowInstanceID() + ".xml", req, res, ContentDisposition.ATTACHMENT);
 	}
 
 	public FlowInstanceEvent createSigningEvent(MutableFlowInstanceManager instanceManager, User user, EventType eventType, String actionID) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, SQLException {
@@ -1645,20 +2021,143 @@ public abstract class BaseFlowModule extends AnnotatedForegroundModule implement
 
 	public void signingComplete(MutableFlowInstanceManager instanceManager, FlowInstanceEvent event, HttpServletRequest req, SiteProfile siteProfile, String actionID) {
 
-		sendSubmitEvent(instanceManager, event, actionID, siteProfile);
-		
+		if (!requiresMultiSigning(instanceManager) && !requiresPayment(instanceManager)) {
+
+			sendSubmitEvent(instanceManager, event, actionID, siteProfile);
+
+		}
+
+		//TODO Unused?
 		systemInterface.getEventHandler().sendEvent(FlowInstanceManager.class, new SigningEvent(instanceManager, event, moduleDescriptor, siteProfile, actionID), EventTarget.ALL);
-		
+
 		systemInterface.getEventHandler().sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, (FlowInstance) instanceManager.getFlowInstance()), EventTarget.ALL);
-		
+
 		removeMutableFlowInstanceManagerFromSession(instanceManager, req.getSession());
 	}
 
-	public void abortSigning(MutableFlowInstanceManager instanceManager) {}
+	public void standalonePaymentComplete(ImmutableFlowInstanceManager instanceManager, HttpServletRequest req, User user, String actionID) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, FlowDefaultStatusNotFound, SQLException {
+
+		FlowInstance flowInstance = (FlowInstance) instanceManager.getFlowInstance();
+
+		addFlowInstanceEvent(flowInstance, EventType.PAYED, null, user);
+
+		Status nextStatus = flowInstance.getFlow().getDefaultState(actionID);
+
+		if (nextStatus == null) {
+
+			throw new FlowDefaultStatusNotFound(actionID, instanceManager.getFlowInstance().getFlow());
+		}
+
+		flowInstance.setStatus(nextStatus);
+		flowInstance.setLastStatusChange(TimeUtils.getCurrentTimestamp());
+		this.daoFactory.getFlowInstanceDAO().update(flowInstance);
+
+		FlowInstanceEvent event = addFlowInstanceEvent(instanceManager.getFlowInstance(), EventType.SUBMITTED, null, user);
+
+		sendSubmitEvent(instanceManager, event, actionID, null);
+
+		systemInterface.getEventHandler().sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, (FlowInstance) instanceManager.getFlowInstance()), EventTarget.ALL);
+
+	}
+
+	public void inlinePaymentComplete(MutableFlowInstanceManager instanceManager, HttpServletRequest req, User user, String actionID) throws FlowInstanceManagerClosedException, UnableToSaveQueryInstanceException, FlowDefaultStatusNotFound, SQLException {
+
+		save(instanceManager, user, req, actionID, EventType.PAYED);
+
+		FlowInstanceEvent event = addFlowInstanceEvent(instanceManager.getFlowInstance(), EventType.SUBMITTED, null, user);
+
+		sendSubmitEvent(instanceManager, event, actionID, null);
+
+		systemInterface.getEventHandler().sendEvent(FlowInstance.class, new CRUDEvent<FlowInstance>(CRUDAction.UPDATE, (FlowInstance) instanceManager.getFlowInstance()), EventTarget.ALL);
+
+	}
+
+	public void abortSigning(MutableFlowInstanceManager instanceManager) {
+
+	}
 
 	public abstract String getSignFailURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req);
 
-	public abstract String getSignSuccessURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req);
+	public String getSignSuccessURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req) {
+
+		if (requiresMultiSigning(instanceManager)) {
+
+			return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/multisign/" + instanceManager.getFlowInstanceID();
+
+		} else if (requiresPayment(instanceManager)) {
+
+			return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/pay/" + instanceManager.getFlowInstanceID();
+		}
+
+		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/submitted/" + instanceManager.getFlowInstanceID();
+	}
 
 	public abstract String getSigningURL(MutableFlowInstanceManager instanceManager, HttpServletRequest req);
+
+	public String getPaymentSuccessURL(FlowInstanceManager instanceManager, HttpServletRequest req) {
+
+		return RequestUtils.getFullContextPathURL(req) + this.getFullAlias() + "/submitted/" + instanceManager.getFlowInstanceID();
+	}
+
+	public boolean requiresMultiSigning(FlowInstanceManager instanceManager) {
+
+		//TODO check content type
+
+		List<MultiSigningQuery> multiSigningQueries = instanceManager.getQueries(MultiSigningQuery.class);
+
+		if (multiSigningQueries != null) {
+
+			for (MultiSigningQuery multiSigningQuery : multiSigningQueries) {
+
+				if (multiSigningQuery.getQueryInstanceDescriptor().getQueryState() != QueryState.HIDDEN && !CollectionUtils.isEmpty(multiSigningQuery.getSigningParties())) {
+
+					return true;
+				}
+
+			}
+
+		}
+
+		return false;
+	}
+
+	public boolean requiresPayment(FlowInstanceManager instanceManager) {
+
+		//TODO check content type
+
+		List<PaymentQuery> paymentQueries = instanceManager.getQueries(PaymentQuery.class);
+
+		if (paymentQueries != null) {
+
+			int amount = 0;
+
+			for (PaymentQuery paymentQuery : paymentQueries) {
+
+				if (paymentQuery.getQueryInstanceDescriptor().getQueryState() != QueryState.HIDDEN && !CollectionUtils.isEmpty(paymentQuery.getInvoiceLines())) {
+
+					for (InvoiceLine invoiceLine : paymentQuery.getInvoiceLines()) {
+
+						amount += invoiceLine.getQuanitity() * invoiceLine.getUnitPrice();
+
+					}
+
+				}
+
+			}
+
+			if (amount > 0) {
+
+				return true;
+			}
+
+		}
+
+		return false;
+	}
+	
+	public boolean submitSurveyEnabled() {
+		
+		return systemInterface.getInstanceHandler().getInstance(FlowSubmitSurveyProvider.class) != null;
+		
+	}
 }

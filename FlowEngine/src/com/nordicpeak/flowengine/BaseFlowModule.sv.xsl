@@ -7,11 +7,13 @@
 	
 	<xsl:variable name="i18n.FlowInstanceID">Ärendenummer</xsl:variable>
 	
-	<xsl:variable name="i18n.previousStep">Föregående</xsl:variable>
-	<xsl:variable name="i18n.nextStep">Nästa</xsl:variable>
+	<xsl:variable name="i18n.previousStep">Föregående steg</xsl:variable>
+	<xsl:variable name="i18n.nextStep">Nästa steg</xsl:variable>
 	
 	<xsl:variable name="i18n.SaveBoxDescription">Vill du fortsätta med din ansökan vid ett senare tillfälle så kan du spara den när som helst.</xsl:variable>
+	<xsl:variable name="i18n.ShortSaveBoxDescription">Du kan spara din ansökan för att fortsätta senare.</xsl:variable>
 	<xsl:variable name="i18n.Save">Spara ansökan</xsl:variable>
+	<xsl:variable name="i18n.save">Spara</xsl:variable>
 
 	<xsl:variable name="i18n.PreviewNotEnabledForCurrentFlow">Det är inte möjligt att förhandsgranska den här e-tjänsten.</xsl:variable>
 	<xsl:variable name="i18n.PreviewOnlyAvailableWhenFlowFullyPopulated">För att kunna förhansdsgranska måste du först fylla i samtliga steg.</xsl:variable>
@@ -22,9 +24,11 @@
 	<xsl:variable name="i18n.preview">Förhandsgranska</xsl:variable>
 	<xsl:variable name="i18n.submit">Skicka in</xsl:variable>
 	<xsl:variable name="i18n.signAndSubmit">Signera och skicka in</xsl:variable>
+	<xsl:variable name="i18n.payHeader">Betala</xsl:variable>
+	<xsl:variable name="i18n.payAndSubmit">Godkänn betalning</xsl:variable>
+	
 	<xsl:variable name="i18n.flowInstance">ansökan</xsl:variable>
 	<xsl:variable name="i18n.noAnsweredQueriesInThisStep">Det finns inga besvarade frågor i detta steg.</xsl:variable>
-	
 	
 	<xsl:variable name="i18n.FlowInstanceSaved">Din ansökan sparades! Om du vill fortsätta senare hittar du din ansökan under Mina ärenden.</xsl:variable>
 	<xsl:variable name="i18n.FlowInstanceManagerSubmitted">Din ansökan är nu inskickad.</xsl:variable>
@@ -52,7 +56,25 @@
 	
 	<xsl:variable name="i18n.SigningProviderNotFoundError">Signeringstjänsten kunde inte hittas.</xsl:variable>
 	
+	<xsl:variable name="i18n.Previous">Föregående</xsl:variable>
+	<xsl:variable name="i18n.Next">Nästa</xsl:variable>
+	
+	<xsl:variable name="i18n.saveBtnSuffix">ansökan</xsl:variable>
+	
 	<xsl:variable name="i18n.FlowInstanceConcurrentlyModified">Denna ansökan har ändrats sedan du öppnade den och kan därför inte sparas. Klicka här för att öppna den senaste versionen, observera att dina eventuella ändringar kommer att gå förlorade.</xsl:variable>
 	<xsl:variable name="i18n.FlowInstanceConcurrentlyModifiedConfirm">Är du säker på att du vill öppna senaste versionen och därmed förlora eventuella ändringar?</xsl:variable>
 	<xsl:variable name="i18n.FlowInstanceConcurrentlyModifiedLinkTitle">Öppna den senaste versionen</xsl:variable>
+	<xsl:variable name="i18n.MultiSignStatus">Flerparts-signering</xsl:variable>
+	
+	<xsl:variable name="i18n.SubmittedEvent">Inskickad</xsl:variable>
+	<xsl:variable name="i18n.SignedEvent">Signerad</xsl:variable>
+	<xsl:variable name="i18n.PayedEvent">Betald</xsl:variable>
+	<xsl:variable name="i18n.UpdatedEvent">Ändrad</xsl:variable>
+	<xsl:variable name="i18n.StatusUpdatedEvent">Status ändrad</xsl:variable>
+	<xsl:variable name="i18n.ManagersUpdatedEvent">Handläggare ändrad</xsl:variable>
+	<xsl:variable name="i18n.CustomerNotificationEvent">Notifiering skickad</xsl:variable>
+	<xsl:variable name="i18n.CustomerMessageSentEvent">Meddelande skickat till handläggare</xsl:variable>
+	<xsl:variable name="i18n.ManagerMessageSentEvent">Meddelande skickat till kund</xsl:variable>
+	<xsl:variable name="i18n.OtherEvent">Annan händelse</xsl:variable>
+	
 </xsl:stylesheet>

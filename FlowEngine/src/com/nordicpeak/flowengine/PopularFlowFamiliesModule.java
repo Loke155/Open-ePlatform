@@ -218,4 +218,10 @@ public class PopularFlowFamiliesModule extends AnnotatedBackgroundModule impleme
 
 		cacheFlows();
 	}
+
+	@Override
+	public int getPriority() {
+
+		return 0;
+	}
 }
