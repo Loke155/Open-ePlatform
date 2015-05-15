@@ -42,6 +42,9 @@ A map based query that supports property unit designation lookups.
 ###PUDQuery
 A simple query for looking up property unit designations
 
+###Release
+A folder containing binary releases of Open ePlatform
+
 ###SearchLMRMI
 A simple RMI proxy for looking up property unit designation etc. via Open eMap.
 

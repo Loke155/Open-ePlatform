@@ -1,0 +1,26 @@
+Installation instructions for Open ePlatform 1.2.1
+
+Requirements (not covered in these install instructions)
+	- Java 1.6+
+	- MySQL 5.0+ or MariaDB 5.1+
+	- MySQL or MariaDB JDBC driver
+	- A servlet container implementing servlet specification 2.4+ (2.5 required for some optional features)
+	
+Installation steps
+	- Create a new database
+	- Import the provided database dump into the new database
+	- Extract the provided WAR file
+	- Rename the config.xml.template file to config.xml
+	- Populate config.xml with the database details and user account for the newly created database
+	- Rename log4j.xml.template to log4j.xml
+	- Edit log4j.xml and set up the configuration per your needs (fore more information see: https://logging.apache.org/log4j/1.2/manual.html)
+	- Deploy the application in your servlet container
+	- Monitor the log for any errors (logged as [ERROR] in the default log format)
+	
+Login and web based configuration
+	- Make sure that you can access the application at the context where you deployed it
+	- Login using username admin and password openeplatform
+	- Navigate to "Systemadm." -> "Moduler och sektioner" and check the settings of each module by clicking the pen next to it
+	- Some modules are stopped and may need to be started before they can be configured
+	
+After all the steps above are completed you should have a fully working Open ePlatform 1.2.1 installation.
