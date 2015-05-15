@@ -854,7 +854,7 @@ public class FlowInstanceAdminModule extends BaseFlowBrowserModule implements Fl
 			sql = FLOW_MANAGER_SQL + ")";
 		}
 
-		ArrayListQuery<Integer> query = new ArrayListQuery<Integer>(dataSource, true, sql, IntegerPopulator.getPopulator());
+		ArrayListQuery<Integer> query = new ArrayListQuery<Integer>(dataSource, sql, IntegerPopulator.getPopulator());
 
 		query.setInt(1, user.getUserID());
 

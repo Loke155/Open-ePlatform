@@ -137,7 +137,7 @@ public class QueryDescriptorCRUD extends IntegerBasedCRUD<QueryDescriptor, FlowA
 
 	private int getCurrentMaxSortIndex(Step step) throws SQLException {
 
-		ObjectQuery<Integer> query = new ObjectQuery<Integer>(callback.getDataSource(), true, "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getQueryDescriptorDAO().getTableName() + " WHERE stepID = ?", IntegerPopulator.getPopulator());
+		ObjectQuery<Integer> query = new ObjectQuery<Integer>(callback.getDataSource(), "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getQueryDescriptorDAO().getTableName() + " WHERE stepID = ?", IntegerPopulator.getPopulator());
 
 		query.setInt(1, step.getStepID());
 

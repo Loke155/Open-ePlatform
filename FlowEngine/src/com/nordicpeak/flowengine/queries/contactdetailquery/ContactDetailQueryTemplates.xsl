@@ -121,7 +121,7 @@
 					
 				</fieldset>
 				
-				<fieldset>
+<!-- 				<fieldset>
 					
 					<div>
 						<strong class="block"><xsl:value-of select="$i18n.ChooseContactChannels" /></strong>
@@ -135,7 +135,7 @@
 						</xsl:if>
 					</div>
 					
-				</fieldset>
+				</fieldset> -->
 				
 			</article>
 			
@@ -459,7 +459,7 @@
 					
 				</fieldset>
 				
-				<xsl:if test="ContactDetailQueryInstance/isMutableUser">
+				<xsl:if test="ContactDetailQueryInstance/isMutableUser = 'true'">
 				
 					<br/>
 				

@@ -103,7 +103,7 @@ public class EvaluatorDescriptorCRUD extends IntegerBasedCRUD<EvaluatorDescripto
 
 	private int getCurrentMaxSortIndex(QueryDescriptor queryDescriptor) throws SQLException {
 
-		ObjectQuery<Integer> evaluator = new ObjectQuery<Integer>(callback.getDataSource(), true, "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getEvaluatorDescriptorDAO().getTableName() + " WHERE queryID = ?", IntegerPopulator.getPopulator());
+		ObjectQuery<Integer> evaluator = new ObjectQuery<Integer>(callback.getDataSource(), "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getEvaluatorDescriptorDAO().getTableName() + " WHERE queryID = ?", IntegerPopulator.getPopulator());
 
 		evaluator.setInt(1, queryDescriptor.getQueryID());
 

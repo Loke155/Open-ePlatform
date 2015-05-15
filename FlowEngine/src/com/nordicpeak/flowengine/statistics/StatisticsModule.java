@@ -427,7 +427,7 @@ public class StatisticsModule extends AnnotatedForegroundModule implements Runna
 
 	private IntegerEntry getPulishedFlowFamilyCount(Timestamp startDate, Timestamp endDate) throws SQLException {
 
-		ObjectQuery<IntegerEntry> query = new ObjectQuery<IntegerEntry>(dataSource, true, GLOBAL_FLOW_FAMILY_COUNT, INTEGER_ENTRY_POPULATOR);
+		ObjectQuery<IntegerEntry> query = new ObjectQuery<IntegerEntry>(dataSource, GLOBAL_FLOW_FAMILY_COUNT, INTEGER_ENTRY_POPULATOR);
 
 		query.setTimestamp(1, startDate);
 		query.setTimestamp(2, startDate);
@@ -536,7 +536,7 @@ public class StatisticsModule extends AnnotatedForegroundModule implements Runna
 
 	private List<IntegerEntry> getFlowFamilyInstanceCount(Integer flowFamilyID, Timestamp startDate, Timestamp endDate) throws SQLException {
 
-		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, true, FLOW_INSTANCE_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
+		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, FLOW_INSTANCE_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
 
 		query.setString(1, EventType.SUBMITTED.toString());
 		query.setInt(2, flowFamilyID);
@@ -919,7 +919,7 @@ public class StatisticsModule extends AnnotatedForegroundModule implements Runna
 
 	private List<IntegerEntry> getUnsubmittedInstancesPerStep(Flow flow, Timestamp startDate, Timestamp endDate) throws SQLException {
 
-		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, true, STEP_UNSUBMITTED_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
+		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, STEP_UNSUBMITTED_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
 
 		query.setInt(1, flow.getFlowID());
 		query.setString(2, ContentType.NEW.toString());
@@ -933,7 +933,7 @@ public class StatisticsModule extends AnnotatedForegroundModule implements Runna
 
 	private List<IntegerEntry> getAbortedInstancesPerStep(Flow flow, Timestamp startDate, Timestamp endDate) throws SQLException {
 
-		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, true, STEP_ABORT_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
+		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, STEP_ABORT_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
 
 		query.setInt(1, flow.getFlowID());
 		query.setTimestamp(2, startDate);
@@ -944,7 +944,7 @@ public class StatisticsModule extends AnnotatedForegroundModule implements Runna
 
 	private List<IntegerEntry> getGlobalFlowInstanceCount(Timestamp startDate, Timestamp endDate) throws SQLException {
 
-		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, true, GLOBAL_FLOW_INSTANCE_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
+		ArrayListQuery<IntegerEntry> query = new ArrayListQuery<IntegerEntry>(dataSource, GLOBAL_FLOW_INSTANCE_COUNT_QUERY, INTEGER_ENTRY_POPULATOR);
 
 		query.setString(1, EventType.SUBMITTED.toString());
 		query.setTimestamp(2, startDate);

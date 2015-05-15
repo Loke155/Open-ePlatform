@@ -718,7 +718,7 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 	private List<FlowFamily> getPopularFamilies(FlowType flowType) throws SQLException {
 
 		//Get ID of all families for this flow type with at least one published flow
-		List<Integer> familyIDs = new ArrayListQuery<Integer>(dataSource, true, "SELECT DISTINCT flowFamilyID FROM flowengine_flows WHERE flowTypeID = " + flowType.getFlowTypeID() + " AND publishDate <= CURDATE() AND (unPublishDate IS NULL OR unPublishDate > CURDATE());", IntegerPopulator.getPopulator()).executeQuery();
+		List<Integer> familyIDs = new ArrayListQuery<Integer>(dataSource, "SELECT DISTINCT flowFamilyID FROM flowengine_flows WHERE flowTypeID = " + flowType.getFlowTypeID() + " AND publishDate <= CURDATE() AND (unPublishDate IS NULL OR unPublishDate > CURDATE());", IntegerPopulator.getPopulator()).executeQuery();
 
 		if (familyIDs != null) {
 
@@ -727,12 +727,12 @@ public class FlowBrowserModule extends BaseFlowBrowserModule implements FlowProc
 			for (Integer flowFamilyID : familyIDs) {
 
 				//Get all flow IDs for this family
-				List<Integer> flowIDs = new ArrayListQuery<Integer>(dataSource, true, "SELECT flowID FROM flowengine_flows WHERE flowFamilyID = " + flowFamilyID, IntegerPopulator.getPopulator()).executeQuery();
+				List<Integer> flowIDs = new ArrayListQuery<Integer>(dataSource, "SELECT flowID FROM flowengine_flows WHERE flowFamilyID = " + flowFamilyID, IntegerPopulator.getPopulator()).executeQuery();
 
 				if (flowIDs != null) {
 
 					//Get all flow instances added within the configured popularInterval of hours
-					ObjectQuery<Integer> instanceCountQuery = new ObjectQuery<Integer>(dataSource, true, "SELECT COUNT(flowInstanceID) FROM flowengine_flow_instances WHERE flowID IN (" + StringUtils.toCommaSeparatedString(flowIDs) + ") AND added >= ?", IntegerPopulator.getPopulator());
+					ObjectQuery<Integer> instanceCountQuery = new ObjectQuery<Integer>(dataSource, "SELECT COUNT(flowInstanceID) FROM flowengine_flow_instances WHERE flowID IN (" + StringUtils.toCommaSeparatedString(flowIDs) + ") AND added >= ?", IntegerPopulator.getPopulator());
 
 					instanceCountQuery.setTimestamp(1, new Timestamp(System.currentTimeMillis() - (MillisecondTimeUnits.HOUR * popularInterval)));
 

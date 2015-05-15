@@ -15,7 +15,7 @@
 	<xsl:variable name="i18n.SelectionMode.ANY">När användaren väljer något av nedanstående markerade alternativ.</xsl:variable>
 	<xsl:variable name="i18n.SelectionMode.ALL">När användaren väljer samtliga av nedanstående markerade alternativ.</xsl:variable>
 	<xsl:variable name="i18n.alternatives.title">Alternativ</xsl:variable>
-	<xsl:variable name="i18n.alternatives.description">Välja vilka alternativ som denna regel skall kopplas mot.</xsl:variable>
+	<xsl:variable name="i18n.alternatives.description">Välj vilka alternativ som denna regel skall kopplas mot.</xsl:variable>
 	<xsl:variable name="i18n.QueryHasNoAlternatives">Frågan som denna regel är kopplad till har inga alternativ.</xsl:variable>
 	<xsl:variable name="i18n.TargetQueryState.title">Frågeläge</xsl:variable>
 	<xsl:variable name="i18n.TargetQueryState.description">Välj vilket frågeläge nedanstående markerade frågor ska få när denna regel aktiveras.</xsl:variable>

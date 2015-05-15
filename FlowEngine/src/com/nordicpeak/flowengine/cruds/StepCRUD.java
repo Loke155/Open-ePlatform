@@ -71,7 +71,7 @@ public class StepCRUD extends IntegerBasedCRUD<Step, FlowAdminModule> {
 	
 	private Integer getCurrentMaxSortIndex(Flow flow) throws SQLException {
 
-		ObjectQuery<Integer> query = new ObjectQuery<Integer>(callback.getDataSource(), true, "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getStepDAO().getTableName() + " WHERE flowID = ?", IntegerPopulator.getPopulator());
+		ObjectQuery<Integer> query = new ObjectQuery<Integer>(callback.getDataSource(), "SELECT MAX(sortIndex) FROM " + callback.getDAOFactory().getStepDAO().getTableName() + " WHERE flowID = ?", IntegerPopulator.getPopulator());
 		
 		query.setInt(1, flow.getFlowID());
 		

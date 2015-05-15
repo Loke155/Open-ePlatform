@@ -133,7 +133,7 @@ public class FeedbackFlowSubmitSurvey extends AnnotatedForegroundModule implemen
 
 			if (flowInstanceID != null && (flowInstance = flowAdminModule.getFlowInstance(flowInstanceID)) != null && getFeedbackSurvey(flowInstanceID) == null) {
 
-				if (flowInstance.getPoster() == null || !flowInstance.getPoster().equals(user)) {
+				if (flowInstance.getFlow().requiresAuthentication() && (flowInstance.getPoster() == null || !flowInstance.getPoster().equals(user))) {
 
 					throw new AccessDeniedException(this.sectionInterface.getSectionDescriptor());
 				}

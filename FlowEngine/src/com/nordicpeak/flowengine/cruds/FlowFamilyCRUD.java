@@ -207,7 +207,7 @@ public class FlowFamilyCRUD extends AdvancedIntegerBasedCRUD<FlowFamily, FlowAdm
 
 	private List<Integer> getCurrentFlowInstanceManagerUserIDs(FlowFamily flowFamily) throws SQLException {
 
-		ArrayListQuery<Integer> query = new ArrayListQuery<Integer>(callback.getDataSource(), true, ACTIVE_FLOWINSTANCE_MANAGERS_SQL, IntegerPopulator.getPopulator());
+		ArrayListQuery<Integer> query = new ArrayListQuery<Integer>(callback.getDataSource(), ACTIVE_FLOWINSTANCE_MANAGERS_SQL, IntegerPopulator.getPopulator());
 
 		query.setInt(1, flowFamily.getFlowFamilyID());
 

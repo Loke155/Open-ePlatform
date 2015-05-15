@@ -139,7 +139,7 @@ public class TextFieldCRUD extends IntegerBasedCRUD<TextField, TextFieldQueryPro
 
 	private int getCurrentMaxSortIndex(TextFieldQuery textFieldQuery) throws SQLException {
 
-		ObjectQuery<Integer> query = new ObjectQuery<Integer>(textFieldDAO.getAnnotatedDAO().getDataSource(), true, "SELECT MAX(sortIndex) FROM " + textFieldDAO.getAnnotatedDAO().getTableName() + " WHERE queryID = ?", IntegerPopulator.getPopulator());
+		ObjectQuery<Integer> query = new ObjectQuery<Integer>(textFieldDAO.getAnnotatedDAO().getDataSource(), "SELECT MAX(sortIndex) FROM " + textFieldDAO.getAnnotatedDAO().getTableName() + " WHERE queryID = ?", IntegerPopulator.getPopulator());
 
 		query.setInt(1, textFieldQuery.getQueryID());
 
