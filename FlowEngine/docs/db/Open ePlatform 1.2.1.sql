@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.1.73, for Win64 (unknown)
 --
--- Host: localhost    Database: e-tjanster.sundsvall.se
+-- Host: localhost    Database: demo.oeplatform.org
 -- ------------------------------------------------------
 -- Server version	5.1.73-community
 
@@ -57,7 +57,7 @@ CREATE TABLE `checkbox_query_alternatives` (
   PRIMARY KEY (`alternativeID`),
   KEY `FK_checkbox_query_alternatives_1` (`queryID`),
   CONSTRAINT `FK_checkbox_query_alternatives_1` FOREIGN KEY (`queryID`) REFERENCES `checkbox_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=799 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1318 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -134,10 +134,8 @@ CREATE TABLE `contact_detail_queries` (
   `queryID` int(10) unsigned NOT NULL,
   `description` text,
   `helpText` text,
-  `allowLetter` tinyint(1) unsigned NOT NULL,
   `allowSMS` tinyint(1) unsigned NOT NULL,
-  `allowEmail` tinyint(1) unsigned NOT NULL,
-  `allowPhone` tinyint(1) unsigned NOT NULL,
+  `requireAddress` tinyint(1) NOT NULL,
   PRIMARY KEY (`queryID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -169,15 +167,12 @@ CREATE TABLE `contact_detail_query_instances` (
   `phone` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `mobilePhone` varchar(255) DEFAULT NULL,
-  `contactByLetter` tinyint(1) unsigned DEFAULT NULL,
   `contactBySMS` tinyint(1) unsigned DEFAULT NULL,
-  `contactByEmail` tinyint(1) unsigned DEFAULT NULL,
-  `contactByPhone` tinyint(1) unsigned DEFAULT NULL,
   `persistUserProfile` tinyint(1) unsigned DEFAULT NULL,
   PRIMARY KEY (`queryInstanceID`),
   KEY `FK_contact_detail_query_instances_1` (`queryID`),
   CONSTRAINT `FK_contact_detail_query_instances_1` FOREIGN KEY (`queryID`) REFERENCES `contact_detail_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4566 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19445 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -230,7 +225,7 @@ CREATE TABLE `drop_down_query_alternatives` (
   PRIMARY KEY (`alternativeID`),
   KEY `FK_drop_down_query_alternatives_1` (`queryID`),
   CONSTRAINT `FK_drop_down_query_alternatives_1` FOREIGN KEY (`queryID`) REFERENCES `drop_down_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -272,164 +267,32 @@ LOCK TABLES `drop_down_query_instances` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `email_attachments`
+-- Table structure for table `feedback_flow_submit_surveys`
 --
 
-DROP TABLE IF EXISTS `email_attachments`;
+DROP TABLE IF EXISTS `feedback_flow_submit_surveys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `email_attachments` (
-  `attachmenID` char(36) NOT NULL,
-  `emailID` char(36) NOT NULL,
-  `data` longblob NOT NULL,
-  PRIMARY KEY (`attachmenID`),
-  KEY `FK_attachments_1` (`emailID`),
-  CONSTRAINT `FK_attachments_1` FOREIGN KEY (`emailID`) REFERENCES `emails` (`emailID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE `feedback_flow_submit_surveys` (
+  `feedbackSurveyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `flowID` int(10) unsigned NOT NULL,
+  `flowInstanceID` int(10) unsigned NOT NULL,
+  `added` datetime NOT NULL,
+  `answer` varchar(45) NOT NULL,
+  `comment` mediumtext,
+  PRIMARY KEY (`feedbackSurveyID`),
+  UNIQUE KEY `Index_3` (`flowID`,`flowInstanceID`),
+  CONSTRAINT `FK_feedback_flow_submit_surveys_1` FOREIGN KEY (`flowID`) REFERENCES `flowengine_flows` (`flowID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `email_attachments`
+-- Dumping data for table `feedback_flow_submit_surveys`
 --
 
-LOCK TABLES `email_attachments` WRITE;
-/*!40000 ALTER TABLE `email_attachments` DISABLE KEYS */;
-/*!40000 ALTER TABLE `email_attachments` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `email_bcc_recipients`
---
-
-DROP TABLE IF EXISTS `email_bcc_recipients`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `email_bcc_recipients` (
-  `tableID` char(36) NOT NULL,
-  `emailID` char(36) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  PRIMARY KEY (`tableID`) USING BTREE,
-  KEY `FK_bccrecipient_1` (`emailID`),
-  CONSTRAINT `FK_bccrecipient_1` FOREIGN KEY (`emailID`) REFERENCES `emails` (`emailID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `email_bcc_recipients`
---
-
-LOCK TABLES `email_bcc_recipients` WRITE;
-/*!40000 ALTER TABLE `email_bcc_recipients` DISABLE KEYS */;
-/*!40000 ALTER TABLE `email_bcc_recipients` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `email_cc_recipients`
---
-
-DROP TABLE IF EXISTS `email_cc_recipients`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `email_cc_recipients` (
-  `tableID` char(36) NOT NULL,
-  `emailID` char(36) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  PRIMARY KEY (`tableID`) USING BTREE,
-  KEY `FK_ccrecipient_1` (`emailID`),
-  CONSTRAINT `FK_ccrecipient_1` FOREIGN KEY (`emailID`) REFERENCES `emails` (`emailID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `email_cc_recipients`
---
-
-LOCK TABLES `email_cc_recipients` WRITE;
-/*!40000 ALTER TABLE `email_cc_recipients` DISABLE KEYS */;
-/*!40000 ALTER TABLE `email_cc_recipients` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `email_recipients`
---
-
-DROP TABLE IF EXISTS `email_recipients`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `email_recipients` (
-  `tableID` char(36) NOT NULL,
-  `emailID` char(36) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  PRIMARY KEY (`tableID`) USING BTREE,
-  KEY `FK_recipient_1` (`emailID`),
-  CONSTRAINT `FK_recipient_1` FOREIGN KEY (`emailID`) REFERENCES `emails` (`emailID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `email_recipients`
---
-
-LOCK TABLES `email_recipients` WRITE;
-/*!40000 ALTER TABLE `email_recipients` DISABLE KEYS */;
-/*!40000 ALTER TABLE `email_recipients` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `email_replyto`
---
-
-DROP TABLE IF EXISTS `email_replyto`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `email_replyto` (
-  `tableID` char(36) NOT NULL,
-  `emailID` char(36) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  PRIMARY KEY (`tableID`) USING BTREE,
-  KEY `FK_replyto_1` (`emailID`),
-  CONSTRAINT `FK_replyto_1` FOREIGN KEY (`emailID`) REFERENCES `emails` (`emailID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `email_replyto`
---
-
-LOCK TABLES `email_replyto` WRITE;
-/*!40000 ALTER TABLE `email_replyto` DISABLE KEYS */;
-/*!40000 ALTER TABLE `email_replyto` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `emails`
---
-
-DROP TABLE IF EXISTS `emails`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `emails` (
-  `emailID` char(36) NOT NULL,
-  `resendCount` int(10) unsigned DEFAULT NULL,
-  `senderName` varchar(255) DEFAULT NULL,
-  `senderAddress` varchar(255) NOT NULL,
-  `charset` varchar(255) DEFAULT NULL,
-  `messageContentType` varchar(255) DEFAULT NULL,
-  `subject` mediumtext,
-  `message` longtext,
-  `lastSent` timestamp NULL DEFAULT NULL,
-  `owner` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`emailID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `emails`
---
-
-LOCK TABLES `emails` WRITE;
-/*!40000 ALTER TABLE `emails` DISABLE KEYS */;
-/*!40000 ALTER TABLE `emails` ENABLE KEYS */;
+LOCK TABLES `feedback_flow_submit_surveys` WRITE;
+/*!40000 ALTER TABLE `feedback_flow_submit_surveys` DISABLE KEYS */;
+/*!40000 ALTER TABLE `feedback_flow_submit_surveys` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -447,7 +310,7 @@ CREATE TABLE `file_upload_files` (
   PRIMARY KEY (`fileID`),
   KEY `FK_file_upload_files_1` (`queryInstanceID`),
   CONSTRAINT `FK_file_upload_files_1` FOREIGN KEY (`queryInstanceID`) REFERENCES `file_upload_query_instances` (`queryInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=294 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1378 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -535,6 +398,76 @@ LOCK TABLES `file_upload_query_instances` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `flow_familiy_notification_settings`
+--
+
+DROP TABLE IF EXISTS `flow_familiy_notification_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `flow_familiy_notification_settings` (
+  `flowFamilyID` int(10) unsigned NOT NULL,
+  `sendStatusChangedUserSMS` tinyint(1) NOT NULL,
+  `sendExternalMessageReceivedUserSMS` tinyint(1) NOT NULL,
+  `sendFlowInstanceSubmittedUserSMS` tinyint(1) NOT NULL,
+  `sendFlowInstanceArchivedUserSMS` tinyint(1) NOT NULL,
+  `sendStatusChangedUserEmail` tinyint(1) NOT NULL,
+  `sendExternalMessageReceivedUserEmail` tinyint(1) NOT NULL,
+  `sendFlowInstanceSubmittedUserEmail` tinyint(1) NOT NULL,
+  `sendFlowInstanceArchivedUserEmail` tinyint(1) NOT NULL,
+  `flowInstanceSubmittedUserEmailSubject` varchar(255) DEFAULT NULL,
+  `flowInstanceSubmittedUserEmailMessage` text,
+  `flowInstanceArchivedUserEmailSubject` varchar(255) DEFAULT NULL,
+  `flowInstanceArchivedUserEmailMessage` text,
+  `sendExternalMessageReceivedManagerEmail` tinyint(1) NOT NULL,
+  `sendFlowInstanceAssignedManagerEmail` tinyint(1) NOT NULL,
+  `sendStatusChangedManagerEmail` tinyint(1) NOT NULL,
+  `sendFlowInstanceSubmittedManagerEmail` tinyint(1) NOT NULL,
+  `sendFlowInstanceSubmittedGlobalEmail` tinyint(1) NOT NULL,
+  `flowInstanceSubmittedGlobalEmailAddress` varchar(255) DEFAULT NULL,
+  `flowInstanceSubmittedGlobalEmailAttachPDF` tinyint(1) NOT NULL,
+  PRIMARY KEY (`flowFamilyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flow_familiy_notification_settings`
+--
+
+LOCK TABLES `flow_familiy_notification_settings` WRITE;
+/*!40000 ALTER TABLE `flow_familiy_notification_settings` DISABLE KEYS */;
+INSERT INTO `flow_familiy_notification_settings` VALUES (9,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(11,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(12,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(15,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(16,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(17,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(18,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(19,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(27,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'miljonamnden@sundsvall.se',1),(31,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1),(33,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'stadsbyggnadsnamnden@sundsvall.se',1),(35,0,0,0,0,0,0,0,0,NULL,'<p>Hej $contact.firstname,</p>\r\n<p>H&auml;r kommer en bekr&auml;ftelse p&aring; att &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har skickats in.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',NULL,'<p>Hej $contact.firstname,</p>\r\n<p>Handl&auml;ggningen av &auml;rendet $flow.name (&auml;rende nr. $flowInstance.flowInstanceID) har slutf&ouml;rts.</p>\r\n<p>Klicka p&aring; l&auml;nken nedan f&ouml;r att visa &auml;rendet:</p>\r\n<p><a src=\"$flowInstance.url\">$flowInstance.url</a></p>',0,0,0,0,1,'bygglov@sundsvall.se',1);
+/*!40000 ALTER TABLE `flow_familiy_notification_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flowengine_aborted_flow_instances`
+--
+
+DROP TABLE IF EXISTS `flowengine_aborted_flow_instances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `flowengine_aborted_flow_instances` (
+  `abortID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `flowFamilyID` int(10) unsigned NOT NULL,
+  `flowID` int(10) unsigned NOT NULL,
+  `stepID` int(10) unsigned NOT NULL,
+  `added` datetime NOT NULL,
+  PRIMARY KEY (`abortID`),
+  KEY `FK_flowengine_aborted_flow_instances_1` (`flowID`),
+  CONSTRAINT `FK_flowengine_aborted_flow_instances_1` FOREIGN KEY (`flowID`) REFERENCES `flowengine_flows` (`flowID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=166 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowengine_aborted_flow_instances`
+--
+
+LOCK TABLES `flowengine_aborted_flow_instances` WRITE;
+/*!40000 ALTER TABLE `flowengine_aborted_flow_instances` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowengine_aborted_flow_instances` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `flowengine_default_flow_statuses`
 --
 
@@ -606,7 +539,7 @@ CREATE TABLE `flowengine_evaluator_descriptors` (
   PRIMARY KEY (`evaluatorID`),
   KEY `FK_flowengine_evaluator_descriptors_1` (`queryID`),
   CONSTRAINT `FK_flowengine_evaluator_descriptors_1` FOREIGN KEY (`queryID`) REFERENCES `flowengine_query_descriptors` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=833 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1617 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -715,7 +648,7 @@ CREATE TABLE `flowengine_external_messages` (
   PRIMARY KEY (`messageID`),
   KEY `FK_flowengine_external_messages_1` (`flowInstanceID`),
   CONSTRAINT `FK_flowengine_external_messages_1` FOREIGN KEY (`flowInstanceID`) REFERENCES `flowengine_flow_instances` (`flowInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -812,8 +745,14 @@ DROP TABLE IF EXISTS `flowengine_flow_families`;
 CREATE TABLE `flowengine_flow_families` (
   `flowFamilyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `versionCount` int(10) unsigned NOT NULL,
+  `contactName` varchar(255) DEFAULT NULL,
+  `contactEmail` varchar(255) DEFAULT NULL,
+  `contactPhone` varchar(255) DEFAULT NULL,
+  `ownerName` varchar(255) DEFAULT NULL,
+  `ownerEmail` varchar(255) DEFAULT NULL,
+  `statisticsMode` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`flowFamilyID`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -898,6 +837,31 @@ LOCK TABLES `flowengine_flow_family_manager_users` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `flowengine_flow_instance_attributes`
+--
+
+DROP TABLE IF EXISTS `flowengine_flow_instance_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `flowengine_flow_instance_attributes` (
+  `flowInstanceID` int(10) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY (`flowInstanceID`,`name`),
+  CONSTRAINT `FK_flowengine_flow_instance_attributes_1` FOREIGN KEY (`flowInstanceID`) REFERENCES `flowengine_flow_instances` (`flowInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowengine_flow_instance_attributes`
+--
+
+LOCK TABLES `flowengine_flow_instance_attributes` WRITE;
+/*!40000 ALTER TABLE `flowengine_flow_instance_attributes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowengine_flow_instance_attributes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `flowengine_flow_instance_bookmarks`
 --
 
@@ -966,7 +930,7 @@ CREATE TABLE `flowengine_flow_instance_events` (
   PRIMARY KEY (`eventID`),
   KEY `FK_flowengine_flow_instance_events_1` (`flowInstanceID`),
   CONSTRAINT `FK_flowengine_flow_instance_events_1` FOREIGN KEY (`flowInstanceID`) REFERENCES `flowengine_flow_instances` (`flowInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=199 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=622 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1028,7 +992,7 @@ CREATE TABLE `flowengine_flow_instances` (
   CONSTRAINT `FK_flowengine_flow_instances_1` FOREIGN KEY (`flowID`) REFERENCES `flowengine_flows` (`flowID`),
   CONSTRAINT `FK_flowengine_flow_instances_2` FOREIGN KEY (`stepID`) REFERENCES `flowengine_steps` (`stepID`),
   CONSTRAINT `FK_flowengine_flow_instances_3` FOREIGN KEY (`statusID`) REFERENCES `flowengine_flow_statuses` (`statusID`)
-) ENGINE=InnoDB AUTO_INCREMENT=233 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=788 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1061,7 +1025,7 @@ CREATE TABLE `flowengine_flow_statuses` (
   PRIMARY KEY (`statusID`) USING BTREE,
   KEY `FK_flowengine_flow_states_1` (`flowID`),
   CONSTRAINT `FK_flowengine_flow_statuses_1` FOREIGN KEY (`flowID`) REFERENCES `flowengine_flows` (`flowID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=333 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1118,7 +1082,7 @@ CREATE TABLE `flowengine_flow_type_admin_groups` (
 
 LOCK TABLES `flowengine_flow_type_admin_groups` WRITE;
 /*!40000 ALTER TABLE `flowengine_flow_type_admin_groups` DISABLE KEYS */;
-INSERT INTO `flowengine_flow_type_admin_groups` VALUES (4,6);
+INSERT INTO `flowengine_flow_type_admin_groups` VALUES (4,10);
 /*!40000 ALTER TABLE `flowengine_flow_type_admin_groups` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1167,6 +1131,7 @@ CREATE TABLE `flowengine_flow_type_allowed_queries` (
 
 LOCK TABLES `flowengine_flow_type_allowed_queries` WRITE;
 /*!40000 ALTER TABLE `flowengine_flow_type_allowed_queries` DISABLE KEYS */;
+INSERT INTO `flowengine_flow_type_allowed_queries` VALUES (4,'com.nordicpeak.flowengine.queries.checkboxquery.CheckboxQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.contactdetailquery.ContactDetailQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.dropdownquery.DropDownQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.fileuploadquery.FileUploadQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.organizationdetailquery.OrganizationDetailQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.radiobuttonquery.RadioButtonQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.textareaquery.TextAreaQueryProviderModule'),(4,'com.nordicpeak.flowengine.queries.textfieldquery.TextFieldQueryProviderModule');
 /*!40000 ALTER TABLE `flowengine_flow_type_allowed_queries` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1190,7 +1155,7 @@ CREATE TABLE `flowengine_flow_types` (
 
 LOCK TABLES `flowengine_flow_types` WRITE;
 /*!40000 ALTER TABLE `flowengine_flow_types` DISABLE KEYS */;
-INSERT INTO `flowengine_flow_types` VALUES (4,'Demo');
+INSERT INTO `flowengine_flow_types` VALUES (4,'Test');
 /*!40000 ALTER TABLE `flowengine_flow_types` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1220,6 +1185,7 @@ CREATE TABLE `flowengine_flows` (
   `requireAuthentication` tinyint(1) NOT NULL,
   `requireSigning` tinyint(1) unsigned NOT NULL,
   `externalLink` varchar(255) DEFAULT NULL,
+  `showSubmitSurvey` tinyint(1) unsigned NOT NULL,
   PRIMARY KEY (`flowID`),
   KEY `FK_flowengine_flows_1` (`flowTypeID`),
   KEY `FK_flowengine_flows_2` (`categoryID`) USING BTREE,
@@ -1227,7 +1193,7 @@ CREATE TABLE `flowengine_flows` (
   CONSTRAINT `FK_flowengine_flows_1` FOREIGN KEY (`flowTypeID`) REFERENCES `flowengine_flow_types` (`flowTypeID`),
   CONSTRAINT `FK_flowengine_flows_2` FOREIGN KEY (`categoryID`) REFERENCES `flowengine_flow_categories` (`categoryID`) ON DELETE SET NULL ON UPDATE SET NULL,
   CONSTRAINT `FK_flowengine_flows_3` FOREIGN KEY (`flowFamilyID`) REFERENCES `flowengine_flow_families` (`flowFamilyID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=111 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=176 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1325,6 +1291,63 @@ LOCK TABLES `flowengine_internal_messages` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `flowengine_operating_message_flowfamilies`
+--
+
+DROP TABLE IF EXISTS `flowengine_operating_message_flowfamilies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `flowengine_operating_message_flowfamilies` (
+  `messageID` int(10) unsigned NOT NULL,
+  `flowFamilyID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`messageID`,`flowFamilyID`),
+  KEY `FK_flowengine_operating_message_flowfamilies_2` (`flowFamilyID`),
+  CONSTRAINT `FK_flowengine_operating_message_flowfamilies_1` FOREIGN KEY (`messageID`) REFERENCES `flowengine_operating_messages` (`messageID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_flowengine_operating_message_flowfamilies_2` FOREIGN KEY (`flowFamilyID`) REFERENCES `flowengine_flow_families` (`flowFamilyID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowengine_operating_message_flowfamilies`
+--
+
+LOCK TABLES `flowengine_operating_message_flowfamilies` WRITE;
+/*!40000 ALTER TABLE `flowengine_operating_message_flowfamilies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowengine_operating_message_flowfamilies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flowengine_operating_messages`
+--
+
+DROP TABLE IF EXISTS `flowengine_operating_messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `flowengine_operating_messages` (
+  `messageID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `message` varchar(255) NOT NULL,
+  `startTime` datetime NOT NULL,
+  `endTime` datetime NOT NULL,
+  `disableFlows` tinyint(1) unsigned NOT NULL,
+  `global` tinyint(1) unsigned NOT NULL,
+  `posted` datetime NOT NULL,
+  `poster` int(10) unsigned NOT NULL,
+  `updated` datetime DEFAULT NULL,
+  `editor` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`messageID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowengine_operating_messages`
+--
+
+LOCK TABLES `flowengine_operating_messages` WRITE;
+/*!40000 ALTER TABLE `flowengine_operating_messages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowengine_operating_messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `flowengine_query_descriptors`
 --
 
@@ -1339,10 +1362,11 @@ CREATE TABLE `flowengine_query_descriptors` (
   `stepID` int(10) unsigned NOT NULL,
   `queryTypeID` varchar(255) NOT NULL,
   `exported` tinyint(1) NOT NULL,
+  `xsdElementName` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`queryID`),
   KEY `FK_flowengine_query_descriptors_1` (`stepID`),
   CONSTRAINT `FK_flowengine_query_descriptors_1` FOREIGN KEY (`stepID`) REFERENCES `flowengine_steps` (`stepID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2128 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3834 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1372,7 +1396,7 @@ CREATE TABLE `flowengine_query_instance_descriptors` (
   KEY `FK_flowengine_query_instance_descriptors_2` (`queryID`),
   CONSTRAINT `FK_flowengine_query_instance_descriptors_1` FOREIGN KEY (`flowInstanceID`) REFERENCES `flowengine_flow_instances` (`flowInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_flowengine_query_instance_descriptors_2` FOREIGN KEY (`queryID`) REFERENCES `flowengine_query_descriptors` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4571 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19450 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1429,7 +1453,7 @@ CREATE TABLE `flowengine_steps` (
   PRIMARY KEY (`stepID`),
   KEY `FK_flowengine_steps_1` (`flowID`),
   CONSTRAINT `FK_flowengine_steps_1` FOREIGN KEY (`flowID`) REFERENCES `flowengine_flows` (`flowID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=430 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=716 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1456,7 +1480,7 @@ CREATE TABLE `flowengine_text_tags` (
   `type` varchar(10) NOT NULL,
   PRIMARY KEY (`textTagID`),
   UNIQUE KEY `Index_2` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1465,7 +1489,6 @@ CREATE TABLE `flowengine_text_tags` (
 
 LOCK TABLES `flowengine_text_tags` WRITE;
 /*!40000 ALTER TABLE `flowengine_text_tags` DISABLE KEYS */;
-INSERT INTO `flowengine_text_tags` VALUES (4,'Testtagg','Testtagg för att testa','En exempeltext','TEXTFIELD'),(5,'kommun','Sundsvalls kommun','<p>Demo</p>','EDITOR');
 /*!40000 ALTER TABLE `flowengine_text_tags` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1488,13 +1511,10 @@ CREATE TABLE `flowengine_user_organizations` (
   `phone` varchar(255) DEFAULT NULL,
   `mobilePhone` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
-  `contactByLetter` tinyint(1) unsigned NOT NULL,
-  `contactByEmail` tinyint(1) unsigned NOT NULL,
   `contactBySMS` tinyint(1) unsigned NOT NULL,
-  `contactByPhone` tinyint(1) unsigned NOT NULL,
   `userID` int(10) unsigned NOT NULL,
   PRIMARY KEY (`organizationID`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1504,85 +1524,6 @@ CREATE TABLE `flowengine_user_organizations` (
 LOCK TABLES `flowengine_user_organizations` WRITE;
 /*!40000 ALTER TABLE `flowengine_user_organizations` DISABLE KEYS */;
 /*!40000 ALTER TABLE `flowengine_user_organizations` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `minimal_user_attributes`
---
-
-DROP TABLE IF EXISTS `minimal_user_attributes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `minimal_user_attributes` (
-  `userID` int(10) unsigned NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `value` varchar(1024) NOT NULL,
-  PRIMARY KEY (`userID`,`name`),
-  CONSTRAINT `FK_minimal_user_attributes_1` FOREIGN KEY (`userID`) REFERENCES `minimal_users` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `minimal_user_attributes`
---
-
-LOCK TABLES `minimal_user_attributes` WRITE;
-/*!40000 ALTER TABLE `minimal_user_attributes` DISABLE KEYS */;
-/*!40000 ALTER TABLE `minimal_user_attributes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `minimal_user_groups`
---
-
-DROP TABLE IF EXISTS `minimal_user_groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `minimal_user_groups` (
-  `userID` int(10) unsigned NOT NULL,
-  `groupID` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`userID`,`groupID`),
-  CONSTRAINT `FK_minimal_user_groups_1` FOREIGN KEY (`userID`) REFERENCES `minimal_users` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `minimal_user_groups`
---
-
-LOCK TABLES `minimal_user_groups` WRITE;
-/*!40000 ALTER TABLE `minimal_user_groups` DISABLE KEYS */;
-/*!40000 ALTER TABLE `minimal_user_groups` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `minimal_users`
---
-
-DROP TABLE IF EXISTS `minimal_users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `minimal_users` (
-  `userID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `firstname` varchar(30) NOT NULL,
-  `lastname` varchar(50) NOT NULL,
-  `admin` tinyint(1) NOT NULL DEFAULT '0',
-  `enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `lastlogin` timestamp NULL DEFAULT '0000-00-00 00:00:00',
-  `language` varchar(76) DEFAULT NULL,
-  `preferedDesign` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2092 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `minimal_users`
---
-
-LOCK TABLES `minimal_users` WRITE;
-/*!40000 ALTER TABLE `minimal_users` DISABLE KEYS */;
-/*!40000 ALTER TABLE `minimal_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1598,7 +1539,7 @@ CREATE TABLE `openhierarchy_background_module_aliases` (
   `listIndex` int(10) unsigned NOT NULL,
   PRIMARY KEY (`moduleID`,`alias`),
   CONSTRAINT `FK_backgroundmodulealiases_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_background_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1607,8 +1548,33 @@ CREATE TABLE `openhierarchy_background_module_aliases` (
 
 LOCK TABLES `openhierarchy_background_module_aliases` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_background_module_aliases` DISABLE KEYS */;
-INSERT INTO `openhierarchy_background_module_aliases` VALUES (1,'*',9),(1,'exclude:administration*',0),(1,'exclude:browser/flow*',3),(1,'exclude:browser/flowoverview*',1),(1,'exclude:browser/submitted*',4),(1,'exclude:flowadmin*',5),(1,'exclude:flowinstanceadmin*',6),(1,'exclude:flowinstances*',2),(1,'exclude:myorganizations*',8),(1,'exclude:mysettings*',7),(2,'*',7),(2,'exclude:administration*',0),(2,'exclude:browser/flow*',3),(2,'exclude:browser/flowoverview*',1),(2,'exclude:flowadmin*',5),(2,'exclude:flowinstanceadmin*',6),(2,'exclude:flowinstances*',2),(2,'exclude:mysettings*',4),(3,'*',9),(3,'exclude:administration*',0),(3,'exclude:browser/flow*',3),(3,'exclude:browser/flowoverview*',1),(3,'exclude:browser/submitted*',4),(3,'exclude:flowadmin*',5),(3,'exclude:flowinstanceadmin*',6),(3,'exclude:flowinstances*',2),(3,'exclude:myorganizations*',8),(3,'exclude:mysettings*',7),(4,'*',0),(5,'exclude:flowinstances/flowinstance*',0),(5,'exclude:flowinstances/overview*',1),(5,'exclude:flowinstances/preview*',2),(5,'flowinstances*',3),(6,'mysettings*',0),(7,'exclude:flowinstances/flowinstance*',0),(7,'exclude:flowinstances/overview*',1),(7,'exclude:flowinstances/preview*',2),(7,'flowinstances*',5),(7,'myorganizations*',4),(7,'mysettings*',3),(8,'*',0),(10,'*',0);
+INSERT INTO `openhierarchy_background_module_aliases` VALUES (10,'*',0),(12,'*',10),(12,'exclude:administration*',0),(12,'exclude:flowadmin*',5),(12,'exclude:flowinstanceadmin*',6),(12,'exclude:minasidor*',2),(12,'exclude:myorganizations*',8),(12,'exclude:mysettings*',7),(12,'exclude:oversikt/flow*',3),(12,'exclude:oversikt/overview*',1),(12,'exclude:oversikt/submitted*',4),(12,'exclude:statistik*',9),(13,'*',0),(14,'*',10),(14,'exclude:administration*',0),(14,'exclude:flowadmin*',5),(14,'exclude:flowinstanceadmin*',6),(14,'exclude:minasidor*',2),(14,'exclude:myorganizations*',8),(14,'exclude:mysettings*',7),(14,'exclude:oversikt/flow*',3),(14,'exclude:oversikt/overview*',1),(14,'exclude:oversikt/submitted*',4),(14,'exclude:statistik*',9),(15,'exclude:minasidor*',3),(15,'exclude:minasidor/flowinstance*',0),(15,'exclude:minasidor/overview*',1),(15,'exclude:minasidor/preview*',2),(15,'exclude:statistik*',4),(16,'*',8),(16,'exclude:administration*',0),(16,'exclude:flowadmin*',5),(16,'exclude:flowinstanceadmin*',6),(16,'exclude:minasidor*',2),(16,'exclude:mysettings*',4),(16,'exclude:oversikt/flow*',3),(16,'exclude:oversikt/overview*',1),(16,'exclude:statistik*',7),(17,'*',0),(18,'*',0),(19,'exclude:minasidor/flowinstance*',0),(19,'exclude:minasidor/overview*',1),(19,'exclude:minasidor/preview*',2),(19,'minasidor*',5),(19,'myorganizations*',4),(19,'mysettings*',3),(20,'mysettings*',0);
 /*!40000 ALTER TABLE `openhierarchy_background_module_aliases` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openhierarchy_background_module_attributes`
+--
+
+DROP TABLE IF EXISTS `openhierarchy_background_module_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `openhierarchy_background_module_attributes` (
+  `moduleID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`moduleID`,`name`),
+  CONSTRAINT `FK_openhierarchy_background_module_attributes_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_background_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openhierarchy_background_module_attributes`
+--
+
+LOCK TABLES `openhierarchy_background_module_attributes` WRITE;
+/*!40000 ALTER TABLE `openhierarchy_background_module_attributes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openhierarchy_background_module_attributes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1651,7 +1617,7 @@ CREATE TABLE `openhierarchy_background_module_settings` (
   PRIMARY KEY (`counter`),
   KEY `FK_backgroundmodulesettings_1` (`moduleID`),
   CONSTRAINT `FK_backgroundmodulesettings_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_background_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=178 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=300 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1660,7 +1626,7 @@ CREATE TABLE `openhierarchy_background_module_settings` (
 
 LOCK TABLES `openhierarchy_background_module_settings` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_background_module_settings` DISABLE KEYS */;
-INSERT INTO `openhierarchy_background_module_settings` VALUES (67,8,'nrOfEvents','5'),(77,10,'profileSettingDescription','Sidhuvudet för den aktuella profilen'),(78,10,'profileSettingID','bgmodule-4'),(79,10,'profileSettingName','Sidhuvud'),(93,5,'mode','SHOW'),(94,4,'editFavouritesAlias','/mysettings'),(95,4,'mode','SHOW'),(96,2,'mode','SHOW'),(97,6,'mode','EDIT'),(120,7,'sectionID','5'),(161,3,'flowCount','5'),(162,3,'interval','72'),(173,1,'adminGroups','10'),(174,1,'adminGroups','6'),(175,1,'cssClass','htmloutputmodule'),(176,1,'html','<section class=\"clearboth\">\r\n	<div class>Text goes here</div>\r\n</section>\r\n'),(177,1,'htmlRequired','true');
+INSERT INTO `openhierarchy_background_module_settings` VALUES (77,10,'profileSettingDescription','Sidhuvudet för den aktuella profilen'),(78,10,'profileSettingID','bgmodule-4'),(79,10,'profileSettingName','Sidhuvud'),(271,14,'flowCount','5'),(272,14,'interval','72'),(273,15,'mode','SHOW'),(274,16,'mode','SHOW'),(275,17,'editFavouritesAlias','/mysettings'),(276,17,'mode','SHOW'),(277,18,'nrOfEvents','5'),(278,19,'sectionID','5'),(279,20,'mode','EDIT'),(295,12,'adminGroups','10'),(296,12,'adminGroups','6'),(297,12,'cssClass','htmloutputmodule'),(298,12,'html','<section class=\"clearboth\">\r\n	<div class=\"center\">test</div>\r\n	<div class=\"center\">123</div>\r\n	<div class=\"current blue\">Om</div>\r\n</section>\r\n'),(299,12,'htmlRequired','true');
 /*!40000 ALTER TABLE `openhierarchy_background_module_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1676,7 +1642,7 @@ CREATE TABLE `openhierarchy_background_module_slots` (
   `slot` varchar(255) NOT NULL,
   PRIMARY KEY (`moduleID`,`slot`),
   CONSTRAINT `FK_backgroundmoduleslots_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_background_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1685,7 +1651,7 @@ CREATE TABLE `openhierarchy_background_module_slots` (
 
 LOCK TABLES `openhierarchy_background_module_slots` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_background_module_slots` DISABLE KEYS */;
-INSERT INTO `openhierarchy_background_module_slots` VALUES (1,'right-content-container.news'),(2,'right-content-container.favourites'),(3,'right-content-container.popular'),(4,'#menu-container.favourites'),(5,'left-content-container.favourites'),(6,'right-content-container.favourites'),(7,'left-content-container.mypagesmenu'),(8,'sectionmenu-content-container.newevents'),(10,'header.logotype');
+INSERT INTO `openhierarchy_background_module_slots` VALUES (10,'header.logotype'),(12,'right-content-container.news'),(13,'top-content-container.info'),(14,'right-content-container.popular'),(15,'left-content-container.favourites'),(16,'right-content-container.favourites'),(17,'#menu-container.favourites'),(18,'sectionmenu-content-container.newevents'),(19,'top-content-container.mypagesmenu'),(20,'right-content-container.favourites');
 /*!40000 ALTER TABLE `openhierarchy_background_module_slots` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1739,7 +1705,7 @@ CREATE TABLE `openhierarchy_background_modules` (
   KEY `FK_backgroundmodules_2` (`dataSourceID`),
   CONSTRAINT `FK_backgroundmodules_1` FOREIGN KEY (`sectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_backgroundmodules_2` FOREIGN KEY (`dataSourceID`) REFERENCES `openhierarchy_data_sources` (`dataSourceID`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1748,7 +1714,7 @@ CREATE TABLE `openhierarchy_background_modules` (
 
 LOCK TABLES `openhierarchy_background_modules` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_background_modules` DISABLE KEYS */;
-INSERT INTO `openhierarchy_background_modules` VALUES (1,'se.unlogic.hierarchy.backgroundmodules.htmloutput.HTMLOutputModule','Aktuellt','HTMLOutputModule.sv.xsl','Classpath',1,1,1,1,1,NULL,'staticcontent',0),(2,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,0,1,NULL,'staticcontent',1),(3,'com.nordicpeak.flowengine.PopularFlowFamiliesModule','Populära e-tjänster','PopularFlowFamiliesModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',2),(4,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteMenuModule.sv.xsl','Classpath',0,1,1,0,1,NULL,'staticcontent',0),(5,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,0,1,NULL,'staticcontent',1),(6,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Redigera favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,0,1,NULL,'staticcontent',1),(7,'com.nordicpeak.flowengine.UserFlowInstanceMenuModule','Mina sidor (Meny)','UserFlowInstanceMenuModuleTemplates.xsl','Classpath',0,1,1,1,1,NULL,NULL,0),(8,'com.nordicpeak.flowengine.NewEventsBackgroundModule','Mina meddelanden (bakgrund)','NewEventsBackgroundModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',0),(10,'se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfileHTMLBackgroundModule','Sidhuvud','',NULL,1,1,1,1,1,NULL,'',1);
+INSERT INTO `openhierarchy_background_modules` VALUES (10,'se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfileHTMLBackgroundModule','Sidhuvud','',NULL,1,1,1,1,1,NULL,'',1),(12,'se.unlogic.hierarchy.backgroundmodules.htmloutput.HTMLOutputModule','Aktuellt','HTMLOutputModule.sv.xsl','Classpath',1,1,1,1,1,NULL,'staticcontent',0),(13,'com.nordicpeak.flowengine.OperatingMessageBackgroundModule','Driftmeddelanden (global)','OperatingMessageBackgroundModuleTemplates.xsl','Classpath',1,1,1,1,1,NULL,'',0),(14,'com.nordicpeak.flowengine.PopularFlowFamiliesModule','Mest använda','PopularFlowFamiliesModule.sv.xsl','Classpath',1,1,1,1,1,NULL,'staticcontent',2),(15,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',1),(16,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',1),(17,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Mina favoriter','UserFavouriteMenuModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',0),(18,'com.nordicpeak.flowengine.NewEventsBackgroundModule','Mina meddelanden (bakgrund)','NewEventsBackgroundModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',0),(19,'com.nordicpeak.flowengine.UserFlowInstanceMenuModule','Mina ärenden (Meny)','UserFlowInstanceMenuModuleTemplates.xsl','Classpath',0,1,1,1,1,NULL,'',0),(20,'com.nordicpeak.flowengine.UserFavouriteBackgroundModule','Redigera favoriter','UserFavouriteBackgroundModule.sv.xsl','Classpath',0,1,1,1,1,NULL,'staticcontent',1);
 /*!40000 ALTER TABLE `openhierarchy_background_modules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1804,7 +1770,7 @@ CREATE TABLE `openhierarchy_filter_module_aliases` (
   `listIndex` int(10) unsigned NOT NULL,
   PRIMARY KEY (`moduleID`,`alias`),
   CONSTRAINT `FK_filtermodulealiases_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_filter_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1815,6 +1781,31 @@ LOCK TABLES `openhierarchy_filter_module_aliases` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_filter_module_aliases` DISABLE KEYS */;
 INSERT INTO `openhierarchy_filter_module_aliases` VALUES (2,'*',0);
 /*!40000 ALTER TABLE `openhierarchy_filter_module_aliases` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openhierarchy_filter_module_attributes`
+--
+
+DROP TABLE IF EXISTS `openhierarchy_filter_module_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `openhierarchy_filter_module_attributes` (
+  `moduleID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`moduleID`,`name`),
+  CONSTRAINT `FK_openhierarchy_filter_module_attributes_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_filter_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openhierarchy_filter_module_attributes`
+--
+
+LOCK TABLES `openhierarchy_filter_module_attributes` WRITE;
+/*!40000 ALTER TABLE `openhierarchy_filter_module_attributes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openhierarchy_filter_module_attributes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1857,7 +1848,7 @@ CREATE TABLE `openhierarchy_filter_module_settings` (
   PRIMARY KEY (`counter`),
   KEY `FK_filtermodulesettings_1` (`moduleID`),
   CONSTRAINT `FK_filtermodulesettings_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_filter_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1913,7 +1904,7 @@ CREATE TABLE `openhierarchy_filter_modules` (
   PRIMARY KEY (`moduleID`),
   KEY `FK_filtermodules_1` (`dataSourceID`),
   CONSTRAINT `FK_filtermodules_1` FOREIGN KEY (`dataSourceID`) REFERENCES `openhierarchy_data_sources` (`dataSourceID`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1924,6 +1915,31 @@ LOCK TABLES `openhierarchy_filter_modules` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_filter_modules` DISABLE KEYS */;
 INSERT INTO `openhierarchy_filter_modules` VALUES (2,'se.unlogic.hierarchy.filtermodules.login.LoginTriggerModule','LoginTriggerModule',1,0,0,1,NULL,0);
 /*!40000 ALTER TABLE `openhierarchy_filter_modules` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openhierarchy_foreground_module_attributes`
+--
+
+DROP TABLE IF EXISTS `openhierarchy_foreground_module_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `openhierarchy_foreground_module_attributes` (
+  `moduleID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`moduleID`,`name`),
+  CONSTRAINT `FK_openhierarchy_foreground_module_attributes_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_foreground_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openhierarchy_foreground_module_attributes`
+--
+
+LOCK TABLES `openhierarchy_foreground_module_attributes` WRITE;
+/*!40000 ALTER TABLE `openhierarchy_foreground_module_attributes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openhierarchy_foreground_module_attributes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1948,7 +1964,7 @@ CREATE TABLE `openhierarchy_foreground_module_groups` (
 
 LOCK TABLES `openhierarchy_foreground_module_groups` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_groups` DISABLE KEYS */;
-INSERT INTO `openhierarchy_foreground_module_groups` VALUES (37,6),(39,6),(69,6),(70,6),(71,6),(95,6),(102,6),(123,6),(133,6),(150,6),(155,6),(160,6),(165,6),(123,10),(133,10),(150,10),(160,10),(165,10),(133,11);
+INSERT INTO `openhierarchy_foreground_module_groups` VALUES (37,6),(39,6),(69,6),(70,6),(71,6),(95,6),(102,6),(109,6),(123,6),(133,6),(150,6),(160,6),(165,6),(176,6),(186,6),(123,10),(150,10),(160,10),(165,10),(133,11);
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_groups` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1967,7 +1983,7 @@ CREATE TABLE `openhierarchy_foreground_module_settings` (
   PRIMARY KEY (`counter`),
   KEY `FK_modulesettings_1` (`moduleID`),
   CONSTRAINT `FK_modulesettings_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_foreground_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6260 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10388 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1976,7 +1992,7 @@ CREATE TABLE `openhierarchy_foreground_module_settings` (
 
 LOCK TABLES `openhierarchy_foreground_module_settings` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_settings` DISABLE KEYS */;
-INSERT INTO `openhierarchy_foreground_module_settings` VALUES (842,84,'menuItemType','MENUITEM'),(864,64,'menuItemType','MENUITEM'),(935,56,'menuItemType','MENUITEM'),(998,70,'menuItemType','MENUITEM'),(1002,37,'menuItemType','MENUITEM'),(1320,102,'cssPath','/css/fck.css'),(1321,102,'menuItemType','MENUITEM'),(3102,9,'menuItemType','SECTION'),(3103,9,'redirectURL','/'),(3104,112,'menuItemType','MENUITEM'),(3199,125,'menuItemType','MENUITEM'),(4089,146,'diskThreshold','100'),(4090,146,'filestore','/path/not/set'),(4091,146,'menuItemType','MENUITEM'),(4092,146,'ramThreshold','500'),(4723,155,'emailFieldMode','OPTIONAL'),(4724,155,'formStyleSheet','MinimalUserProviderForm.sv.xsl'),(4725,155,'includeDebugData','false'),(4726,155,'menuItemType','MENUITEM'),(4727,155,'passwordAlgorithm','SHA-1'),(4728,155,'passwordFieldMode','DISABLED'),(4729,155,'priority','0'),(4730,155,'supportedAttributes','citizenIdentifier'),(4731,155,'userTypeName','E-legitimation användare (kan endast logga in med e-leg)'),(4732,155,'usernameFieldMode','DISABLED'),(4798,71,'formStyleSheet','SimpleUserProviderForm.sv.xsl'),(4799,71,'includeDebugData','false'),(4800,71,'menuItemType','MENUITEM'),(4801,71,'passwordAlgorithm','SHA-1'),(4802,71,'priority','0'),(4803,71,'supportedAttributes','citizenIdentifier'),(4804,71,'userTypeName','Användare med separat fält för användarnamn och lösenord'),(4809,61,'maxFileSize','1'),(4810,61,'maxRequestSize','5'),(4811,61,'menuItemType','MENUITEM'),(4812,61,'ramThreshold','500'),(4887,132,'menuItemType','MENUITEM'),(5218,133,'highPriorityThreshold','90'),(5219,133,'maxHitCount','20'),(5220,133,'maxRequestSize','1000'),(5221,133,'maxUnfilteredHitCount','100'),(5222,133,'mediumPriorityThreshold','60'),(5223,133,'menuItemType','SECTION'),(5224,133,'ramThreshold','500'),(5615,161,'defaultLogotype','classpath://com/nordicpeak/flowengine/pdf/staticcontent/pics/logo.png'),(5616,161,'includedFonts','/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Bold.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-It.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Regular.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Semibold.ttf'),(5617,161,'menuItemType','MENUITEM'),(5618,161,'pdfDir','/path/not/set'),(5619,161,'pdfStyleSheet','FlowInstancePDF.sv.xsl'),(5620,161,'supportedActionIDs','com.nordicpeak.flowengine.FlowBrowserModule.submit'),(5621,161,'tempDir','/path/not/set'),(5622,161,'xhtmlDebug','false'),(5623,161,'xhtmlDebugFile','/path/not/set'),(5624,161,'xmlDebug','false'),(5625,161,'xmlDebugFile','/path/not/set'),(5638,113,'ckConnectorModuleAlias','/fileconnector'),(5639,113,'cssPath','/css/fck.css'),(5640,113,'includeDebugData','false'),(5641,113,'menuItemType','MENUITEM'),(5642,113,'pdfStyleSheet','CheckboxQueryPDF.sv.xsl'),(5643,113,'queryStyleSheet','CheckboxQuery.sv.xsl'),(5644,113,'useCKEditorForDescription','true'),(5652,116,'ckConnectorModuleAlias','/fileconnector'),(5653,116,'cssPath','/css/fck.css'),(5654,116,'includeDebugData','false'),(5655,116,'menuItemType','MENUITEM'),(5656,116,'pdfStyleSheet','DropDownQueryPDF.sv.xsl'),(5657,116,'queryStyleSheet','DropDownQuery.sv.xsl'),(5658,116,'useCKEditorForDescription','false'),(5659,119,'ckConnectorModuleAlias','/fileconnector'),(5660,119,'cleanupInterval','10'),(5661,119,'cssPath','/css/fck.css'),(5662,119,'fileStore','/path/not/set'),(5663,119,'includeDebugData','true'),(5664,119,'menuItemType','MENUITEM'),(5665,119,'pdfStyleSheet','FileUploadQueryPDF.sv.xsl'),(5666,119,'queryStyleSheet','FileUploadQuery.sv.xsl'),(5667,119,'tempFileStore','/path/not/set'),(5668,119,'useCKEditorForDescription','false'),(5669,149,'ckConnectorModuleAlias','/fileconnector'),(5670,149,'cssPath','/css/fck.css'),(5671,149,'includeDebugData','false'),(5672,149,'menuItemType','MENUITEM'),(5673,149,'pdfStyleSheet','OrganizationDetailQueryPDF.sv.xsl'),(5674,149,'queryStyleSheet','OrganizationDetailQuery.sv.xsl'),(5675,149,'useCKEditorForDescription','false'),(5676,131,'ckConnectorModuleAlias','/fileconnector'),(5677,131,'cssPath','/css/fck.css'),(5678,131,'includeDebugData','false'),(5679,131,'menuItemType','MENUITEM'),(5680,131,'pdfStyleSheet','ContactDetailQueryPDF.sv.xsl'),(5681,131,'queryStyleSheet','ContactDetailQuery.sv.xsl'),(5682,131,'useCKEditorForDescription','false'),(5683,115,'ckConnectorModuleAlias','/fileconnector'),(5684,115,'cssPath','/css/fck.css'),(5685,115,'includeDebugData','false'),(5686,115,'menuItemType','MENUITEM'),(5687,115,'pdfStyleSheet','RadioButtonQueryPDF.sv.xsl'),(5688,115,'queryStyleSheet','RadioButtonQuery.sv.xsl'),(5689,115,'useCKEditorForDescription','true'),(5696,117,'ckConnectorModuleAlias','/fileconnector'),(5697,117,'cssPath','/css/style.css'),(5698,117,'includeDebugData','false'),(5699,117,'menuItemType','MENUITEM'),(5700,117,'pdfStyleSheet','TextAreaQueryPDF.sv.xsl'),(5701,117,'queryStyleSheet','TextAreaQuery.sv.xsl'),(5702,117,'useCKEditorForDescription','false'),(5703,118,'ckConnectorModuleAlias','/fileconnector'),(5704,118,'includeDebugData','false'),(5705,118,'menuItemType','MENUITEM'),(5706,118,'pdfStyleSheet','TextFieldQueryPDF.sv.xsl'),(5707,118,'queryStyleSheet','TextFieldQuery.sv.xsl'),(5708,118,'useCKEditorForDescription','false'),(5726,69,'menuItemType','MENUITEM'),(5727,160,'cssPath','/css/fck.css'),(5728,160,'menuItemType','MENUITEM'),(5729,150,'menuItemType','MENUITEM'),(5797,107,'menuItemType','MENUITEM'),(5798,110,'connectionTimeout','10000'),(5799,110,'daoFactoryClass','se.unlogic.hierarchy.foregroundmodules.mailsenders.persisting.daos.mysql.MySQLMailDAOFactory'),(5800,110,'databaseID','3'),(5801,110,'exceptionInterval','60000'),(5802,110,'host','not.set'),(5803,110,'maxExceptionCount','5'),(5804,110,'maxQueueSize','50'),(5805,110,'maxResendCount','3'),(5806,110,'menuItemType','MENUITEM'),(5807,110,'noWorkInterval','10000'),(5808,110,'poolSize','10'),(5809,110,'port','25'),(5810,110,'priority','0'),(5811,110,'queueFullInterval','3000'),(5812,110,'resendInterval','30'),(5813,110,'shutdownTimeout','60000'),(5814,110,'socketTimeout','600000'),(5815,110,'useAuth','false'),(6162,165,'cssPath','/css/style.css'),(6163,165,'diskThreshold','100'),(6164,165,'fileStore','/path/not/set'),(6165,165,'menuItemType','MENUITEM'),(6166,165,'ramThreshold','500'),(6167,121,'maxRequestSize','1000'),(6168,121,'menuItemType','SECTION'),(6169,121,'ramThreshold','500'),(6170,39,'csspath','/css/fck.css'),(6171,39,'diskThreshold','100'),(6172,39,'filestore','/path/not/set'),(6173,39,'pageViewModuleAlias','page'),(6174,39,'pageViewModuleName','Sidvisare'),(6175,39,'pageViewModuleXSLPath','PageViewModule.sv.xsl'),(6176,39,'pageViewModuleXSLPathType','Classpath'),(6184,145,'allowPasswordChanging','false'),(6185,145,'cancelRedirectURI','flowinstances'),(6186,145,'emailFieldMode','REQUIRED'),(6187,145,'firstnameFieldMode','DISABLED'),(6188,145,'lastnameFieldMode','DISABLED'),(6189,145,'menuItemType','MENUITEM'),(6190,145,'supportedAttributes','address:Adress:50\r\n\r\nzipCode:Postnummer:5\r\n\r\npostalAddress:Ort:50\r\n\r\nmobilePhone:Mobiltelefon:15\r\n\r\nphone:Telefonnummer:15\r\n\r\ncontactByLetter\r\n\r\ncontactByEmail\r\n\r\ncontactBySMS\r\n\r\ncontactByPhone'),(6191,145,'usernameFieldMode','HIDDEN'),(6192,123,'adminGroupIDs','6'),(6193,123,'maxFlowIconHeight','65'),(6194,123,'maxFlowIconWidth','65'),(6195,123,'maxRequestSize','1000'),(6196,123,'menuItemType','SECTION'),(6197,123,'ramThreshold','500'),(6198,123,'tempDir','/path/not/set'),(6210,159,'accountDisabledMessage','<h1>Konto ej aktiverat</h1>\r\n<p>Ditt anv&auml;ndarkonto &auml;r inte aktiverat, kontakta systemadministrat&ouml;ren f&ouml;r mer information.</p>\r\n'),(6211,159,'addToLoginHandler','true'),(6212,159,'idpMetadataFilePath','/path/not/set'),(6213,159,'logXML','true'),(6214,159,'loginFailedMessage','<h1>Inloggningen misslyckades</h1>\r\n<p>Prova igen eller kontakta systemadministrat&ouml;ren f&ouml;r mer information.</p>\r\n'),(6215,159,'menuItemType','MENUITEM'),(6216,159,'priority','100'),(6217,159,'spMetadataFilePath','/path/not/set'),(6218,159,'userAdapterModuleID','156'),(6219,159,'userSessionTimeout','60'),(6220,162,'authifyAPIKey','not set'),(6221,162,'authifySecretKey','not set'),(6222,162,'includeDebugData','false'),(6223,162,'menuItemType','MENUITEM'),(6224,162,'userSSNAttributeName','citizenIdentifier'),(6225,8,'adminTimeout','60'),(6226,8,'default','true'),(6227,8,'logoutModuleAliases','/logout\r\n/logout/logout'),(6228,8,'menuItemType','SECTION'),(6229,8,'priority','100'),(6230,8,'userTimeout','30'),(6231,95,'allowAdminAdministration','true'),(6232,95,'allowGroupAdministration','true'),(6233,95,'filteringField','FIRSTNAME'),(6234,95,'menuItemType','MENUITEM'),(6247,114,'flowTypeIDs','4'),(6248,114,'listAllFlowTypes','true'),(6249,114,'maxHitCount','10'),(6250,114,'maxRequestSize','1000'),(6251,114,'menuItemType','SECTION'),(6252,114,'openExternalFlowsInNewWindow','true'),(6253,114,'popularFlowCount','5'),(6254,114,'popularInterval','72'),(6255,114,'ramThreshold','500'),(6256,114,'recommendedTags','Bygga\r\nRiva\r\nLivsmedel'),(6257,114,'showRelatedFlows','true'),(6258,114,'tempDir','/path/not/set'),(6259,114,'userFavouriteModuleAlias','/myfavourites');
+INSERT INTO `openhierarchy_foreground_module_settings` VALUES (842,84,'menuItemType','MENUITEM'),(864,64,'menuItemType','MENUITEM'),(998,70,'menuItemType','MENUITEM'),(1002,37,'menuItemType','MENUITEM'),(1070,95,'allowAdminAdministration','false'),(1071,95,'allowGroupAdministration','true'),(1072,95,'filteringField','FIRSTNAME'),(1073,95,'menuItemType','MENUITEM'),(1320,102,'cssPath','/css/fck.css'),(1321,102,'menuItemType','MENUITEM'),(3102,9,'menuItemType','SECTION'),(3103,9,'redirectURL','/'),(3104,112,'menuItemType','MENUITEM'),(3199,125,'menuItemType','MENUITEM'),(4089,146,'diskThreshold','100'),(4091,146,'menuItemType','MENUITEM'),(4092,146,'ramThreshold','500'),(5638,113,'ckConnectorModuleAlias','/fileconnector'),(5639,113,'cssPath','/css/fck.css'),(5640,113,'includeDebugData','false'),(5641,113,'menuItemType','MENUITEM'),(5642,113,'pdfStyleSheet','CheckboxQueryPDF.sv.xsl'),(5643,113,'queryStyleSheet','CheckboxQuery.sv.xsl'),(5644,113,'useCKEditorForDescription','true'),(5683,115,'ckConnectorModuleAlias','/fileconnector'),(5684,115,'cssPath','/css/fck.css'),(5685,115,'includeDebugData','false'),(5686,115,'menuItemType','MENUITEM'),(5687,115,'pdfStyleSheet','RadioButtonQueryPDF.sv.xsl'),(5688,115,'queryStyleSheet','RadioButtonQuery.sv.xsl'),(5689,115,'useCKEditorForDescription','true'),(5726,69,'menuItemType','MENUITEM'),(5727,160,'cssPath','/css/fck.css'),(5728,160,'menuItemType','MENUITEM'),(5729,150,'menuItemType','MENUITEM'),(6162,165,'cssPath','/css/style.css'),(6163,165,'diskThreshold','100'),(6165,165,'menuItemType','MENUITEM'),(6166,165,'ramThreshold','500'),(6192,123,'adminGroupIDs','6'),(6193,123,'maxFlowIconHeight','65'),(6194,123,'maxFlowIconWidth','65'),(6195,123,'maxRequestSize','1000'),(6196,123,'menuItemType','SECTION'),(6197,123,'ramThreshold','500'),(6214,108,'menuItemType','MENUITEM'),(6215,61,'maxFileSize','1'),(6216,61,'maxRequestSize','5'),(6217,61,'menuItemType','MENUITEM'),(6218,61,'ramThreshold','500'),(6219,161,'defaultLogotype','classpath://com/nordicpeak/flowengine/pdf/staticcontent/pics/logo.png'),(6220,161,'includedFonts','/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Bold.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-It.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Regular.ttf\r\n/com/nordicpeak/flowengine/pdf/fonts/SourceSansPro-Semibold.ttf'),(6221,161,'menuItemType','MENUITEM'),(6223,161,'pdfStyleSheet','FlowInstancePDF.sv.xsl'),(6224,161,'supportedActionIDs','com.nordicpeak.flowengine.FlowBrowserModule.submit'),(6226,161,'xhtmlDebug','false'),(6228,161,'xmlDebug','false'),(6230,116,'ckConnectorModuleAlias','/fileconnector'),(6231,116,'cssPath','/css/fck.css'),(6232,116,'includeDebugData','false'),(6233,116,'menuItemType','MENUITEM'),(6234,116,'pdfStyleSheet','DropDownQueryPDF.sv.xsl'),(6235,116,'queryStyleSheet','DropDownQuery.sv.xsl'),(6236,116,'useCKEditorForDescription','true'),(6364,149,'ckConnectorModuleAlias','/fileconnector'),(6365,149,'cssPath','/css/fck.css'),(6366,149,'includeDebugData','false'),(6367,149,'menuItemType','MENUITEM'),(6368,149,'pdfStyleSheet','OrganizationDetailQueryPDF.sv.xsl'),(6369,149,'queryStyleSheet','OrganizationDetailQuery.sv.xsl'),(6370,149,'useCKEditorForDescription','true'),(6371,131,'ckConnectorModuleAlias','/fileconnector'),(6372,131,'cssPath','/css/fck.css'),(6373,131,'includeDebugData','false'),(6374,131,'menuItemType','MENUITEM'),(6375,131,'pdfStyleSheet','ContactDetailQueryPDF.sv.xsl'),(6376,131,'queryStyleSheet','ContactDetailQuery.sv.xsl'),(6377,131,'useCKEditorForDescription','true'),(6510,117,'ckConnectorModuleAlias','/fileconnector'),(6511,117,'cssPath','/css/style.css'),(6512,117,'includeDebugData','false'),(6513,117,'menuItemType','MENUITEM'),(6514,117,'pdfStyleSheet','TextAreaQueryPDF.sv.xsl'),(6515,117,'queryStyleSheet','TextAreaQuery.sv.xsl'),(6516,117,'useCKEditorForDescription','true'),(6523,118,'ckConnectorModuleAlias','/fileconnector'),(6524,118,'cssPath','/css/style.css'),(6525,118,'includeDebugData','false'),(6526,118,'menuItemType','MENUITEM'),(6527,118,'pdfStyleSheet','TextFieldQueryPDF.sv.xsl'),(6528,118,'queryStyleSheet','TextFieldQuery.sv.xsl'),(6529,118,'useCKEditorForDescription','true'),(6956,119,'ckConnectorModuleAlias','/fileconnector'),(6957,119,'cleanupInterval','10'),(6958,119,'cssPath','/css/style.css'),(6960,119,'includeDebugData','true'),(6961,119,'maxAllowedFileSize','50'),(6962,119,'menuItemType','MENUITEM'),(6963,119,'pdfStyleSheet','FileUploadQueryPDF.sv.xsl'),(6964,119,'queryStyleSheet','FileUploadQuery.sv.xsl'),(6966,119,'useCKEditorForDescription','true'),(7044,39,'csspath','/css/fck.css'),(7045,39,'diskThreshold','100'),(7047,39,'pageViewModuleAlias','page'),(7048,39,'pageViewModuleName','Sidvisare'),(7049,39,'pageViewModuleXSLPath','PageViewModule.sv.xsl'),(7050,39,'pageViewModuleXSLPathType','Classpath'),(7942,16,'allowAdminAdministration','true'),(7943,16,'allowGroupAdministration','true'),(7944,16,'allowUserSwitching','true'),(7945,16,'filteringField','FIRSTNAME'),(7946,16,'menuItemType','MENUITEM'),(8744,170,'menuItemType','MENUITEM'),(8745,172,'maxRequestSize','1000'),(8746,172,'menuItemType','SECTION'),(8747,172,'ramThreshold','500'),(8748,173,'allowPasswordChanging','false'),(8749,173,'cancelRedirectURI','flowinstances'),(8750,173,'emailFieldMode','REQUIRED'),(8751,173,'firstnameFieldMode','DISABLED'),(8752,173,'lastnameFieldMode','DISABLED'),(8753,173,'menuItemType','MENUITEM'),(8754,173,'supportedAttributes','address:Adress:50\n\n\n\nzipCode:Postnummer:5\n\n\n\npostalAddress:Ort:50\n\n\n\nmobilePhone:Mobiltelefon:15\n\n\n\nphone:Telefonnummer:15\n\n\n\ncontactByLetter\n\n\n\ncontactByEmail\n\n\n\ncontactBySMS\n\n\n\ncontactByPhone'),(8755,173,'usernameFieldMode','HIDDEN'),(8870,180,'menuItemType','MENUITEM'),(8871,180,'supportedActionIDs','com.nordicpeak.flowengine.FlowBrowserModule.submit'),(8920,109,'adminUserIDs','1'),(8921,109,'allowedSettings','recommendedTags'),(8922,109,'allowedSettings','maxHitCount'),(8923,109,'cssPath','/css/fck.css'),(8924,109,'menuItemType','MENUITEM'),(8925,109,'moduleID','168'),(8926,109,'moduleType','FOREGROUND'),(8967,133,'enableSiteProfileSupport','false'),(8968,133,'highPriorityThreshold','90'),(8969,133,'logFlowInstanceIndexing','false'),(8970,133,'maxHitCount','20'),(8971,133,'maxRequestSize','1000'),(8972,133,'maxUnfilteredHitCount','100'),(8973,133,'mediumPriorityThreshold','60'),(8974,133,'menuItemType','SECTION'),(8975,133,'ramThreshold','500'),(9564,71,'formStyleSheet','SimpleUserProviderForm.sv.xsl'),(9565,71,'includeDebugData','false'),(9566,71,'listAsAddableType','true'),(9567,71,'menuItemType','MENUITEM'),(9568,71,'passwordAlgorithm','SHA-1'),(9569,71,'priority','0'),(9570,71,'supportedAttributes','citizenIdentifier:Personnummer\r\nsmexID!:SMEX ID\r\nphone!:Telefon\r\norganizationID!:Organisations ID\r\norganization!:Organisation'),(9571,71,'userTypeName','Användare med separat fält för användarnamn och lösenord'),(9572,56,'menuItemType','MENUITEM'),(9573,174,'changeCheckInterval','*/5 * * * *'),(9574,174,'enableExportSupport','true'),(9575,174,'flowStatisticsMessage','<h1>$family.name</h1>\r\n<p>Nedan visas statistik f&ouml;r e-tj&auml;nsten $family.name.</p>\r\n'),(9576,174,'globalStatisticsMessage','<h1>Statistik f&ouml;r samtliga e-tj&auml;nster</h1>\r\n<p>H&auml;r kan du se statistik p&aring; anv&auml;ndningen av v&aring;ra e-tj&auml;nster. V&auml;lj en e-tj&auml;nst i menyn till v&auml;nster f&ouml;r att visa statistik om en specifik e-tj&auml;nst.</p>\r\n'),(9577,174,'internalGroups','6'),(9578,174,'menuItemType','SECTION'),(9579,174,'slot','left-content-container.favourites'),(9580,174,'weeksBackInTime','20'),(10306,8,'adminTimeout','60'),(10307,8,'default','true'),(10308,8,'loginLockoutActivated','true'),(10309,8,'loginLockoutTime','1800'),(10310,8,'loginRetries','10'),(10311,8,'loginRetryInterval','600'),(10312,8,'logoutModuleAliases','/logout\r\n/logout/logout'),(10313,8,'menuItemType','SECTION'),(10314,8,'priority','100'),(10315,8,'userTimeout','30'),(10332,185,'menuItemType','MENUITEM'),(10333,168,'listAllFlowTypes','true'),(10334,168,'maxHitCount','10'),(10335,168,'maxRequestSize','1000'),(10336,168,'menuItemType','SECTION'),(10337,168,'openExternalFlowsInNewWindow','true'),(10338,168,'popularFlowCount','5'),(10339,168,'popularInterval','72'),(10340,168,'ramThreshold','500'),(10341,168,'showRelatedFlows','false'),(10343,168,'useCategoryFilter','false'),(10344,168,'userFavouriteModuleAlias','/myfavourites');
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1992,7 +2008,7 @@ CREATE TABLE `openhierarchy_foreground_module_users` (
   `userID` int(10) unsigned NOT NULL,
   PRIMARY KEY (`moduleID`,`userID`),
   CONSTRAINT `FK_moduleusers_1` FOREIGN KEY (`moduleID`) REFERENCES `openhierarchy_foreground_modules` (`moduleID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2001,7 +2017,7 @@ CREATE TABLE `openhierarchy_foreground_module_users` (
 
 LOCK TABLES `openhierarchy_foreground_module_users` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_users` DISABLE KEYS */;
-INSERT INTO `openhierarchy_foreground_module_users` VALUES (61,3),(69,8);
+INSERT INTO `openhierarchy_foreground_module_users` VALUES (39,8),(61,3),(69,8),(108,2);
 /*!40000 ALTER TABLE `openhierarchy_foreground_module_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2035,7 +2051,7 @@ CREATE TABLE `openhierarchy_foreground_modules` (
   KEY `FK_modules_2` (`dataSourceID`),
   CONSTRAINT `FK_modules_1` FOREIGN KEY (`sectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_modules_2` FOREIGN KEY (`dataSourceID`) REFERENCES `openhierarchy_data_sources` (`dataSourceID`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=166 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2044,7 +2060,7 @@ CREATE TABLE `openhierarchy_foreground_modules` (
 
 LOCK TABLES `openhierarchy_foreground_modules` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_foreground_modules` DISABLE KEYS */;
-INSERT INTO `openhierarchy_foreground_modules` VALUES (8,'se.unlogic.hierarchy.foregroundmodules.login.UserProviderLoginModule','Logga in','login','Logga in','LoginModule.sv.xsl','Classpath',1,0,0,1,0,1,NULL,NULL,NULL),(9,'se.unlogic.hierarchy.foregroundmodules.logout.LogoutModule','Logga ut','logout','Logga ut','LogoutModule.sv.xsl','Classpath',0,1,1,1,0,1,NULL,NULL,NULL),(17,'se.unlogic.hierarchy.foregroundmodules.userprofile.UserProfileModule','Mina inställningar','userprofile','Modul för ändring av användaruppgifter','userprofile.xsl','Classpath',0,1,1,1,1,0,NULL,NULL,NULL),(37,'se.unlogic.hierarchy.foregroundmodules.menuadmin.MenuAdminModule','Menyer','menuadmin','Menyer','MenuAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(39,'se.unlogic.hierarchy.foregroundmodules.pagemodules.PageAdminModule','Sidor','pageadmin','Sidor','PageAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontentadmin',NULL),(56,'se.unlogic.hierarchy.foregroundmodules.runtimeinfo.RuntimeInfoModule','Systeminfo','runtimeinfo','Systeminfo','RuntimeInfoModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,NULL,NULL),(61,'se.unlogic.hierarchy.foregroundmodules.systemadmin.SystemAdminModule','Moduler och sektioner','systemadmin','Moduler och sektioner','SystemAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(64,'se.unlogic.hierarchy.foregroundmodules.threadinfo.ThreadInfoModule','Trådinfo','threadinfo','Trådinfo','ThreadInfoModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(67,'se.unlogic.hierarchy.foregroundmodules.staticcontent.StaticContentModule','Statiskt innehåll','static','Statiskt innehåll',NULL,NULL,1,1,1,1,0,1,NULL,NULL,NULL),(69,'se.unlogic.hierarchy.foregroundmodules.usersessionadmin.UserSessionAdminModule','Inloggade användare','sessionadmin','Inloggade användare','UserSessionAdminModule.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(70,'se.unlogic.hierarchy.foregroundmodules.groupadmin.GroupAdminModule','Grupper','groupadmin','Grupper','GroupAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(71,'se.unlogic.hierarchy.foregroundmodules.userproviders.SimpleUserProviderModule','SimpleUserProviderModule','userprovider','SimpleUserProviderModule',NULL,NULL,0,0,0,1,0,1,NULL,'/se/unlogic/hierarchy/foregroundmodules/useradmin/staticcontent',NULL),(84,'se.unlogic.hierarchy.foregroundmodules.datasourceadmin.DataSourceAdminModule','Datakällor','datasourceadmin','Datakällor','DataSourceAdminModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(95,'se.unlogic.hierarchy.foregroundmodules.useradmin.UserAdminModule','Användare','useradmin','Användare','UserAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(102,'se.unlogic.hierarchy.foregroundmodules.htmloutput.HTMLOutputAdminModule','Högerkolumn - Admin','htmloutputadmin','Högerkolumn - Admin','HTMLOutputAdminModule.sv.xsl','Classpath',0,0,1,1,0,4,NULL,'staticcontent',NULL),(107,'se.unlogic.hierarchy.foregroundmodules.mailsenders.dummy.DummyEmailSenderModule','Dummy email sender','dummyemailsender','Receives last email sent',NULL,NULL,0,0,1,0,0,4,NULL,NULL,NULL),(108,'se.unlogic.hierarchy.foregroundmodules.test.EmailMailTestModule','E-post test modul','mailtest','Skickar ett test meddelande till den som klickar på länken',NULL,NULL,0,0,1,1,0,4,NULL,NULL,NULL),(110,'se.unlogic.hierarchy.foregroundmodules.mailsenders.persisting.PersistingMailSender','E-post kö','mailsender','E-post kö',NULL,NULL,0,0,1,1,1,4,NULL,NULL,NULL),(112,'com.nordicpeak.flowengine.QueryHandlerModule','QueryHandler','queryhandler','QueryHandler',NULL,NULL,0,0,1,1,0,1,NULL,NULL,NULL),(113,'com.nordicpeak.flowengine.queries.checkboxquery.CheckboxQueryProviderModule','CheckBoxQueryProvider','checkboxquery','CheckBoxQueryProvider','CheckboxQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(114,'com.nordicpeak.flowengine.FlowBrowserModule','E-tjänster','browser','E-tjänster','FlowInstanceBrowserModule.sv.xsl','Classpath',1,1,1,1,1,1,NULL,'staticcontent',NULL),(115,'com.nordicpeak.flowengine.queries.radiobuttonquery.RadioButtonQueryProviderModule','RadioButtonQueryProvider','radiobuttonquery','RadioButtonQueryProvider','RadioButtonQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(116,'com.nordicpeak.flowengine.queries.dropdownquery.DropDownQueryProviderModule','DropDownQueryProvider','dropdown','DropDownQueryProvider','DropDownQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(117,'com.nordicpeak.flowengine.queries.textareaquery.TextAreaQueryProviderModule','TextAreaQueryProvider','textarea','TextAreaQueryProvider','TextAreaQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(118,'com.nordicpeak.flowengine.queries.textfieldquery.TextFieldQueryProviderModule','TextFieldQueryProvider','textfieldprovider','TextFieldQueryProvider','TextFieldQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(119,'com.nordicpeak.flowengine.queries.fileuploadquery.FileUploadQueryProviderModule','FileUploadQueryProvider','fileuploadquery','FileUploadQueryProvider','FileUploadQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(121,'com.nordicpeak.flowengine.UserFlowInstanceModule','Mina ärenden','flowinstances','Mina ärenden','UserFlowInstanceModule.sv.xsl','Classpath',0,1,1,1,1,1,NULL,'staticcontent',NULL),(123,'com.nordicpeak.flowengine.FlowAdminModule','Adm. e-tjänster','flowadmin','Administrera e-tjänster','FlowAdminModule.sv.xsl','Classpath',0,0,0,1,1,1,NULL,'staticcontent',NULL),(124,'com.nordicpeak.flowengine.EvaluationHandlerModule','EvaluationHandler','evaluationhandler','EvaluationHandler',NULL,NULL,1,1,1,1,0,1,NULL,NULL,NULL),(125,'com.nordicpeak.flowengine.evaluators.querystateevaluator.QueryStateEvaluationProviderModule','QueryStateEvaluationProvider','querystateevaluationprovider','QueryStateEvaluationProvider','QueryStateEvaluationProviderModule.sv.xsl','Classpath',1,1,1,1,0,1,NULL,NULL,NULL),(131,'com.nordicpeak.flowengine.queries.contactdetailquery.ContactDetailQueryProviderModule','Kontaktvägar','contactdetails','Kontaktvägar','ContactDetailQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(132,'com.nordicpeak.flowengine.UserFavouriteForegroundModule','Mina favoriter','myfavourites','Mina favoriter',NULL,NULL,0,1,1,0,0,1,NULL,'staticcontent',NULL),(133,'com.nordicpeak.flowengine.FlowInstanceAdminModule','Adm. ärenden','flowinstanceadmin','Administrera ärenden','FlowInstanceAdminModule.sv.xsl','Classpath',0,0,1,1,1,1,NULL,'staticcontent',NULL),(144,'se.unlogic.hierarchy.foregroundmodules.groupproviders.SimpleGroupProviderModule','SimpleGroupProvider','simplegroupprovider','A group provider for simple groups',NULL,NULL,0,0,0,1,0,1,NULL,NULL,NULL),(145,'com.nordicpeak.flowengine.UserProfileModule','Mina uppgifter','mysettings','Mina uppgifter','UserProfileModule.sv.xsl','Classpath',0,1,0,1,0,1,NULL,'/com/nordicpeak/flowengine/staticcontent',NULL),(146,'com.nordicpeak.flowengine.CKConnectorModule','CKConnector','fileconnector','CKConnector',NULL,NULL,1,1,1,1,0,1,NULL,'staticcontent',NULL),(148,'com.nordicpeak.flowengine.UserOrganizationsModule','Mina företag','myorganizations','Mina företag','UserOrganizationsModule.sv.xsl','Classpath',0,1,1,1,0,1,NULL,'staticcontent',NULL),(149,'com.nordicpeak.flowengine.queries.organizationdetailquery.OrganizationDetailQueryProviderModule','Kontaktuppgiftsfråga (företag)','organizationdetails','Kontaktuppgiftsfråga (företag)','OrganizationDetailQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(150,'se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfilesAdminModule','Profiler','profiler','Profiler','SiteProfilesAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(154,'com.nordicpeak.saml.SPMetadataSenderModule','SPMetadataSenderModule','metadata','SPMetadataSenderModule',NULL,NULL,1,1,1,0,0,1,NULL,NULL,NULL),(155,'se.unlogic.hierarchy.foregroundmodules.minimaluser.MinimalUserProviderModule','MinimalUserProvider','minimaluserprovider','MinimalUserProvider',NULL,NULL,0,0,0,1,0,1,NULL,'/se/unlogic/hierarchy/foregroundmodules/useradmin/staticcontent',NULL),(156,'com.nordicpeak.saml.minimaluseradapter.MinimalUserSAMLAdapterModule','MinimalUserSAMLAdapter','minimalusersamladapter','MinimalUserSAMLAdapter','',NULL,0,0,0,1,0,1,NULL,'',NULL),(159,'com.nordicpeak.saml.SAMLLoginProviderModule','SAML inloggning','saml','Inloggning via SAML',NULL,NULL,1,1,0,0,0,1,NULL,NULL,NULL),(160,'com.nordicpeak.flowengine.TextTagAdminModule','Taggar','tagadmin','Administrera taggar','TextTagAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(161,'com.nordicpeak.flowengine.pdf.PDFGeneratorModule','PDFGeneratorModule','pdfgen','PDFGeneratorModule',NULL,NULL,0,0,0,1,0,1,NULL,NULL,NULL),(162,'com.nordicpeak.authifyclient.AuthifySigningProvider','Signering - Authify','signing-authify','Signering - Authify','AuthifySigningProvider.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(165,'se.unlogic.hierarchy.foregroundmodules.htmloutput.HTMLOutputAdminModule','Administrera widgets','widgetadmin','Administrera widget','HTMLOutputAdminModule.sv.xsl','Classpath',0,0,1,1,0,4,NULL,'staticcontent',NULL);
+INSERT INTO `openhierarchy_foreground_modules` VALUES (8,'se.unlogic.hierarchy.foregroundmodules.login.UserProviderLoginModule','Logga in','login','Logga in','LoginModule.sv.xsl','Classpath',1,0,0,1,0,1,NULL,NULL,NULL),(9,'se.unlogic.hierarchy.foregroundmodules.logout.LogoutModule','Logga ut','logout','Logga ut','LogoutModule.sv.xsl','Classpath',0,1,1,1,0,1,NULL,NULL,NULL),(16,'se.unlogic.hierarchy.foregroundmodules.useradmin.UserAdminModule','Användare (admin)','useradminadmin','Användare (admin)','UserAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(17,'se.unlogic.hierarchy.foregroundmodules.userprofile.UserProfileModule','Mina inställningar','userprofile','Modul för ändring av användaruppgifter','userprofile.xsl','Classpath',0,1,1,1,1,0,NULL,NULL,NULL),(37,'se.unlogic.hierarchy.foregroundmodules.menuadmin.MenuAdminModule','Menyer','menuadmin','Menyer','MenuAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(39,'se.unlogic.hierarchy.foregroundmodules.pagemodules.PageAdminModule','Sidor','pageadmin','Sidor','PageAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontentadmin',NULL),(56,'se.unlogic.hierarchy.foregroundmodules.runtimeinfo.RuntimeInfoModule','Systeminfo','runtimeinfo','Systeminfo','RuntimeInfoModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(61,'se.unlogic.hierarchy.foregroundmodules.systemadmin.SystemAdminModule','Moduler och sektioner','systemadmin','Moduler och sektioner','SystemAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(64,'se.unlogic.hierarchy.foregroundmodules.threadinfo.ThreadInfoModule','Trådinfo','threadinfo','Trådinfo','ThreadInfoModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(67,'se.unlogic.hierarchy.foregroundmodules.staticcontent.StaticContentModule','Statiskt innehåll','static','Statiskt innehåll',NULL,NULL,1,1,1,1,0,1,NULL,NULL,NULL),(69,'se.unlogic.hierarchy.foregroundmodules.usersessionadmin.UserSessionAdminModule','Inloggade användare','sessionadmin','Inloggade användare','UserSessionAdminModule.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(70,'se.unlogic.hierarchy.foregroundmodules.groupadmin.GroupAdminModule','Grupper','groupadmin','Grupper','GroupAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(71,'se.unlogic.hierarchy.foregroundmodules.userproviders.SimpleUserProviderModule','SimpleUserProviderModule','userprovider','SimpleUserProviderModule',NULL,NULL,0,0,0,1,0,1,NULL,'/se/unlogic/hierarchy/foregroundmodules/useradmin/staticcontent',NULL),(84,'se.unlogic.hierarchy.foregroundmodules.datasourceadmin.DataSourceAdminModule','Datakällor','datasourceadmin','Datakällor','DataSourceAdminModule.en.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(95,'se.unlogic.hierarchy.foregroundmodules.useradmin.UserAdminModule','Användare','useradmin','Användare','UserAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(102,'se.unlogic.hierarchy.foregroundmodules.htmloutput.HTMLOutputAdminModule','Högerkolumn - Admin','htmloutputadmin','Högerkolumn - Admin','HTMLOutputAdminModule.sv.xsl','Classpath',0,0,1,1,0,4,NULL,'staticcontent',NULL),(108,'se.unlogic.hierarchy.foregroundmodules.test.EmailMailTestModule','E-post test modul','mailtest','Skickar ett test meddelande till den som klickar på länken',NULL,NULL,0,0,1,1,0,4,NULL,NULL,NULL),(109,'se.unlogic.hierarchy.foregroundmodules.modulesettings.ModuleSettingUpdateModule','Inställningar - Sök','settings','Inställningar - Rekommenderade sökningar','ModuleSettingUpdateModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(111,'se.unlogic.hierarchy.foregroundmodules.test.XSLReload','Ladda om stilmall','reloadxsl','Ladda om stilmall',NULL,NULL,0,0,1,1,0,4,NULL,NULL,NULL),(112,'com.nordicpeak.flowengine.QueryHandlerModule','QueryHandler','queryhandler','QueryHandler',NULL,NULL,0,0,1,1,0,1,NULL,NULL,NULL),(113,'com.nordicpeak.flowengine.queries.checkboxquery.CheckboxQueryProviderModule','CheckBoxQueryProvider','checkboxquery','CheckBoxQueryProvider','CheckboxQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(115,'com.nordicpeak.flowengine.queries.radiobuttonquery.RadioButtonQueryProviderModule','RadioButtonQueryProvider','radiobuttonquery','RadioButtonQueryProvider','RadioButtonQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(116,'com.nordicpeak.flowengine.queries.dropdownquery.DropDownQueryProviderModule','DropDownQueryProvider','dropdown','DropDownQueryProvider','DropDownQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(117,'com.nordicpeak.flowengine.queries.textareaquery.TextAreaQueryProviderModule','TextAreaQueryProvider','textarea','TextAreaQueryProvider','TextAreaQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(118,'com.nordicpeak.flowengine.queries.textfieldquery.TextFieldQueryProviderModule','TextFieldQueryProvider','textfieldprovider','TextFieldQueryProvider','TextFieldQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(119,'com.nordicpeak.flowengine.queries.fileuploadquery.FileUploadQueryProviderModule','FileUploadQueryProvider','fileuploadquery','FileUploadQueryProvider','FileUploadQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(123,'com.nordicpeak.flowengine.FlowAdminModule','Adm. e-tjänster','flowadmin','Administrera e-tjänster','FlowAdminModule.sv.xsl','Classpath',0,0,0,1,1,1,NULL,'staticcontent',NULL),(124,'com.nordicpeak.flowengine.EvaluationHandlerModule','EvaluationHandler','evaluationhandler','EvaluationHandler',NULL,NULL,1,1,1,1,0,1,NULL,NULL,NULL),(125,'com.nordicpeak.flowengine.evaluators.querystateevaluator.QueryStateEvaluationProviderModule','QueryStateEvaluationProvider','querystateevaluationprovider','QueryStateEvaluationProvider','QueryStateEvaluationProviderModule.sv.xsl','Classpath',1,1,1,1,0,1,NULL,NULL,NULL),(131,'com.nordicpeak.flowengine.queries.contactdetailquery.ContactDetailQueryProviderModule','Kontaktvägar','contactdetails','Kontaktvägar','ContactDetailQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(133,'com.nordicpeak.flowengine.FlowInstanceAdminModule','Adm. ärenden','flowinstanceadmin','Administrera ärenden','FlowInstanceAdminModule.sv.xsl','Classpath',0,0,1,1,1,1,NULL,'staticcontent',NULL),(144,'se.unlogic.hierarchy.foregroundmodules.groupproviders.SimpleGroupProviderModule','SimpleGroupProvider','simplegroupprovider','A group provider for simple groups',NULL,NULL,0,0,0,1,0,1,NULL,NULL,NULL),(146,'com.nordicpeak.flowengine.CKConnectorModule','CKConnector','fileconnector','CKConnector',NULL,NULL,1,1,1,1,0,1,NULL,'staticcontent',NULL),(149,'com.nordicpeak.flowengine.queries.organizationdetailquery.OrganizationDetailQueryProviderModule','Kontaktuppgiftsfråga (företag)','organizationdetails','Kontaktuppgiftsfråga (företag)','OrganizationDetailQueryAdmin.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(150,'se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfilesAdminModule','Profiler','profiler','Profiler','SiteProfilesAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(160,'com.nordicpeak.flowengine.TextTagAdminModule','Taggar','tagadmin','Administrera taggar','TextTagAdminModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(161,'com.nordicpeak.flowengine.pdf.PDFGeneratorModule','PDFGeneratorModule','pdfgen','PDFGeneratorModule',NULL,NULL,0,0,0,1,0,1,NULL,NULL,NULL),(165,'se.unlogic.hierarchy.foregroundmodules.htmloutput.HTMLOutputAdminModule','Administrera widget','widgetadmin','Administrera widget','HTMLOutputAdminModule.sv.xsl','Classpath',0,0,1,1,0,4,NULL,'staticcontent',NULL),(168,'com.nordicpeak.flowengine.FlowBrowserModule','E-tjänster','oversikt','E-tjänster','FlowInstanceBrowserModule.sv.xsl','Classpath',1,1,1,1,1,1,NULL,'staticcontent',NULL),(169,'com.nordicpeak.flowengine.flowsubmitsurveys.FeedbackFlowSubmitSurvey','Feedback','flowfeedback','Feedback','FeedbackFlowSubmitSurvey.sv.xsl','Classpath',1,1,1,1,0,1,NULL,'staticcontent',NULL),(170,'com.nordicpeak.flowengine.UserFavouriteForegroundModule','Mina favoriter','myfavourites','Mina favoriter','',NULL,0,1,1,1,0,1,NULL,'staticcontent',NULL),(171,'com.nordicpeak.flowengine.UserOrganizationsModule','Mina företag','myorganizations','Mina företag','UserOrganizationsModule.sv.xsl','Classpath',0,1,1,1,0,1,NULL,'staticcontent',NULL),(172,'com.nordicpeak.flowengine.UserFlowInstanceModule','Mina sidor','minasidor','Mina sidor','UserFlowInstanceModule.sv.xsl','Classpath',0,1,1,1,1,1,NULL,'staticcontent',NULL),(173,'com.nordicpeak.flowengine.UserProfileModule','Mina uppgifter','mysettings','Mina uppgifter','UserProfileModule.sv.xsl','Classpath',0,1,0,1,0,1,NULL,'/com/nordicpeak/flowengine/staticcontent',NULL),(174,'com.nordicpeak.flowengine.statistics.StatisticsModule','Statistik','statistik','Statistik','StatisticsModule.sv.xsl','Classpath',1,1,1,1,1,1,NULL,'staticcontent',NULL),(175,'com.nordicpeak.flowengine.AbortedFlowInstanceListenerModule','AbortedFlowInstanceListenerModule','abortlistener','AbortedFlowInstanceListenerModule','',NULL,0,0,0,1,0,4,NULL,'',NULL),(176,'com.nordicpeak.flowengine.OperatingMessageModule','Driftmeddelanden','operatingmessages','Driftmeddelanden','OperatingMessageModule.sv.xsl','Classpath',0,0,1,1,1,4,NULL,'staticcontent',NULL),(179,'com.nordicpeak.flowengine.notifications.StandardFlowNotificationHandler','StandardFlowNotificationHandler','notificationhandler','StandardFlowNotificationHandler','StandardFlowNotificationHandler.sv.xsl','Classpath',0,1,0,0,0,4,NULL,'staticcontent',NULL),(180,'com.nordicpeak.flowengine.XMLProviderModule','XMLProviderModule','xml','XMLProviderModule','',NULL,0,0,0,1,0,4,NULL,'',NULL),(185,'com.nordicpeak.flowengine.signingproviders.DummySigningProvider','Dummy signing','dummy-signing','Dummy signing',NULL,NULL,1,1,1,1,0,1,NULL,'/com/nordicpeak/authifyclient/staticcontent',NULL),(186,'se.unlogic.hierarchy.foregroundmodules.mailsenders.direct.DirectMailSender','E-post sändare','mailsender','E-post sändare',NULL,NULL,0,0,0,1,0,4,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `openhierarchy_foreground_modules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2072,7 +2088,7 @@ CREATE TABLE `openhierarchy_menu_index` (
   CONSTRAINT `FK_menuindex_2` FOREIGN KEY (`sectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_menuindex_3` FOREIGN KEY (`subSectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_menuindex_4` FOREIGN KEY (`menuItemID`) REFERENCES `openhierarchy_virtual_menu_items` (`menuItemID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=396 DEFAULT CHARSET=latin1 COMMENT='InnoDB free: 206848 kB; (`sectionID`) REFER `foraldramotet-o';
+) ENGINE=InnoDB AUTO_INCREMENT=409 DEFAULT CHARSET=latin1 COMMENT='InnoDB free: 206848 kB; (`sectionID`) REFER `foraldramotet-o';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2081,8 +2097,33 @@ CREATE TABLE `openhierarchy_menu_index` (
 
 LOCK TABLES `openhierarchy_menu_index` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_menu_index` DISABLE KEYS */;
-INSERT INTO `openhierarchy_menu_index` VALUES (186,4,6,37,'se.unlogic.hierarchy.modules.menuadmin.MenuAdminModule',NULL,NULL),(188,4,21,39,'39',NULL,NULL),(190,1,48,NULL,NULL,4,NULL),(214,4,31,56,'56',NULL,NULL),(222,4,39,61,'61',NULL,NULL),(226,4,32,64,'64',NULL,NULL),(230,1,18,64,'64',NULL,NULL),(235,4,25,37,'37',NULL,NULL),(249,1,24,8,'8',NULL,NULL),(250,1,34,9,'9',NULL,NULL),(251,4,30,69,'69',NULL,NULL),(252,4,19,70,'70',NULL,NULL),(324,4,37,84,'84',NULL,NULL),(330,4,27,NULL,NULL,NULL,9),(331,4,3,NULL,NULL,NULL,10),(339,4,26,NULL,NULL,NULL,11),(346,4,18,95,'95',NULL,NULL),(347,1,37,39,'18',NULL,NULL),(348,1,38,39,'19',NULL,NULL),(356,4,33,NULL,NULL,NULL,12),(357,4,34,NULL,NULL,NULL,13),(374,4,36,110,'110',NULL,NULL),(375,1,43,116,'116',NULL,NULL),(376,1,44,121,'121',NULL,NULL),(377,1,46,123,'123',NULL,NULL),(381,1,42,114,'114',NULL,NULL),(382,1,45,NULL,NULL,NULL,14),(386,1,47,133,'133',NULL,NULL),(387,4,41,150,'150',NULL,NULL),(389,4,42,160,'160',NULL,NULL),(393,1,49,39,'20',NULL,NULL),(394,1,50,NULL,NULL,6,NULL),(395,6,1,39,'20',NULL,NULL);
+INSERT INTO `openhierarchy_menu_index` VALUES (182,4,39,16,'16',NULL,NULL),(186,4,6,37,'se.unlogic.hierarchy.modules.menuadmin.MenuAdminModule',NULL,NULL),(188,4,26,39,'39',NULL,NULL),(190,1,53,NULL,NULL,4,NULL),(214,4,33,56,'56',NULL,NULL),(222,4,41,61,'61',NULL,NULL),(226,4,34,64,'64',NULL,NULL),(230,1,18,64,'64',NULL,NULL),(235,4,27,37,'37',NULL,NULL),(249,1,24,8,'8',NULL,NULL),(250,1,34,9,'9',NULL,NULL),(251,4,32,69,'69',NULL,NULL),(252,4,19,70,'70',NULL,NULL),(324,4,40,84,'84',NULL,NULL),(330,4,31,NULL,NULL,NULL,9),(331,4,3,NULL,NULL,NULL,10),(339,4,30,NULL,NULL,NULL,11),(346,4,10,95,'95',NULL,NULL),(347,1,37,39,'18',NULL,NULL),(348,1,38,39,'19',NULL,NULL),(356,4,35,NULL,NULL,NULL,12),(357,4,37,NULL,NULL,NULL,13),(373,4,25,109,'109',NULL,NULL),(375,1,43,116,'116',NULL,NULL),(377,1,52,123,'123',NULL,NULL),(382,1,47,NULL,NULL,NULL,14),(383,5,4,NULL,NULL,NULL,15),(386,1,51,133,'133',NULL,NULL),(387,4,43,150,'150',NULL,NULL),(389,4,44,160,'160',NULL,NULL),(391,5,5,NULL,NULL,NULL,18),(392,5,1,NULL,NULL,NULL,19),(393,1,49,39,'20',NULL,NULL),(400,1,45,168,'168',NULL,NULL),(401,1,46,172,'172',NULL,NULL),(402,1,48,174,'174',NULL,NULL),(403,4,18,176,'176',NULL,NULL);
 /*!40000 ALTER TABLE `openhierarchy_menu_index` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openhierarchy_section_attributes`
+--
+
+DROP TABLE IF EXISTS `openhierarchy_section_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `openhierarchy_section_attributes` (
+  `sectionID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`sectionID`,`name`),
+  CONSTRAINT `FK_openhierarchy_section_attributes_1` FOREIGN KEY (`sectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openhierarchy_section_attributes`
+--
+
+LOCK TABLES `openhierarchy_section_attributes` WRITE;
+/*!40000 ALTER TABLE `openhierarchy_section_attributes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openhierarchy_section_attributes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -2106,7 +2147,7 @@ CREATE TABLE `openhierarchy_section_groups` (
 
 LOCK TABLES `openhierarchy_section_groups` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_section_groups` DISABLE KEYS */;
-INSERT INTO `openhierarchy_section_groups` VALUES (4,6),(4,10),(6,6),(6,10);
+INSERT INTO `openhierarchy_section_groups` VALUES (4,6),(4,10);
 /*!40000 ALTER TABLE `openhierarchy_section_groups` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2159,7 +2200,7 @@ CREATE TABLE `openhierarchy_sections` (
   PRIMARY KEY (`sectionID`),
   UNIQUE KEY `Index_2` (`parentSectionID`,`alias`),
   CONSTRAINT `FK_sections_1` FOREIGN KEY (`parentSectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2168,7 +2209,7 @@ CREATE TABLE `openhierarchy_sections` (
 
 LOCK TABLES `openhierarchy_sections` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_sections` DISABLE KEYS */;
-INSERT INTO `openhierarchy_sections` VALUES (1,NULL,'home',1,1,1,1,0,1,'Hem','Hemmasektionen','/browser','/browser',NULL),(4,1,'administration',1,0,0,1,1,1,'Systemadm.','Systemadministration och övervakning','/sessionadmin','/sessionadmin',NULL),(5,1,'mypages',1,0,1,1,0,1,'Mina ärenden','Mina ärenden','/not/set','/not/set',NULL),(6,1,'om',1,1,1,1,1,1,'Om','Om','/page/om','/page/om',NULL);
+INSERT INTO `openhierarchy_sections` VALUES (1,NULL,'home',1,1,1,1,0,1,'Hem','Hemmasektionen','/oversikt','/oversikt','HTTPS'),(4,1,'administration',1,0,0,1,1,1,'Systemadm.','Systemadministration och övervakning','/sessionadmin','/sessionadmin',NULL),(5,1,'mypages',1,0,1,1,0,1,'Mina ärenden','Mina ärenden','/notset','/notset',NULL);
 /*!40000 ALTER TABLE `openhierarchy_sections` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2250,7 +2291,7 @@ CREATE TABLE `openhierarchy_virtual_menu_items` (
 
 LOCK TABLES `openhierarchy_virtual_menu_items` WRITE;
 /*!40000 ALTER TABLE `openhierarchy_virtual_menu_items` DISABLE KEYS */;
-INSERT INTO `openhierarchy_virtual_menu_items` VALUES (9,'TITLE','Övervakning','Övervakning',NULL,0,0,1,4),(10,'TITLE','Administration','Administration',NULL,0,0,0,4),(11,'BLANK',NULL,NULL,NULL,0,0,1,4),(12,'BLANK',NULL,NULL,NULL,0,0,1,4),(13,'TITLE','Övrigt','Övrigt',NULL,0,0,1,4),(14,'SECTION','Mina favoriter','Mina favoriter','#menu-container.favourites',0,0,0,1);
+INSERT INTO `openhierarchy_virtual_menu_items` VALUES (9,'TITLE','Övervakning','Övervakning',NULL,0,0,1,4),(10,'TITLE','Administration','Administration',NULL,0,0,0,4),(11,'BLANK',NULL,NULL,NULL,0,0,1,4),(12,'BLANK',NULL,NULL,NULL,0,0,1,4),(13,'TITLE','Nordic Peak','Menyalternativ som endast syns för Nordic Peak',NULL,0,0,1,4),(14,'SECTION','Mina favoriter','Mina favoriter','#menu-container.favourites',0,1,0,1),(15,'MENUITEM','Mina uppgifter','Mina uppgifter','/mysettings',0,1,1,5),(18,'MENUITEM','Mina företag','Mina företag','/myorganizations',0,1,1,5),(19,'MENUITEM','Mina ärenden','Mina ärenden','/flowinstances',0,1,1,5);
 /*!40000 ALTER TABLE `openhierarchy_virtual_menu_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2265,10 +2306,8 @@ CREATE TABLE `organization_detail_queries` (
   `queryID` int(10) unsigned NOT NULL,
   `description` text,
   `helpText` text,
-  `allowLetter` tinyint(1) unsigned NOT NULL,
   `allowSMS` tinyint(1) unsigned NOT NULL,
-  `allowEmail` tinyint(1) unsigned NOT NULL,
-  `allowPhone` tinyint(1) unsigned NOT NULL,
+  `requireAddress` tinyint(1) NOT NULL,
   PRIMARY KEY (`queryID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2302,16 +2341,13 @@ CREATE TABLE `organization_detail_query_instances` (
   `phone` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `mobilePhone` varchar(255) DEFAULT NULL,
-  `contactByLetter` tinyint(1) unsigned DEFAULT NULL,
   `contactBySMS` tinyint(1) unsigned DEFAULT NULL,
-  `contactByEmail` tinyint(1) unsigned DEFAULT NULL,
-  `contactByPhone` tinyint(1) unsigned DEFAULT NULL,
   `organizationID` int(10) unsigned DEFAULT NULL,
   `persistOrganization` tinyint(1) unsigned DEFAULT NULL,
   PRIMARY KEY (`queryInstanceID`),
   KEY `FK_organization_detail_query_instances_1` (`queryID`),
   CONSTRAINT `FK_organization_detail_query_instances_1` FOREIGN KEY (`queryID`) REFERENCES `organization_detail_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4567 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19446 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2395,7 +2431,7 @@ CREATE TABLE `pages` (
   UNIQUE KEY `Index_3` (`sectionID`,`alias`),
   KEY `FK_pages_1` (`sectionID`),
   CONSTRAINT `FK_pages_1` FOREIGN KEY (`sectionID`) REFERENCES `openhierarchy_sections` (`sectionID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1 COMMENT='InnoDB free: 191488 kB; (`sectionID`) REFER `fkdb-system/sec';
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=latin1 COMMENT='InnoDB free: 191488 kB; (`sectionID`) REFER `fkdb-system/sec';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2404,7 +2440,6 @@ CREATE TABLE `pages` (
 
 LOCK TABLES `pages` WRITE;
 /*!40000 ALTER TABLE `pages` DISABLE KEYS */;
-INSERT INTO `pages` VALUES (20,'Om','Om','<h2>Rubrik</h2>\r\n<p>Text</p>\r\n','1',0,1,1,1,6,'om',0);
 /*!40000 ALTER TABLE `pages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2443,6 +2478,7 @@ CREATE TABLE `query_state_evaluators` (
   `evaluatorID` int(10) unsigned NOT NULL,
   `selectionMode` varchar(45) NOT NULL,
   `queryState` varchar(45) NOT NULL,
+  `doNotResetQueryState` tinyint(1) NOT NULL,
   PRIMARY KEY (`evaluatorID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2496,7 +2532,7 @@ CREATE TABLE `radio_button_query_alternatives` (
   PRIMARY KEY (`alternativeID`),
   KEY `FK_radio_button_query_alternatives_1` (`queryID`),
   CONSTRAINT `FK_radio_button_query_alternatives_1` FOREIGN KEY (`queryID`) REFERENCES `radio_button_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1759 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3058 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2575,7 +2611,7 @@ CREATE TABLE `simple_groups` (
   `description` varchar(255) NOT NULL,
   `enabled` tinyint(1) NOT NULL,
   PRIMARY KEY (`groupID`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=806 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2600,6 +2636,7 @@ CREATE TABLE `simple_user_attributes` (
   `name` varchar(255) NOT NULL,
   `value` varchar(4096) NOT NULL,
   PRIMARY KEY (`userID`,`name`) USING BTREE,
+  KEY `Index_2` (`name`),
   CONSTRAINT `FK_simple_user_attributes_1` FOREIGN KEY (`userID`) REFERENCES `simple_users` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2610,7 +2647,6 @@ CREATE TABLE `simple_user_attributes` (
 
 LOCK TABLES `simple_user_attributes` WRITE;
 /*!40000 ALTER TABLE `simple_user_attributes` DISABLE KEYS */;
-INSERT INTO `simple_user_attributes` VALUES (1,'address','Rådhusgatan 11'),(1,'contactByEmail','true'),(1,'contactBySMS','true'),(1,'mobilePhone','0706153310'),(1,'phone','0706153310'),(1,'postalAddress','Sundsvall'),(1,'zipCode','85231');
 /*!40000 ALTER TABLE `simple_user_attributes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2661,7 +2697,7 @@ CREATE TABLE `simple_users` (
   `language` varchar(76) DEFAULT NULL,
   `preferedDesign` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2670,7 +2706,7 @@ CREATE TABLE `simple_users` (
 
 LOCK TABLES `simple_users` WRITE;
 /*!40000 ALTER TABLE `simple_users` DISABLE KEYS */;
-INSERT INTO `simple_users` VALUES (1,'admin','d033e22ae348aeb5660fc2140aec35850c4da997','FlowEngine','Admin','email@not.set',1,1,'2008-01-27 19:43:42','2014-09-11 20:53:41',NULL,NULL);
+INSERT INTO `simple_users` VALUES (1,'admin','6e2b592b196249838b312cfa026ebe2146dfa6dc','John','Doe','john.doe@oeplatform.org',1,1,'2008-01-27 19:43:42','2015-05-15 12:06:19',NULL,NULL);
 /*!40000 ALTER TABLE `simple_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2686,7 +2722,7 @@ CREATE TABLE `site_profile_domains` (
   `domain` varchar(255) NOT NULL,
   PRIMARY KEY (`profileID`,`domain`),
   CONSTRAINT `FK_site_profile_domains_1` FOREIGN KEY (`profileID`) REFERENCES `site_profiles` (`profileID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2695,7 +2731,6 @@ CREATE TABLE `site_profile_domains` (
 
 LOCK TABLES `site_profile_domains` WRITE;
 /*!40000 ALTER TABLE `site_profile_domains` DISABLE KEYS */;
-INSERT INTO `site_profile_domains` VALUES (1,'demo.not.set');
 /*!40000 ALTER TABLE `site_profile_domains` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2720,7 +2755,6 @@ CREATE TABLE `site_profile_global_settings` (
 
 LOCK TABLES `site_profile_global_settings` WRITE;
 /*!40000 ALTER TABLE `site_profile_global_settings` DISABLE KEYS */;
-INSERT INTO `site_profile_global_settings` VALUES ('kommun',1,'<p>Test</p>\r\n'),('pdf.flowinstance.logo',1,'classpath://com/nordicpeak/flowengine/pdf/staticcontent/pics/logo.png'),('Testtagg',1,'En exempeltext');
 /*!40000 ALTER TABLE `site_profile_global_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2748,7 +2782,6 @@ CREATE TABLE `site_profile_settings` (
 
 LOCK TABLES `site_profile_settings` WRITE;
 /*!40000 ALTER TABLE `site_profile_settings` DISABLE KEYS */;
-INSERT INTO `site_profile_settings` VALUES ('BaseMapQuery-lmUser',1,'sundsvall',1),('BaseMapQuery-searchPrefix',1,'SUNDSVALL',1),('BaseMapQuery-startExtent',1,'608114,6910996,641846,6932596',1),('bgmodule-4',1,'<p><img alt=\"\" height=\"70\" src=\"/images/sundsvall.e-tjansteportalen.se.png\" style=\"width: 1280px; height: 70px;\" width=\"1280\" ></p>\r\n',1),('FlowFamilyEmailAddresses:11',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:12',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:15',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:16',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:17',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:18',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:19',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:27',1,'miljonamnden@sundsvall.se',1),('FlowFamilyEmailAddresses:31',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:33',1,'bygglov@sundsvall.se',1),('FlowFamilyEmailAddresses:9',1,'bygglov@sundsvall.se',1),('kommun',1,'<p>Demo</p>\r\n',1),('pdf.flowinstance.logo',1,'file:///D:/Program Files/Apache Software Foundation/Tomcat 7.0/sites/kommun.e-tjansteportalen.se/filestore/logos/sundsvall.png',1),('Testtagg',1,'Demo text',1);
 /*!40000 ALTER TABLE `site_profile_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2764,7 +2797,7 @@ CREATE TABLE `site_profiles` (
   `name` varchar(255) NOT NULL,
   `design` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`profileID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2773,7 +2806,6 @@ CREATE TABLE `site_profiles` (
 
 LOCK TABLES `site_profiles` WRITE;
 /*!40000 ALTER TABLE `site_profiles` DISABLE KEYS */;
-INSERT INTO `site_profiles` VALUES (1,'Demo','default (xsl/design.xsl)');
 /*!40000 ALTER TABLE `site_profiles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2797,7 +2829,7 @@ CREATE TABLE `table_versions` (
 
 LOCK TABLES `table_versions` WRITE;
 /*!40000 ALTER TABLE `table_versions` DISABLE KEYS */;
-INSERT INTO `table_versions` VALUES ('com.nordicpeak.flowengine.dao.FlowEngineDAOFactory',44),('com.nordicpeak.flowengine.evaluators.querystateevaluator.QueryStateEvaluationProviderModule',2),('com.nordicpeak.flowengine.queries.checkboxquery.CheckboxQueryProviderModule',7),('com.nordicpeak.flowengine.queries.contactdetailquery.ContactDetailQueryProviderModule',3),('com.nordicpeak.flowengine.queries.dropdownquery.DropDownQueryProviderModule',5),('com.nordicpeak.flowengine.queries.fileuploadquery.FileUploadQueryProviderModule',1),('com.nordicpeak.flowengine.queries.multigeometrymapquery.MultiGeometryMapQueryProvider',4),('com.nordicpeak.flowengine.queries.organizationdetailquery.OrganizationDetailQueryProviderModule',3),('com.nordicpeak.flowengine.queries.radiobuttonquery.RadioButtonQueryProviderModule',4),('com.nordicpeak.flowengine.queries.singlepolygonmapquery.SinglePolygonMapQueryProvider',5),('com.nordicpeak.flowengine.queries.textareaquery.TextAreaQueryProviderModule',1),('com.nordicpeak.flowengine.queries.textfieldquery.TextFieldQueryProviderModule',2),('com.nordicpeak.persistingsmssender.PersistingSMSSender',1),('se.unlogic.hierarchy.core.daos.implementations.mysql.MySQLCoreDAOFactory',31),('se.unlogic.hierarchy.foregroundmodules.forum.daos.mysql.MySQLForumDAOFactory',2),('se.unlogic.hierarchy.foregroundmodules.groupproviders.SimpleGroupProviderModule',3),('se.unlogic.hierarchy.foregroundmodules.mailsenders.persisting.daos.mysql.MySQLMailDAOFactory',1),('se.unlogic.hierarchy.foregroundmodules.minimaluser.MinimalUserProviderModule',2),('se.unlogic.hierarchy.foregroundmodules.pagemodules.daos.annotated.AnnotatedPageDAOFactory',3),('se.unlogic.hierarchy.foregroundmodules.userproviders.SimpleUserProviderModule',4),('se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfilesAdminModule',4);
+INSERT INTO `table_versions` VALUES ('com.nordicpeak.flowengine.dao.FlowEngineDAOFactory',52),('com.nordicpeak.flowengine.evaluators.querystateevaluator.QueryStateEvaluationProviderModule',4),('com.nordicpeak.flowengine.flowsubmitsurveys.FeedbackFlowSubmitSurvey',2),('com.nordicpeak.flowengine.notifications.StandardFlowNotificationHandler',3),('com.nordicpeak.flowengine.queries.checkboxquery.CheckboxQueryProviderModule',7),('com.nordicpeak.flowengine.queries.contactdetailquery.ContactDetailQueryProviderModule',5),('com.nordicpeak.flowengine.queries.dropdownquery.DropDownQueryProviderModule',5),('com.nordicpeak.flowengine.queries.fileuploadquery.FileUploadQueryProviderModule',1),('com.nordicpeak.flowengine.queries.organizationdetailquery.OrganizationDetailQueryProviderModule',4),('com.nordicpeak.flowengine.queries.radiobuttonquery.RadioButtonQueryProviderModule',4),('com.nordicpeak.flowengine.queries.textareaquery.TextAreaQueryProviderModule',1),('com.nordicpeak.flowengine.queries.textfieldquery.TextFieldQueryProviderModule',3),('se.unlogic.hierarchy.core.daos.implementations.mysql.MySQLCoreDAOFactory',34),('se.unlogic.hierarchy.foregroundmodules.groupproviders.SimpleGroupProviderModule',3),('se.unlogic.hierarchy.foregroundmodules.pagemodules.daos.annotated.AnnotatedPageDAOFactory',3),('se.unlogic.hierarchy.foregroundmodules.userproviders.SimpleUserProviderModule',5),('se.unlogic.openhierarchy.foregroundmodules.siteprofile.SiteProfilesAdminModule',4);
 /*!40000 ALTER TABLE `table_versions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2894,7 +2926,7 @@ CREATE TABLE `text_field_query_instance_values` (
   KEY `FK_text_field_query_instance_values_2` (`textFieldID`),
   CONSTRAINT `FK_text_field_query_instance_values_1` FOREIGN KEY (`queryInstanceID`) REFERENCES `text_field_query_instances` (`queryInstanceID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_text_field_query_instance_values_2` FOREIGN KEY (`textFieldID`) REFERENCES `text_fields` (`textFieldID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=712 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2217 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2948,10 +2980,12 @@ CREATE TABLE `text_fields` (
   `queryID` int(10) unsigned NOT NULL,
   `maxContentLength` int(10) unsigned DEFAULT NULL,
   `invalidFormatMessage` varchar(255) DEFAULT NULL,
+  `setAsAttribute` tinyint(1) NOT NULL,
+  `attributeName` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`textFieldID`),
   KEY `FK_text_fields_1` (`queryID`),
   CONSTRAINT `FK_text_fields_1` FOREIGN KEY (`queryID`) REFERENCES `text_field_queries` (`queryID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1613 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2756 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2972,4 +3006,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-09-11 23:22:22
+-- Dump completed on 2015-05-15 14:37:01
