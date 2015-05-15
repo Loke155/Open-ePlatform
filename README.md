@@ -15,7 +15,7 @@ A signing provider tailored for API of authify.com.
 ###BaseMapQuery
 The base class for all types of map based query types.
 
-###demo.e-tjansteportalen.se
+###demo.oeplatform.org
 A dynamic web project for eclipse containing the Open ePlatform design
 
 ###FlowEngine
