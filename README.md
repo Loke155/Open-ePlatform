@@ -5,7 +5,7 @@ Open-ePlatform
 
 ##Repository contents
 
-This repository contains the projects that together form Open ePlatform release 1.2.0.
+This repository contains the projects that together form Open ePlatform release 1.2.1.
 
 Here is a brief description of each project:
 
@@ -58,7 +58,7 @@ A sample MySQL database is available in the docs folder of the FlowEngine projec
 The projects above require the following depencies in order to build.
 
 * Java SE 1.6
-* The OpenHierarchy framework v1.2.4 (openhierarchy.org)
+* The OpenHierarchy framework v1.2.5 (openhierarchy.org)
 * MinimalUser module (svn://svn.openhierarchy.org/openhierarchy/modules/minimaluser/trunk)
 * SAMLLoginProvider module (svn://svn.openhierarchy.org/openhierarchy/modules/SAMLLoginProvider/trunk)
 * SiteProfile module (svn://svn.openhierarchy.org/openhierarchy/modules/siteprofile/trunk)
