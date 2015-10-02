@@ -12,8 +12,15 @@ public final class QueryTypeDescriptor extends GeneratedElementable {
 
 	@XMLElement
 	private final String name;
+	
+	//Group on type of query. 
+	@XMLElement
+	private final Boolean specialQuery;
+	
+	@XMLElement
+	private final String description;
 
-	public QueryTypeDescriptor(String queryTypeID, String name) {
+	public QueryTypeDescriptor(String queryTypeID, String name, Boolean specialQuery, String description) {
 
 		super();
 
@@ -24,7 +31,24 @@ public final class QueryTypeDescriptor extends GeneratedElementable {
 
 		this.queryTypeID = queryTypeID;
 		this.name = name;
+		this.specialQuery = specialQuery;
+		this.description = description;
 	}
+	
+	public QueryTypeDescriptor(String queryTypeID, String name) {
+		super();
+
+		if (StringUtils.isEmpty(queryTypeID)) {
+
+			throw new RuntimeException("queryTypeID cannot be null or empty");
+		}
+
+		this.queryTypeID = queryTypeID;
+		this.name = name;
+		this.specialQuery = false;
+		this.description = "";
+	}
+
 
 	public String getQueryTypeID() {
 
@@ -68,9 +92,12 @@ public final class QueryTypeDescriptor extends GeneratedElementable {
 		return true;
 	}
 
-	@Override
-	public String toString() {
-
-		return name + " (ID: " + queryTypeID + ")";
+	public Boolean getSpecialQuery() {
+		return specialQuery;
 	}
+
+	public String getDescription() {
+		return description;
+	}
+
 }

@@ -6,6 +6,9 @@
 	<xsl:include href="ContactDetailQueryAdminTemplates.xsl"/>
 	
 	<xsl:variable name="java.queryTypeName">Kontaktuppgiftsfråga (privatperson)</xsl:variable>
+	<xsl:variable name="java.queryTypeDescription">Lägg till kontaktuppgifter för privatperson</xsl:variable>
+	<!-- Lägger frågan i gruppen specialfrågor istället för i standardfrågor -->
+	<xsl:variable name="java.queryTypeIsSpecial">false</xsl:variable>
 	
 	<xsl:variable name="i18n.maxLength">tillåten längd på textinnehåll</xsl:variable>
 	

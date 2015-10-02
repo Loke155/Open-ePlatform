@@ -6,6 +6,10 @@
 	<xsl:include href="CheckboxQueryAdminTemplates.xsl"/>
 	
 	<xsl:variable name="java.queryTypeName">Kryssrutefråga</xsl:variable>
+	<xsl:variable name="java.queryTypeDescription">Fråga med kryssboxar</xsl:variable>
+	<!-- Lägger frågan i gruppen specialfrågor istället för i standardfrågor -->
+	<xsl:variable name="java.queryTypeIsSpecial">false</xsl:variable>
+	
 	<xsl:variable name="java.countText">Antal</xsl:variable>
 	<xsl:variable name="java.alternativesText">Alternativ</xsl:variable>
 	

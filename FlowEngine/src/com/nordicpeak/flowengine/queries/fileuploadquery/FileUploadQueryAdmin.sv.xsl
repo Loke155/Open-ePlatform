@@ -6,6 +6,9 @@
 	<xsl:include href="FileUploadQueryAdminTemplates.xsl"/>
 	
 	<xsl:variable name="java.queryTypeName">Filuppladdningsfråga</xsl:variable>
+	<xsl:variable name="java.queryTypeDescription">Ladda upp filer</xsl:variable>
+	<!-- Lägger frågan i gruppen specialfrågor istället för i standardfrågor -->
+	<xsl:variable name="java.queryTypeIsSpecial">false</xsl:variable>
 	
 	<xsl:variable name="java.pdfAttachmentDescriptionPrefix">En fil från fråga:</xsl:variable>
 	

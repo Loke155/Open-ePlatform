@@ -34,7 +34,7 @@ import se.unlogic.hierarchy.core.validationerrors.FileCountExceededValidationErr
 import se.unlogic.hierarchy.core.validationerrors.FileSizeLimitExceededValidationError;
 import se.unlogic.hierarchy.core.validationerrors.InvalidFileExtensionValidationError;
 import se.unlogic.standardutils.collections.CollectionUtils;
-import se.unlogic.standardutils.crypto.Base64;
+import se.unlogic.standardutils.base64.Base64;
 import se.unlogic.standardutils.dao.AnnotatedDAO;
 import se.unlogic.standardutils.dao.HighLevelQuery;
 import se.unlogic.standardutils.dao.QueryParameterFactory;
