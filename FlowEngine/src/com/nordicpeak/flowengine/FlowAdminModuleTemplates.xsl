@@ -22,7 +22,6 @@
 		/js/flowengine.step-navigator.js
 		/js/flowadminmodule.js
 		/js/jquery.tablesorter.min.js
-		/js/jquery.ui.datepicker.js
 		/js/jquery.ui.datepicker-sv.js
 		/js/UserGroupList.js		
 	</xsl:variable>
@@ -1777,24 +1776,48 @@
 				</div>
 			</div>	
 		
-			<div class="floatleft full bigmarginbottom">
-				
-				<label for="flowtype" class="floatleft full">
-					<xsl:value-of select="$i18n.queryType" />
-				</label>
-				
+			<div class="floatleft full bigmarginbottom">				
 				<div class="floatleft full">
-					<xsl:call-template name="createDropdown">
+					<fieldset>
+						<h2><xsl:value-of select="$i18n.queryType" /></h2>
+						<label><xsl:value-of select="$i18n.queryTypes.default" /></label>
+						<table class="oep-table errand-table">
+							<thead>
+								<tr>
+									<th class="icon no-sort"></th>
+									<th class="service query-type-column"><span data-icon-after="_"><xsl:value-of select="$i18n.query"/></span></th>
+									<th class="service"><span data-icon-after="_"><xsl:value-of select="$i18n.description"/></span></th>								
+								</tr>
+							</thead>
+							<tbody>
+								<xsl:apply-templates select="QueryTypes/QueryTypeDescriptor[specialQuery='false']"/>				
+							</tbody>
+						</table>
+						<label><xsl:value-of select="$i18n.queryTypes.special"/></label>
+						<table class="oep-table errand-table">
+							<thead>
+								<tr>
+									<th class="icon no-sort"></th>
+									<th class="service query-type-column"><span data-icon-after="_"><xsl:value-of select="$i18n.query"/></span></th>
+									<th class="service"><span data-icon-after="_"><xsl:value-of select="$i18n.description"/></span></th>								
+								</tr>
+							</thead>
+							<tbody>
+								<xsl:apply-templates select="QueryTypes/QueryTypeDescriptor[specialQuery='true']"/>								
+							</tbody>
+						</table>
+					</fieldset>
+					<!-- <xsl:call-template name="createDropdown">
 						<xsl:with-param name="name" select="'queryTypeID'"/>
 						<xsl:with-param name="valueElementName" select="'queryTypeID'" />
 						<xsl:with-param name="labelElementName" select="'name'" />
 						<xsl:with-param name="element" select="QueryTypes/QueryTypeDescriptor" />      
-					</xsl:call-template>
+					</xsl:call-template> -->
 				</div>
 			</div>		
-					
+			<fieldset>		
 			<div class="floatleft full bigmarginbottom">
-				
+			
 				<label for="name" class="floatleft full">
 					<xsl:value-of select="$i18n.name" />
 				</label>
@@ -1805,56 +1828,59 @@
 						<xsl:with-param name="name" select="'name'"/>     
 					</xsl:call-template>
 				</div>
+			
 			</div>					
 			
-			<h2><xsl:value-of select="$i18n.defaultQueryState.title"/></h2>
 			
-			<p><xsl:value-of select="$i18n.defaultQueryState.description"/></p>
+				<h2><xsl:value-of select="$i18n.defaultQueryState.title"/></h2>
+				
+				<p><xsl:value-of select="$i18n.defaultQueryState.description"/></p>
+				
+				<div class="floatleft full bigmarginbottom">
+								
+					<div class="floatleft full">
+						<xsl:call-template name="createRadio">
+							<xsl:with-param name="id" select="'visible'"/>
+							<xsl:with-param name="name" select="'defaultQueryState'"/>
+							<xsl:with-param name="value" select="'VISIBLE'"/>        
+						</xsl:call-template>
+						
+						<label for="visible">
+							<xsl:value-of select="$i18n.queryState.VISIBLE" />
+						</label>					
+					</div>
+				</div>	
 			
-			<div class="floatleft full bigmarginbottom">
-							
-				<div class="floatleft full">
-					<xsl:call-template name="createRadio">
-						<xsl:with-param name="id" select="'visible'"/>
-						<xsl:with-param name="name" select="'defaultQueryState'"/>
-						<xsl:with-param name="value" select="'VISIBLE'"/>        
-					</xsl:call-template>
-					
-					<label for="visible">
-						<xsl:value-of select="$i18n.queryState.VISIBLE" />
-					</label>					
-				</div>
-			</div>	
-		
-			<div class="floatleft full bigmarginbottom">
-							
-				<div class="floatleft full">
-					<xsl:call-template name="createRadio">
-						<xsl:with-param name="id" select="'visible_required'"/>
-						<xsl:with-param name="name" select="'defaultQueryState'"/>
-						<xsl:with-param name="value" select="'VISIBLE_REQUIRED'"/>        
-					</xsl:call-template>
-					
-					<label for="visible_required">
-						<xsl:value-of select="$i18n.queryState.VISIBLE_REQUIRED" />
-					</label>					
-				</div>
-			</div>	
-		
-			<div class="floatleft full bigmarginbottom">
-							
-				<div class="floatleft full">
-					<xsl:call-template name="createRadio">
-						<xsl:with-param name="id" select="'hidden'"/>
-						<xsl:with-param name="name" select="'defaultQueryState'"/>
-						<xsl:with-param name="value" select="'HIDDEN'"/>        
-					</xsl:call-template>
-					
-					<label for="hidden">
-						<xsl:value-of select="$i18n.queryState.HIDDEN" />
-					</label>					
-				</div>
-			</div>			
+				<div class="floatleft full bigmarginbottom">
+								
+					<div class="floatleft full">
+						<xsl:call-template name="createRadio">
+							<xsl:with-param name="id" select="'visible_required'"/>
+							<xsl:with-param name="name" select="'defaultQueryState'"/>
+							<xsl:with-param name="value" select="'VISIBLE_REQUIRED'"/>        
+						</xsl:call-template>
+						
+						<label for="visible_required">
+							<xsl:value-of select="$i18n.queryState.VISIBLE_REQUIRED" />
+						</label>					
+					</div>
+				</div>	
+			
+				<div class="floatleft full bigmarginbottom">
+								
+					<div class="floatleft full">
+						<xsl:call-template name="createRadio">
+							<xsl:with-param name="id" select="'hidden'"/>
+							<xsl:with-param name="name" select="'defaultQueryState'"/>
+							<xsl:with-param name="value" select="'HIDDEN'"/>        
+						</xsl:call-template>
+						
+						<label for="hidden">
+							<xsl:value-of select="$i18n.queryState.HIDDEN" />
+						</label>					
+					</div>
+				</div>	
+			</fieldset>		
 					
 			<div class="floatright">
 				<input type="submit" value="{$i18n.AddQueryDescriptor.submit}" />
@@ -1862,8 +1888,25 @@
 	
 		</form>
 	
-	</xsl:template>	
+	</xsl:template>
+		
+	<xsl:template match="QueryTypeDescriptor">
+		<tr>
+			<td class="link"><input type="radio" value="{queryTypeID}" name="queryTypeID"/></td>
+			<td><xsl:value-of select="name"></xsl:value-of></td>
+			<td class="descriptionFullText">
+			<span><xsl:value-of select="description"></xsl:value-of></span>
+			</td>			
+			<td style="display:none;" class="descriptionShortText"></td>	
+			<td>
+				<a style="display:none;" class="btn btn-dark more-info-btn" href="#">Mer info</a>
+				<a style="display:none;" class="btn btn-dark less-info-btn" href="#">Mindre info</a>
+			</td>
+											
+		</tr>	
+	</xsl:template>
 	
+
 	<xsl:template match="AddEvaluatorDescriptor">
 	
 		<h1>
