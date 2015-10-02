@@ -8,7 +8,10 @@
 	<xsl:include href="DropDownQueryAdminTemplates.xsl"/>
 	
 	<xsl:variable name="java.queryTypeName">Rullistafråga</xsl:variable>
-		<xsl:variable name="java.countText">Antal</xsl:variable>
+	<xsl:variable name="java.queryTypeDescription">Rullista(dropdown) med alternativ</xsl:variable>
+	<!-- Lägger frågan i gruppen specialfrågor istället för i standardfrågor -->
+	<xsl:variable name="java.queryTypeIsSpecial">false</xsl:variable>
+	<xsl:variable name="java.countText">Antal</xsl:variable>
 	<xsl:variable name="java.alternativesText">Alternativ</xsl:variable>
 	
 	<xsl:variable name="i18n.ShortDescription">Kort beskrivning</xsl:variable>

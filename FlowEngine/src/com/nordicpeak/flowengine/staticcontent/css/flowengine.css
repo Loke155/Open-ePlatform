@@ -324,3 +324,7 @@ table.oep-table tr.disabled td, table.oep-table tr.disabled td a {
 #FlowBrowser section.modal.warning {
 	padding: 10px 10px;
 }
+
+.query-type-column{
+	width: 20em;
+}

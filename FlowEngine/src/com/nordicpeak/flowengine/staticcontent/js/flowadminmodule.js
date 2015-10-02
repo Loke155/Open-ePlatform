@@ -56,6 +56,44 @@ $(document).ready(function() {
 	
 	$("#flowtype").trigger("change");
 	
+	$('.descriptionFullText').each(function(i,elem){
+		//console.log(elem);
+		var fullText = $(elem).find('span').text();
+		
+		if(fullText.length > 110){
+			console.log(fullText);
+			//Hide the full text td.
+			$(elem).hide();
+			var shortText = fullText.substr(0,109)+'...';
+			$(elem).parent().find('.descriptionShortText').append('<span>'+shortText+'</span>');
+			$(elem).parent().find('.descriptionShortText').show();
+			$(elem).parent().find('.more-info-btn').show();
+			
+		}
+	});
+	
+	$('.more-info-btn').click(function(e){
+		console.log('more info btn');
+		
+		e.preventDefault();
+		
+        $(this).parent().parent().find('.descriptionFullText').show();
+        $(this).parent().parent().find('.descriptionShortText').hide();
+        $(this).hide();
+        $(this).parent().find('.less-info-btn').show();
+        
+	});
+	
+	$('.less-info-btn').click(function(e){
+		e.preventDefault();
+		$(this).parent().parent().find('.descriptionShortText').show();
+        $(this).parent().parent().find('.descriptionFullText').hide();
+        $(this).hide();
+        $(this).parent().find('.more-info-btn').show();
+        
+	});
+	
+	
 //	$(".managerlist input[name='group']").change(function(e) {
 //		
 //		validateManagerUserAccess($(this).val());

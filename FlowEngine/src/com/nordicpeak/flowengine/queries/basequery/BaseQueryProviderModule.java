@@ -60,6 +60,13 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 
 	@XSLVariable(prefix = "java.")
 	protected String queryTypeName = "This variable should be set by your stylesheet";
+	
+	@XSLVariable(prefix = "java.")
+	protected String queryTypeDescription = "This variable should be set by your stylesheet";
+	
+	@XSLVariable(prefix = "java.")
+	protected String queryTypeIsSpecial = "This variable should be set by your stylesheet";
+	
 
 	@ModuleSetting
 	@TextFieldSettingDescriptor(name = "Query XSL stylesheet", description = "The path in classpath relative from this class to the XSL stylesheet used to transform the HTML of queries", required = true)
@@ -105,13 +112,20 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 	@Override
 	protected synchronized void moduleConfigured() throws Exception {
 
+		Boolean specialType=false;
+		
 		super.moduleConfigured();
 		
 		createQueryTransformer();
 		
+		if(queryTypeIsSpecial!=null && queryTypeIsSpecial.equalsIgnoreCase("true")){
+			specialType = true;
+		}
+		log.debug("QueryType is special: "+queryTypeIsSpecial);
+		
 		if(queryTypeDescriptor == null){
 			
-			queryTypeDescriptor = new QueryTypeDescriptor(queryTypeID, queryTypeName);
+			queryTypeDescriptor = new QueryTypeDescriptor(queryTypeID, queryTypeName,specialType,queryTypeDescription);
 			
 			//Rename legacy integer based queryTypeID's on module startup
 			oldQueryTypeID = this.moduleDescriptor.getModuleID().toString();
@@ -131,7 +145,7 @@ public abstract class BaseQueryProviderModule<QI extends BaseQueryInstance> exte
 				queryHandler.removeQueryProvider(queryTypeDescriptor);
 			}
 			
-			queryTypeDescriptor = new QueryTypeDescriptor(queryTypeID, queryTypeName);
+			queryTypeDescriptor = new QueryTypeDescriptor(queryTypeID, queryTypeName,specialType,queryTypeDescription);
 			
 			if(queryHandler != null){
 

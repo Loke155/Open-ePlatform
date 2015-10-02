@@ -342,4 +342,9 @@
 	<xsl:variable name="i18n.StatisticsMode.None">Generera ingen statistik</xsl:variable>
 	<xsl:variable name="i18n.StatisticsMode.Internal">Generera statistik men visa den endast för interna användare</xsl:variable>
 	<xsl:variable name="i18n.StatisticsMode.Public">Generera statistik och visa den publikt</xsl:variable>
+	
+	<xsl:variable name="i18n.queryTypes.default">Standardfrågor</xsl:variable>
+	<xsl:variable name="i18n.queryTypes.special">Specialfrågor</xsl:variable>
+	<xsl:variable name="i18n.query">Fråga</xsl:variable>
+
 </xsl:stylesheet>
